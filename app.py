@@ -161,11 +161,17 @@ with main_tab:
         city = c1.text_input("City", "New York")
         mood = c1.text_input("Activity", "Relaxing walk")
         routine = c2.text_area("Routine", "Mon-Fri 9-5 work")
-        if st.form_submit_button("🚀 Generate Plan"):
-            client = Groq(api_key=GROQ_KEY)
-            weather, err = get_current_weather(city, WEATHER_KEY)
-            if err: st.error("Weather Error")
-            else:
+        
+        # We capture the button press here...
+        submitted = st.form_submit_button("🚀 Generate Plan")
+
+    # ...but we run the logic OUTSIDE the form block! (This fixes your error)
+    if submitted:
+        client = Groq(api_key=GROQ_KEY)
+        weather, err = get_current_weather(city, WEATHER_KEY)
+        if err: st.error("Weather Error")
+        else:
+            with st.spinner("🤖 Analyzing weather, routines, and searching web..."):
                 q_res = client.chat.completions.create(
                     messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}],
                     model="llama-3.1-8b-instant"
@@ -178,6 +184,8 @@ with main_tab:
                 )
                 plan = final_res.choices[0].message.content
                 st.markdown(plan)
+                
+                # The download button is now safely outside the st.form
                 st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
                 
                 df = get_forecast(city, WEATHER_KEY)
