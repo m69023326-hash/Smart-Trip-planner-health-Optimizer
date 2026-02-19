@@ -982,6 +982,49 @@ def page_travel_tips():
         with st.expander(f"📖 {note['topic']}"):
             st.write(note['desc'])
 
+def page_communication():
+    st.header("📱 Communication Access")
+    
+    st.subheader("📶 Mobile Network Operators in Pakistan")
+    operators = [
+        {"name": "Jazz (Mobilink)", "tech": "4G/LTE", "coverage": "Best overall coverage, excellent in urban and good in northern areas", "tourist_sim": "Yes — Jazz Super SIM at airports"},
+        {"name": "Zong (CMPak)", "tech": "4G/LTE", "coverage": "Second-best coverage, strong in GB and northern areas", "tourist_sim": "Yes — available at airports and franchise centers"},
+        {"name": "Telenor Pakistan", "tech": "4G/LTE", "coverage": "Good urban coverage, limited in remote northern areas", "tourist_sim": "Yes — Telenor Easy Card"},
+        {"name": "Ufone (PTCL)", "tech": "4G/LTE", "coverage": "Good in Punjab and urban areas, limited in GB", "tourist_sim": "Yes — available at select outlets"},
+        {"name": "SCOM", "tech": "3G", "coverage": "Exclusive to AJK and Gilgit-Baltistan", "tourist_sim": "Limited availability"},
+    ]
+    df_ops = pd.DataFrame(operators)
+    st.dataframe(df_ops, use_container_width=True, hide_index=True)
+    
+    st.divider()
+    
+    st.subheader("🪪 How to Get a Local SIM Card (Foreigners)")
+    steps = [
+        "1. **Documents Needed:** Valid passport with visa, one passport-size photo",
+        "2. **Where to Buy:** Airport counters (recommended), franchise centers in any city",
+        "3. **Biometric Verification:** Fingerprint and photo will be taken (mandatory for all SIMs in Pakistan)",
+        "4. **Cost:** PKR 200-500 for the SIM + data packages from PKR 300-1,000 for 10-30GB data",
+        "5. **Recommended:** Jazz or Zong for best coverage in tourist areas and northern Pakistan",
+        "6. **Activation Time:** Usually instant to 2 hours after biometric registration"
+    ]
+    for step in steps:
+        st.markdown(step)
+        
+    st.divider()
+    
+    st.subheader("⚠️ Connectivity by Region")
+    conn_data = [
+        {"Region": "Islamabad/Lahore/Karachi", "Coverage": "Excellent 4G/LTE + WiFi", "Status": "🟢"},
+        {"Region": "Swat / Naran / Kaghan", "Coverage": "Good 3G/4G in main towns", "Status": "🟢"},
+        {"Region": "Hunza / Gilgit", "Coverage": "3G/4G in towns, limited in remote areas", "Status": "🟡"},
+        {"Region": "Skardu", "Coverage": "3G/4G in city, none in Deosai", "Status": "🟡"},
+        {"Region": "Fairy Meadows", "Coverage": "NO coverage at all", "Status": "🔴"},
+        {"Region": "Kalash Valley", "Coverage": "Very limited 2G only", "Status": "🔴"},
+        {"Region": "Neelum Valley (deep)", "Coverage": "Limited to no coverage", "Status": "🔴"},
+    ]
+    df_conn = pd.DataFrame(conn_data)
+    st.dataframe(df_conn, use_container_width=True, hide_index=True)
+
 def page_admin():
     st.header("🔐 Admin Panel")
     if not st.session_state.admin_logged_in:
@@ -1105,6 +1148,7 @@ with tourism_tab:
         "🚨 Emergency Info": page_emergency,
         "📸 Photo Gallery": page_gallery,
         "📜 Travel Tips": page_travel_tips,
+        "📱 Communication": page_communication,
         "🔐 Admin Panel": page_admin,
     }
     
