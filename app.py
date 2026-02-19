@@ -927,6 +927,60 @@ def page_travel_tips():
         with st.expander(category["title"]):
             for item in category["items"]:
                 st.markdown(f"- {item}")
+                
+    st.divider()
+    
+    st.subheader("✅ Do's and ❌ Don'ts")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("### ✅ Do's")
+        dos = [
+            "Do dress modestly, especially women, particularly when visiting mosques and religious sites",
+            "Do ask permission before photographing local people, especially women",
+            "Do learn basic Urdu greetings: 'Assalam-o-Alaikum' (Hello), 'Shukriya' (Thank you), 'Kya Haal Hai' (How are you?)",
+            "Do accept offers of tea (chai) — it's a significant gesture of hospitality",
+            "Do remove your shoes before entering mosques, homes, and some shops",
+            "Do respect prayer times — shops and services may close briefly during prayer",
+            "Do try local cuisine — Pakistani food is world-renowned for its flavors",
+            "Do tip porters, guides, and hotel staff (10-15% is customary)",
+            "Do carry warm clothing even in summer if visiting northern areas (temperatures drop sharply at night)",
+            "Do haggle at bazaars and markets — it's expected and part of the experience"
+        ]
+        for d in dos:
+            st.markdown(f"- {d}")
+            
+    with c2:
+        st.markdown("### ❌ Don'ts")
+        donts = [
+            "Don't eat or drink in public during the fasting hours of Ramadan (even if you're not Muslim)",
+            "Don't wear revealing clothing in public areas",
+            "Don't photograph military installations, checkpoints, or security forces",
+            "Don't discuss politics or controversial topics with strangers",
+            "Don't use your left hand for eating or handing items to others (left hand is considered unclean)",
+            "Don't point your feet at people or religious texts",
+            "Don't consume alcohol in public (it is prohibited for Muslims and restricted for foreigners)",
+            "Don't travel to restricted or prohibited areas without a No Objection Certificate (NOC)",
+            "Don't litter — especially in natural and protected areas",
+            "Don't make negative comments about religion or cultural practices"
+        ]
+        for d in donts:
+            st.markdown(f"- {d}")
+            
+    st.divider()
+    
+    st.subheader("📚 Cultural Notes")
+    cultural_notes = [
+        {"topic": "Hospitality", "desc": "Pakistani hospitality is legendary. Locals will often go out of their way to help tourists. Don't be surprised if strangers invite you for tea or a meal — this is a genuine cultural tradition, not a scam."},
+        {"topic": "Religion", "desc": "Islam is the state religion and permeates daily life. Visitors are expected to respect Islamic traditions. During the holy month of Ramadan, eating, drinking, and smoking in public during daylight hours are legally restricted and culturally insensitive."},
+        {"topic": "Language", "desc": "While Urdu is the national language, English is co-official and widely used in government, business, and education. You will find English speakers easily in major cities, though learning a few Urdu phrases is highly appreciated by locals."},
+        {"topic": "Currency", "desc": "Pakistani Rupee (PKR) is the local currency. Credit cards are accepted at major hotels and restaurants in cities but NOT in rural/northern areas. Always carry sufficient cash when traveling outside major cities."},
+        {"topic": "Dress Code", "desc": "Modest clothing is expected. Men: long pants and shirts. Women: loose clothing covering arms and legs, a scarf/dupatta is recommended for religious sites. Shalwar Kameez (traditional dress) is comfortable and culturally appropriate."},
+        {"topic": "Permits", "desc": "Some areas require a No Objection Certificate (NOC) for foreign tourists, particularly in border regions (parts of GB, AJK, Balochistan). Check with your tour operator or local authorities before traveling."}
+    ]
+    
+    for note in cultural_notes:
+        with st.expander(f"📖 {note['topic']}"):
+            st.write(note['desc'])
 
 def page_admin():
     st.header("🔐 Admin Panel")
