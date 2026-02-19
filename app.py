@@ -109,9 +109,24 @@ def get_forecast(city, api_key):
         url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
         res = requests.get(url).json()
         if res.get("cod") != "200": return None
+        
         data = []
         for i in res['list']:
-            data.append({"Date": i['dt_txt'], "Temperature (°C)": i['main']['temp'], "Rain Chance (%)": i.get('pop', 0)*100})
+            # Parse Date and Time for better graph display
+            dt = pd.to_datetime(i['dt_txt'])
+            hour = dt.hour
+            # Determine Day or Night (6 AM to 6 PM is Day)
+            day_night = "Day ☀️" if 6 <= hour < 18 else "Night 🌙"
+            
+            data.append({
+                "Datetime": i['dt_txt'],
+                "Date": dt.strftime('%Y-%m-%d'),
+                "Time": dt.strftime('%I:%M %p'),
+                "Period": day_night,
+                "Temperature (°C)": i['main']['temp'],
+                "Rain Chance (%)": int(i.get('pop', 0) * 100),
+                "Condition": i['weather'][0]['description'].title()
+            })
         return pd.DataFrame(data)
     except: return None
 
@@ -162,10 +177,8 @@ with main_tab:
         mood = c1.text_input("Activity", "Relaxing walk")
         routine = c2.text_area("Routine", "Mon-Fri 9-5 work")
         
-        # We capture the button press here...
         submitted = st.form_submit_button("🚀 Generate Plan")
 
-    # ...but we run the logic OUTSIDE the form block! (This fixes your error)
     if submitted:
         client = Groq(api_key=GROQ_KEY)
         weather, err = get_current_weather(city, WEATHER_KEY)
@@ -185,14 +198,39 @@ with main_tab:
                 plan = final_res.choices[0].message.content
                 st.markdown(plan)
                 
-                # The download button is now safely outside the st.form
                 st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
                 
+                # --- ENHANCED GRAPHS SECTION ---
                 df = get_forecast(city, WEATHER_KEY)
                 if df is not None:
+                    st.divider()
+                    st.subheader(f"🌦️ 5-Day Weather Outlook: {city.title()}")
                     c1, c2 = st.columns(2)
-                    c1.plotly_chart(px.line(df, x="Date", y="Temperature (°C)", title="Temp Trend"))
-                    c2.plotly_chart(px.bar(df, x="Date", y="Rain Chance (%)", title="Rain Chance"))
+                    
+                    # 1. Temperature Graph (Enhanced)
+                    with c1:
+                        fig_temp = px.line(
+                            df, x="Datetime", y="Temperature (°C)", 
+                            title="🌡️ Temperature Trend",
+                            markers=True,
+                            hover_data={"Datetime": False, "Date": True, "Time": True, "Period": True, "Condition": True}
+                        )
+                        fig_temp.update_traces(line_color='#FF5546', marker=dict(size=8, color='#4b90ff'))
+                        fig_temp.update_layout(xaxis_title="", yaxis_title="Temp (°C)", hovermode="x unified")
+                        st.plotly_chart(fig_temp, use_container_width=True)
+                    
+                    # 2. Rain Probability Graph (Enhanced)
+                    with c2:
+                        fig_rain = px.bar(
+                            df, x="Datetime", y="Rain Chance (%)", 
+                            title="☔ Chance of Rain / Storms",
+                            color="Rain Chance (%)", 
+                            color_continuous_scale="Blues",
+                            range_y=[0, 100], # Locks the Y-axis from 0 to 100%
+                            hover_data={"Datetime": False, "Date": True, "Time": True, "Period": True, "Condition": True}
+                        )
+                        fig_rain.update_layout(xaxis_title="", yaxis_title="Probability (%)", coloraxis_showscale=False, hovermode="x unified")
+                        st.plotly_chart(fig_rain, use_container_width=True)
 
 # --- TAB 2: GEMINI-STYLE COMPANION ---
 with companion_tab:
