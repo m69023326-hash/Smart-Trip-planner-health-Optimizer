@@ -149,13 +149,11 @@ def create_pdf(plan_text):
 
 async def text_to_speech_edge(text, language_code):
     """Generates audio using the correct voice for the detected language."""
-    
-    # Select Voice based on Language
-    voice = "en-US-AriaNeural" # Default English
+    voice = "en-US-AriaNeural" # Default
     if language_code == "UR":
-        voice = "ur-PK-UzmaNeural" # Urdu Voice
+        voice = "ur-PK-UzmaNeural"
     elif language_code == "HI":
-        voice = "hi-IN-SwaraNeural" # Hindi Voice
+        voice = "hi-IN-SwaraNeural"
         
     communicate = edge_tts.Communicate(text, voice)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
@@ -165,15 +163,15 @@ async def text_to_speech_edge(text, language_code):
 # --- MAIN APP LAYOUT ---
 
 st.title("🗺️ Pro Life Planner & Health Assistant")
-st.markdown("Powered by **Groq**, **Tavily**, **OpenWeather** & **Voice AI**")
 
-# Create 4 main tabs
-main_tab, medical_tab, chat_tab, voice_tab = st.tabs(["📅 Trip Planner", "🏥 Report Analyzer", "💬 Text Chat", "🎙️ Voice Companion"])
+# Consolidated Layout: Just 2 Main Tabs
+main_tab, companion_tab = st.tabs(["📅 Trip Planner", "🤖 AI Health Companion"])
 
 # ==========================================
-# TAB 1: TRIP PLANNER
+# TAB 1: TRIP PLANNER (UNCHANGED)
 # ==========================================
 with main_tab:
+    st.markdown("### 🌍 Plan your perfect week")
     with st.form("user_input_form"):
         col1, col2 = st.columns(2)
         with col1:
@@ -262,60 +260,118 @@ with main_tab:
                 st.error(f"An error occurred: {str(e)}")
 
 # ==========================================
-# TAB 2: MEDICAL REPORT ANALYZER
+# TAB 2: AI HEALTH COMPANION (ALL-IN-ONE)
 # ==========================================
-with medical_tab:
-    st.header("🏥 Medical Report Analysis")
-    st.info("Upload your Lab Reports (PDF or Image) to get a custom diet plan.")
+with companion_tab:
+    st.header("💬 AI Health Companion")
+    st.caption("Chat with me, upload reports, or talk naturally in your language.")
+
+    # --- CHAT HISTORY DISPLAY ---
+    # We display chat first so new inputs appear below (standard chat app feel)
+    chat_container = st.container()
+    with chat_container:
+        for message in st.session_state.chat_history:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    # --- MULTIMEDIA INPUT TOOLBAR ---
+    # This is the "Industrial" touch: A toolbar above the chat input
+    with st.popover("➕ Multimedia Options (Upload / Voice)", use_container_width=True):
+        st.markdown("### 📎 Upload Report or 🎙️ Speak")
+        
+        # 1. File Uploader
+        uploaded_file = st.file_uploader("Upload Medical Report (PDF/Img)", type=["pdf", "png", "jpg", "jpeg"], key="chat_uploader")
+        
+        # 2. Audio Input
+        audio_value = st.audio_input("Press to Record Voice", key="chat_audio")
+
+    # --- LOGIC: HANDLE UPLOADS & VOICE ---
     
-    uploaded_file = st.file_uploader("Upload Report", type=["pdf", "png", "jpg", "jpeg"])
-    
+    # CASE A: FILE UPLOADED
     if uploaded_file:
-        if st.button("🧬 Analyze Report"):
-            with st.spinner("Reading document..."):
-                client = Groq(api_key=GROQ_KEY)
-                extracted_text = ""
+        with st.spinner("📄 Analyzing Document..."):
+            client = Groq(api_key=GROQ_KEY)
+            extracted_text = ""
+            if uploaded_file.type == "application/pdf":
+                extracted_text = extract_text_from_pdf(uploaded_file)
+            else:
+                extracted_text = analyze_medical_image(uploaded_file, client)
+            
+            # Save data to session
+            st.session_state.medical_data = extracted_text
+            
+            # Generate Analysis
+            diet_prompt = f"""
+            Act as a Nutritionist. 
+            Patient Data: {extracted_text}
+            Task: Summarize findings and give a diet plan. Avoid foods & Eat foods list.
+            Disclaimer: You are an AI.
+            """
+            completion = client.chat.completions.create(
+                messages=[{"role": "user", "content": diet_prompt}],
+                model="llama-3.3-70b-versatile"
+            )
+            analysis_text = completion.choices[0].message.content
+            
+            # Add to Chat
+            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded Report: {uploaded_file.name}"})
+            st.session_state.chat_history.append({"role": "assistant", "content": analysis_text})
+            st.rerun()
+
+    # CASE B: VOICE INPUT
+    if audio_value:
+        with st.spinner("👂 Listening..."):
+            client = Groq(api_key=GROQ_KEY)
+            try:
+                # Transcribe
+                transcription = client.audio.transcriptions.create(
+                    file=("voice.wav", audio_value),
+                    model="whisper-large-v3-turbo",
+                    response_format="text"
+                )
                 
-                if uploaded_file.type == "application/pdf":
-                    extracted_text = extract_text_from_pdf(uploaded_file)
-                else:
-                    extracted_text = analyze_medical_image(uploaded_file, client)
+                # Add User Voice to Chat
+                st.session_state.chat_history.append({"role": "user", "content": f"🎙️ (Voice): {transcription}"})
                 
-                st.session_state.medical_data = extracted_text
-                st.expander("View Extracted Data").write(extracted_text)
+                # Generate AI Response
+                system_prompt = """
+                You are a voice assistant. Detect language (EN/UR/HI). 
+                Reply in same language. Start with code [LANG:XX].
+                Keep it short.
+                """
+                context = ""
+                if st.session_state.medical_data:
+                    context = f"Medical Context: {st.session_state.medical_data[:500]}..."
 
-                with st.spinner("Generating Diet Plan..."):
-                    diet_prompt = f"""
-                    You are a professional Nutritionist.
-                    **Patient's Medical Data:**
-                    {extracted_text}
-                    
-                    **Task:**
-                    1. Summarize key findings.
-                    2. Create a specific, safe Diet Plan.
-                    3. List foods to AVOID and foods to EAT.
-                    4. DISCLAIMER: Start by stating you are an AI.
-                    """
-                    
-                    completion = client.chat.completions.create(
-                        messages=[{"role": "user", "content": diet_prompt}],
-                        model="llama-3.3-70b-versatile"
-                    )
-                    
-                    diet_plan = completion.choices[0].message.content
-                    st.markdown(diet_plan)
-                    st.session_state.chat_history.append({"role": "assistant", "content": f"**Analysis of uploaded report:**\n\n{diet_plan}"})
+                messages = [{"role": "system", "content": system_prompt + context}]
+                messages.append({"role": "user", "content": transcription})
+                
+                completion = client.chat.completions.create(
+                    messages=messages,
+                    model="llama-3.3-70b-versatile",
+                    temperature=0.7
+                )
+                raw_response = completion.choices[0].message.content
+                
+                # Parse Language
+                lang_code = "EN"
+                ai_text = raw_response
+                if "[LANG:UR]" in raw_response: lang_code = "UR"; ai_text = raw_response.replace("[LANG:UR]", "").strip()
+                elif "[LANG:HI]" in raw_response: lang_code = "HI"; ai_text = raw_response.replace("[LANG:HI]", "").strip()
+                elif "[LANG:EN]" in raw_response: lang_code = "EN"; ai_text = raw_response.replace("[LANG:EN]", "").strip()
 
-# ==========================================
-# TAB 3: HEALTH CHATBOT
-# ==========================================
-with chat_tab:
-    st.header("💬 Health & Lifestyle Companion")
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+                # Add AI Reply to Chat
+                st.session_state.chat_history.append({"role": "assistant", "content": f"🔊 {ai_text}"})
+                
+                # Speak It
+                audio_file = asyncio.run(text_to_speech_edge(ai_text, lang_code))
+                st.audio(audio_file, format="audio/mp3", autoplay=True)
+                
+            except Exception as e:
+                st.error(f"Voice Error: {e}")
 
-    if prompt := st.chat_input("Ex: What fruits are safe for my sugar level?"):
+    # CASE C: TEXT INPUT (Standard Chat)
+    if prompt := st.chat_input("Type a message..."):
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -326,11 +382,11 @@ with chat_tab:
                     client = Groq(api_key=GROQ_KEY)
                     context_data = ""
                     if st.session_state.medical_data:
-                        context_data = f"Context from uploaded report: {st.session_state.medical_data[:2000]}"
+                        context_data = f"Medical Report Context: {st.session_state.medical_data[:2000]}"
 
                     messages = [{"role": "system", "content": f"You are a helpful Health Coach. {context_data}"}]
                     for msg in st.session_state.chat_history[-5:]: 
-                        messages.append(msg)
+                        messages.append({"role": msg["role"], "content": msg["content"]}) # Simplified msg object
 
                     chat_completion = client.chat.completions.create(
                         messages=messages,
@@ -344,70 +400,3 @@ with chat_tab:
                     
                 except Exception as e:
                     st.error(f"Chat Error: {str(e)}")
-
-# ==========================================
-# TAB 4: MULTILINGUAL VOICE COMPANION
-# ==========================================
-with voice_tab:
-    st.header("🎙️ Multilingual Voice Companion")
-    st.caption("Speak in **English, Urdu, or Hindi**. I will detect your language and reply in the same voice!")
-
-    # 1. Record Audio (New Streamlit Feature)
-    audio_value = st.audio_input("🔴 Press to Record")
-
-    if audio_value:
-        with st.spinner("👂 Listening & Detecting Language..."):
-            client = Groq(api_key=GROQ_KEY)
-            try:
-                # A. Transcribe with Groq Whisper
-                transcription = client.audio.transcriptions.create(
-                    file=("voice.wav", audio_value),
-                    model="whisper-large-v3-turbo",
-                    response_format="text"
-                )
-                st.success(f"You said: {transcription}")
-
-                # B. Get AI Response + Language Detection
-                with st.spinner("🧠 Thinking..."):
-                    # We ask the LLM to output a hidden code [LANG:XX] at the start
-                    system_prompt = """
-                    You are a voice assistant. 
-                    1. Detect the language of the user's input.
-                    2. Reply IN THE SAME LANGUAGE.
-                    3. START your response with a language code: [LANG:EN] for English, [LANG:UR] for Urdu, [LANG:HI] for Hindi.
-                    4. Keep the answer conversational and short (2 sentences).
-                    """
-                    
-                    messages = [{"role": "system", "content": system_prompt}]
-                    messages.append({"role": "user", "content": transcription})
-                    
-                    completion = client.chat.completions.create(
-                        messages=messages,
-                        model="llama-3.3-70b-versatile",
-                        temperature=0.7,
-                    )
-                    raw_response = completion.choices[0].message.content
-                    
-                    # C. Parse Language Code
-                    lang_code = "EN" # Default
-                    ai_text = raw_response
-                    
-                    if "[LANG:UR]" in raw_response:
-                        lang_code = "UR"
-                        ai_text = raw_response.replace("[LANG:UR]", "").strip()
-                    elif "[LANG:HI]" in raw_response:
-                        lang_code = "HI"
-                        ai_text = raw_response.replace("[LANG:HI]", "").strip()
-                    elif "[LANG:EN]" in raw_response:
-                        lang_code = "EN"
-                        ai_text = raw_response.replace("[LANG:EN]", "").strip()
-
-                    st.markdown(f"**AI ({lang_code}):** {ai_text}")
-
-                # D. Speak Response (Smart Voice Switch)
-                with st.spinner(f"🗣️ Speaking in {lang_code}..."):
-                    audio_file = asyncio.run(text_to_speech_edge(ai_text, lang_code))
-                    st.audio(audio_file, format="audio/mp3", autoplay=True)
-            
-            except Exception as e:
-                st.error(f"Voice Error: {e}")
