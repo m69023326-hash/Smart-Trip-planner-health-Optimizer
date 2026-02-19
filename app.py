@@ -199,7 +199,7 @@ with companion_tab:
         
         with col_buttons:
             if st.button("📄 Share Reports & Get Analysis"):
-                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! 🩺 Please upload your medical report using the ➕ button below. What else can I do for you today? ✨"})
+                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! 🩺 Please upload your medical report using the ➕ button below.\n\nWhat else can I do for you today? ✨"})
                 st.rerun()
             if st.button("🥦 Prepare a Diet Plan"):
                 st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
@@ -214,7 +214,6 @@ with companion_tab:
     # 2. Chat History Display
     for i, msg in enumerate(st.session_state.chat_history):
         st.chat_message(msg["role"]).write(msg["content"])
-        # If the user says "yes" to a PDF in chat, provide a quick download button for the previous AI message
         if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
             prev_msg = st.session_state.chat_history[i-1]["content"]
             st.download_button("📥 Download Document", create_pdf(prev_msg), f"document_{i}.pdf", key=f"dl_{i}")
@@ -241,7 +240,8 @@ with companion_tab:
             sys_prompt = """
             You are a helpful nutritionist. 
             Rule 1: Always use emojis 🍎🥦. 
-            Rule 2: At the very end of your diet plan, you MUST ask: "Do you want its PDF file? 📄"
+            Rule 2: Format the diet plan beautifully. Use Markdown headers (###), bullet points, and leave EMPTY LINES between paragraphs so it is easy to read.
+            Rule 3: At the very end of your diet plan, on a NEW LINE, you MUST ask: "Do you want its PDF file? 📄"
             """
             res = client.chat.completions.create(
                 messages=[{"role": "system", "content": sys_prompt}, 
@@ -264,8 +264,9 @@ with companion_tab:
             You are a friendly AI companion. 
             1. Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN].
             2. ALWAYS use emojis 😊.
-            3. If creating a plan, end by asking: "Do you want its PDF file? 📄"
-            4. If answering a normal question, end by asking: "What else can I do for you today? ✨"
+            3. Format your text response professionally. Leave clear EMPTY LINES between different thoughts or sentences so it does not look like a single block of text.
+            4. If creating a plan, end on a NEW LINE asking: "Do you want its PDF file? 📄"
+            5. If answering a normal question, end on a NEW LINE asking: "What else can I do for you today? ✨"
             """
             res = client.chat.completions.create(
                 messages=[{"role": "system", "content": sys_msg}, {"role": "user", "content": txt}],
@@ -289,11 +290,12 @@ with companion_tab:
         context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else "No medical context."
         
         sys_prompt = f"""
-        You are a highly empathetic and helpful AI Companion.
+        You are a highly empathetic and professional AI Companion.
         Follow these rules strictly:
-        1. Always use relevant emojis throughout your response to make it engaging and friendly 🌟.
-        2. If the user asks you to create any kind of plan (diet plan, routine, trip plan, etc.), after providing the plan, you MUST ask exactly: "Do you want its PDF file? 📄"
-        3. For all other general questions, always end your reply by asking a polite follow-up question like "What else can I do for you today? 😊" or "How else can I help? ✨".
+        1. Always use relevant emojis to make your response engaging 🌟.
+        2. Format your responses beautifully using Markdown. You MUST use clear paragraph breaks (leave an empty line between different thoughts) and bullet points where helpful. Never write a single giant block of text.
+        3. If the user asks you to create a plan, leave an empty line at the end and ask exactly: "Do you want its PDF file? 📄"
+        4. For general questions, leave an empty line at the end and ask: "What else can I do for you today? 😊" or "How else can I help? ✨".
         {context}
         """
         
