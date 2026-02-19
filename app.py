@@ -248,25 +248,65 @@ def weather_code_to_text(code):
     codes = {0:"☀️ Clear",1:"🌤️ Mainly Clear",2:"⛅ Partly Cloudy",3:"☁️ Overcast", 45:"🌫️ Foggy",51:"🌦️ Light Drizzle",61:"🌧️ Slight Rain",63:"🌧️ Moderate Rain",65:"🌧️ Heavy Rain",71:"🌨️ Slight Snow",95:"⛈️ Thunderstorm"}
     return codes.get(code, f"Code {code}")
 
-def get_youtube_embed_url(url):
-    if "youtu.be/" in url: vid = url.split("youtu.be/")[1].split("?")[0].split("&")[0]
-    elif "watch?v=" in url: vid = url.split("watch?v=")[1].split("&")[0].split("?")[0]
-    elif "/embed/" in url: vid = url.split("/embed/")[1].split("?")[0].split("&")[0]
-    else: return url
-    return f"https://www.youtube.com/embed/{vid}"
-
 # ============================================================
 # TOURISM PAGES VIEWS
 # ============================================================
 def page_home():
-    st.markdown("<div style='text-align:center; padding:20px 0;'><h1 style='color:#1B5E20;'>🇵🇰 Welcome to Pakistan</h1><p>Your Complete Smart Tourism Guide</p></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='text-align:center; padding:20px 0;'>
+        <h1 style='font-size:2.8em; color:#1B5E20; margin-bottom: 0;'>🇵🇰 Welcome to Pakistan</h1>
+        <p style='font-size:1.3em; color:#555;'>Your Complete Smart Tourism Guide</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    **Pakistan** — A land of breathtaking mountains, ancient civilizations, rich culture, and legendary hospitality. 
+    From the mighty Karakoram and Himalayan ranges to the ancient ruins of Mohenjo-daro, from the vibrant streets of Lahore to the serene valleys of Hunza and Swat — Pakistan offers experiences that rival the world's best destinations.
+    """)
+    
     dests = load_json("destinations.json")
-    if dests:
-        st.subheader("🌟 Featured Destinations")
-        cols = st.columns(min(len(dests), 4))
-        for i, dest in enumerate(dests[:4]):
-            with cols[i % 4]:
-                st.markdown(f"<div style='background:linear-gradient(135deg,#E8F5E9,#C8E6C9);padding:15px;border-radius:12px;text-align:center;'><h4>{dest['name']}</h4><p>{dest['region']}</p></div>", unsafe_allow_html=True)
+    
+    # Fallback to default data if JSON is empty so it looks exactly like the image
+    if not dests:
+        dests = [
+            {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "best_season": "April - October", "budget_per_day": {"budget": 5000}},
+            {"name": "Skardu", "region": "Gilgit-Baltistan", "access_level": "Moderate", "best_season": "May - September", "budget_per_day": {"budget": 6000}},
+            {"name": "Swat Valley", "region": "Khyber Pakhtunkhwa", "access_level": "Easy", "best_season": "March - October", "budget_per_day": {"budget": 4000}},
+            {"name": "Lahore", "region": "Punjab", "access_level": "Easy", "best_season": "October - March", "budget_per_day": {"budget": 3000}}
+        ]
+        
+    st.subheader("🌟 Featured Destinations")
+    cols = st.columns(min(len(dests), 4))
+    for i, dest in enumerate(dests[:4]):
+        with cols[i % 4]:
+            budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
+            st.markdown(f"""
+            <div style='background:linear-gradient(135deg,#E8F5E9,#C8E6C9);padding:20px;
+            border-radius:15px;text-align:center;margin:5px 0;min-height:220px; color:#333; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+            <h3 style='color:#1B5E20;margin:0; font-weight:bold;'>{dest.get('name', 'N/A')}</h3>
+            <p style='color:#555;font-size:0.9em;margin-bottom:15px;'>{dest.get('region', 'N/A')}</p>
+            <p style='font-size:0.85em; margin:5px;'>📍 <span style='color:#d32f2f;'>{dest.get('access_level', 'N/A')} Access</span></p>
+            <p style='font-size:0.85em; margin:5px;'>📅 <span style='color:#1976d2;'>{dest.get('best_season', 'N/A')}</span></p>
+            <p style='font-size:0.9em; margin-top:15px; color:#d84315; font-weight:bold;'>💰 From PKR {budget:,}/day</p>
+            </div>""", unsafe_allow_html=True)
+            
+    st.divider()
+    st.subheader("📋 What This App Offers")
+    features = [
+        ("🏔️","Destinations","10+ curated tourist destinations"),
+        ("🤖","AI Assistant","Smart travel assistant powered by AI"),
+        ("💰","Budget Planner","Plan your trip budget"),
+        ("🗺️","Interactive Maps","Explore Pakistan visually"),
+        ("🌦️","Weather Info","Real-time weather data"),
+        ("🚨","Emergency","Quick access to emergency contacts"),
+        ("📸","Photo Gallery","Visual tour of Pakistan"),
+        ("📜","Travel Tips","Safety & cultural guidelines")
+    ]
+    
+    cols = st.columns(4)
+    for i, (icon, title, desc) in enumerate(features):
+        with cols[i % 4]:
+            st.markdown(f"**{icon} {title}**\n\n<span style='font-size:0.9em;color:#666;'>{desc}</span>", unsafe_allow_html=True)
 
 def page_destinations():
     st.header("🏔️ Tourist Destinations")
