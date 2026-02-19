@@ -1353,10 +1353,14 @@ with companion_tab:
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
         txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
-        res = client.chat.completions.create(messages=[{"role": "system", "content": "Reply in same language. Use emojis."}, {"role": "user", "content": txt}], model="llama-3.3-70b-versatile")
+        
+        # RESTORED STRICT LANGUAGE TAGGING PROMPT
+        sys_prompt = "You are a friendly AI companion. Reply in the exact same language as the user. YOU MUST start your response with exactly [LANG:UR] for Urdu, [LANG:HI] for Hindi, or [LANG:EN] for English. Always use emojis."
+        
+        res = client.chat.completions.create(messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": txt}], model="llama-3.3-70b-versatile")
         raw = res.choices[0].message.content
         lang = "UR" if "[LANG:UR]" in raw else "HI" if "[LANG:HI]" in raw else "EN"
-        clean = raw.replace(f"[LANG:{lang}]", "").strip()
+        clean = raw.replace("[LANG:UR]", "").replace("[LANG:HI]", "").replace("[LANG:EN]", "").strip()
         st.session_state.chat_history.extend([{"role": "user", "content": f"🎙️ {txt}"}, {"role": "assistant", "content": clean}])
         st.session_state.autoplay_audio = asyncio.run(tts(clean, lang))
         st.rerun()
