@@ -312,7 +312,7 @@ def page_destinations():
     st.header("🏔️ Tourist Destinations")
     dests = load_json("destinations.json")
     
-    # Smart Fallback Data if JSON is empty (restores the view from the screenshot)
+    # Smart Fallback Data if JSON is empty 
     if not dests:
         dests = [
             {
@@ -350,7 +350,6 @@ def page_destinations():
             }
         ]
 
-    # Filters Section
     regions = sorted(set(d.get("region", "Unknown") for d in dests))
     col1, col2 = st.columns(2)
     with col1:
@@ -358,7 +357,6 @@ def page_destinations():
     with col2:
         sel_access = st.selectbox("Filter by Access Level", ["All", "Easy", "Moderate", "Difficult"])
 
-    # Filter Logic
     filtered = dests
     if sel_region != "All Regions":
         filtered = [d for d in filtered if d.get("region") == sel_region]
@@ -369,13 +367,11 @@ def page_destinations():
         st.info("No destinations match your filters.")
         return
 
-    # Selector and Display
     selected = st.selectbox("Select a Destination", [d["name"] for d in filtered])
     dest = next(d for d in filtered if d["name"] == selected)
 
     st.subheader(f"📍 {dest['name']} — {dest.get('region', 'N/A')}")
     
-    # 4-Column Metrics
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Access Level", dest.get("access_level", "N/A"))
     c2.metric("Altitude", f"{dest.get('altitude_m', 'N/A')}m")
@@ -384,10 +380,8 @@ def page_destinations():
     budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
     c4.metric("Budget/day", f"PKR {budget:,}+" if isinstance(budget, int) else f"PKR {budget}+")
 
-    # Description
     st.markdown(f"📄 **Description:** {dest.get('description', '')}")
 
-    # Expandable Sections
     with st.expander("📜 Historical Background", expanded=False):
         st.write(dest.get("history", "No history available."))
 
@@ -464,6 +458,92 @@ def page_maps():
     </script>
     """
     components.html(html, height=520)
+
+def page_budget():
+    st.header("💰 Budget Planner")
+    
+    budget_data = load_json("budget_templates.json")
+    destinations = load_json("destinations.json")
+    
+    # Fallbacks for empty data
+    if not destinations:
+        destinations = [{"name": "Hunza Valley"}, {"name": "Skardu"}, {"name": "Swat Valley"}, {"name": "Lahore"}]
+        
+    if not budget_data or "categories" not in budget_data:
+        budget_data = {
+            "travel_styles": ["Budget", "Standard", "Luxury"],
+            "categories": [
+                {"name": "Accommodation", "icon": "🏨", "budget": 2000, "standard": 5000, "luxury": 15000},
+                {"name": "Food (3 meals)", "icon": "🍔", "budget": 1200, "standard": 3000, "luxury": 8000},
+                {"name": "Local Transport", "icon": "🚕", "budget": 800, "standard": 2500, "luxury": 8000},
+                {"name": "Activities & Entry Fees", "icon": "🎟️", "budget": 300, "standard": 1000, "luxury": 3000},
+                {"name": "Communication (SIM/Data)", "icon": "📱", "budget": 150, "standard": 300, "luxury": 500},
+                {"name": "Miscellaneous", "icon": "🛍️", "budget": 500, "standard": 1500, "luxury": 5000}
+            ],
+            "currency_rates": {
+                "USD": 0.0036, "EUR": 0.0033, "GBP": 0.0028, "AED": 0.013, "CNY": 0.026
+            },
+            "tips": [
+                "Use local transport like Careem or InDrive instead of traditional taxis.",
+                "Eat at local dhabas for authentic and cheap food.",
+                "Book accommodation in advance during peak season (June-August)."
+            ]
+        }
+
+    st.subheader("🧮 Trip Budget Calculator")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        sel_dest = st.selectbox("Destination", [d["name"] for d in destinations], key="bp_dest")
+        num_days = st.slider("Number of Days", 1, 30, 5)
+    with c2:
+        style = st.selectbox("Travel Style", budget_data.get("travel_styles", ["Budget", "Standard", "Luxury"]))
+        num_people = st.slider("Number of Travelers", 1, 10, 2)
+        
+    style_key = style.lower()
+    categories = budget_data.get("categories", [])
+    
+    items = []
+    total = 0
+    pie_data = []
+    pie_labels = []
+    
+    for cat in categories:
+        daily = cat.get(style_key, 0)
+        cost = daily * num_days * num_people
+        total += cost
+        items.append({
+            "Category": f"{cat.get('icon','')} {cat['name']}", 
+            "Daily/Person (PKR)": f"{daily:,}", 
+            "Total (PKR)": f"{cost:,}"
+        })
+        pie_data.append(cost)
+        pie_labels.append(cat['name'])
+        
+    st.divider()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("💵 Total Budget", f"PKR {total:,}")
+    c2.metric("👤 Per Person", f"PKR {total // max(num_people,1):,}")
+    c3.metric("📅 Per Day", f"PKR {total // max(num_days,1):,}")
+    
+    st.dataframe(pd.DataFrame(items), use_container_width=True, hide_index=True)
+    
+    st.subheader("📊 Expense Distribution")
+    fig = px.pie(values=pie_data, names=pie_labels, color_discrete_sequence=px.colors.qualitative.Set3)
+    fig.update_traces(textposition="inside", textinfo="percent+label")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.subheader("💱 Currency Conversion")
+    rates = budget_data.get("currency_rates", {})
+    sel_currency = st.selectbox("Convert to", [c for c in rates.keys()])
+    rate = rates.get(sel_currency, 1)
+    st.info(f"**PKR {total:,}** ≈ **{sel_currency} {total * rate:,.2f}**")
+    
+    st.divider()
+    st.subheader("💡 Money-Saving Tips")
+    for tip in budget_data.get("tips", []):
+        st.markdown(f"- {tip}")
+
 
 def page_admin():
     st.header("🔐 Admin Panel")
@@ -584,6 +664,7 @@ with tourism_tab:
         "🗺️ Interactive Map": page_maps,
         "🌦️ Weather": page_weather,
         "🤖 Smart Assistant": page_smart_assistant,
+        "💰 Budget Planner": page_budget,
         "🔐 Admin Panel": page_admin,
     }
     
