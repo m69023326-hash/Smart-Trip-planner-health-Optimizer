@@ -95,6 +95,16 @@ st.markdown("""
         background-color: #f0f2f6;
         transform: scale(1.1);
     }
+
+    /* Local Sidebar Radio Button Styling */
+    div[role="radiogroup"] > label {
+        padding: 10px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    div[role="radiogroup"] > label:hover {
+        background-color: #f0f2f6;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1137,6 +1147,7 @@ with companion_tab:
 # --- TAB 3: PAKISTAN TOURISM ---
 with tourism_tab:
     st.markdown("### 🇵🇰 Pakistan Tourism Hub")
+    st.divider()
     
     tourism_pages = {
         "🏠 Home": page_home,
@@ -1152,9 +1163,13 @@ with tourism_tab:
         "🔐 Admin Panel": page_admin,
     }
     
-    # Sub-Navigation Dropdown
-    selection = st.selectbox("Navigate Tourism Modules:", list(tourism_pages.keys()), key="tourism_nav")
-    st.divider()
+    # Create a "Local Sidebar" specifically for this tab using columns
+    tour_sidebar_col, tour_content_col = st.columns([2, 8])
     
-    # Render Selected Page
-    tourism_pages[selection]()
+    with tour_sidebar_col:
+        st.markdown("#### 🧭 Navigate")
+        selection = st.radio("Modules", list(tourism_pages.keys()), key="tourism_nav", label_visibility="collapsed")
+        
+    with tour_content_col:
+        # Render Selected Page
+        tourism_pages[selection]()
