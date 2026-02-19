@@ -319,7 +319,6 @@ def weather_code_to_text(code):
 # TOURISM PAGES VIEWS
 # ============================================================
 def page_home():
-    # Inject Custom CSS specifically for the premium Home Dashboard look
     st.markdown("""
     <style>
     .premium-card {
@@ -355,7 +354,6 @@ def page_home():
     </style>
     """, unsafe_allow_html=True)
 
-    # Elite Hero Section
     st.markdown("""
     <div style='text-align:center; padding: 30px 0 10px 0;'>
         <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
@@ -387,7 +385,6 @@ def page_home():
     for i, dest in enumerate(dests[:4]):
         with cols[i % 4]:
             budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
-            # Formatting numbers beautifully
             budget_str = f"{budget:,}" if isinstance(budget, (int, float)) else str(budget)
             
             st.markdown(f"""
@@ -416,7 +413,6 @@ def page_home():
         ("📖", "Cultural Etiquette", "Guidelines for respectful and immersive travel.")
     ]
     
-    # Render Features beautifully in two rows
     cols1 = st.columns(4)
     for i in range(4):
         icon, title, desc = features[i]
@@ -501,7 +497,7 @@ def page_destinations():
         st.markdown(f"<p style='color: #334155; font-family: \"Georgia\", serif; line-height: 1.6;'>{dest.get('history', 'Historical records currently unavailable.')}</p>", unsafe_allow_html=True)
 
     if "landmarks" in dest and dest["landmarks"]:
-        with st.expander(" monument 🏛️ Key Architectural & Natural Landmarks", expanded=False):
+        with st.expander("🏛️ Key Architectural & Natural Landmarks", expanded=False):
             for lm in dest["landmarks"]:
                 st.markdown(f"<b style='color:#0f172a;'>{lm['name']}</b> — <span style='color:#475569;'>{lm['description']}</span>", unsafe_allow_html=True)
 
@@ -1230,36 +1226,89 @@ main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Healt
 
 # --- TAB 1: TRIP PLANNER ---
 with main_tab:
-    with st.form("trip_form"):
-        c1, c2 = st.columns(2)
-        city = c1.text_input("City", "New York")
-        mood = c1.text_input("Activity", "Relaxing walk")
-        routine = c2.text_area("Routine", "Mon-Fri 9-5 work")
-        submitted = st.form_submit_button("🚀 Generate Plan")
-
-    if submitted:
-        client = Groq(api_key=GROQ_KEY)
-        weather, err = get_current_weather(city, WEATHER_KEY)
-        if err: st.error("Weather Error")
-        else:
-            with st.spinner("🤖 Analyzing weather, routines, and searching web..."):
-                q_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}], model="llama-3.1-8b-instant")
-                search_data = search_tavily(q_res.choices[0].message.content)
-                final_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}], model="llama-3.3-70b-versatile")
-                plan = final_res.choices[0].message.content
-                st.markdown(plan)
-                st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
+    plan_sidebar_col, plan_content_col = st.columns([2.5, 7.5])
+    
+    with plan_sidebar_col:
+        st.markdown("<div class='info-panel-header'>Planner Menu</div>", unsafe_allow_html=True)
+        plan_nav = st.radio("Planner Navigation", ["📖 App Overview", "⚙️ Activity Planner"], label_visibility="collapsed")
+        
+        if plan_nav == "⚙️ Activity Planner":
+            st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
+            with st.form("trip_form"):
+                st.markdown("<b style='color:#0f172a; font-family:\"Segoe UI\", sans-serif;'>1. Routine Configurator</b>", unsafe_allow_html=True)
+                with st.expander("Configure Weekly Routine", expanded=False):
+                    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                    routine_dict = {}
+                    for day in days:
+                        routine_dict[day] = st.selectbox(day, ["Busy", "Free"], key=f"day_{day}")
                 
-                df = get_forecast(city, WEATHER_KEY)
-                if df is not None:
-                    st.divider()
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Temp Trend", markers=True)
-                        st.plotly_chart(fig_temp, use_container_width=True)
-                    with c2:
-                        fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Rain Chance", range_y=[0, 100])
-                        st.plotly_chart(fig_rain, use_container_width=True)
+                st.markdown("<br><b style='color:#0f172a; font-family:\"Segoe UI\", sans-serif;'>2. Geographic & Activity Target</b>", unsafe_allow_html=True)
+                city = st.text_input("📍 Current Location", "New York")
+                mood = st.text_input("🎯 Desired Activity", "Relaxing walk or fine dining")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                submitted = st.form_submit_button("🚀 Generate Optimal Plan", use_container_width=True)
+
+    with plan_content_col:
+        if plan_nav == "📖 App Overview":
+            st.markdown("""
+            <div style='padding: 30px; background: linear-gradient(145deg, #ffffff, #f8f9fa); border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+                <h2 style='color: #0f172a; font-family: "Segoe UI", sans-serif; font-weight: 800; margin-bottom: 20px; text-align: center;'>Welcome to Your Ultimate Life & Health Planner 🌟</h2>
+                
+                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
+                In today's hyper-connected, fast-paced world, time slips through our fingers seamlessly. We know you are navigating an incredibly busy life. Balancing professional demands, family obligations, and personal goals often leaves little room to actually breathe and <em>enjoy</em> your surroundings.
+                </p>
+                
+                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
+                Our AI platform acts as your personal time-architect. By simply outlining your weekly routine, we identify those hidden pockets of free time. Whether you have just a couple of hours on a Wednesday evening or an entire open Sunday, we curate the perfect activity—be it a relaxing walk, an immersive local trip, or a cozy dining experience—allowing you to truly savor your city without the mental fatigue of planning.
+                </p>
+                
+                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 30px;'>
+                But life isn't just about managing time; it's about safeguarding your physical well-being. Living with conditions such as asthma, diabetes, or high blood pressure requires vigilant, constant management. We deeply understand that your doctor is not always immediately available at 11 PM to interpret a sudden lab report or suggest an urgent dietary adjustment. This AI platform perfectly fills that gap with a compassionate touch. Simply share your medical reports, and our sophisticated Health Companion will instantly analyze your specific clinical constraints to prepare a safe, personalized diet and wellness plan—ensuring you are always looked after, day or night.
+                </p>
+                
+                <hr style='border-color: #cbd5e1; margin-bottom: 20px;'>
+                
+                <h4 style='color: #047857; font-family: "Segoe UI", sans-serif; font-weight: 700; margin-bottom: 15px;'>Platform Capabilities</h4>
+                <ul style='color: #475569; font-size: 1.05em; line-height: 1.6; font-family: "Segoe UI", sans-serif;'>
+                    <li style='margin-bottom: 10px;'><b>📅 Trip Planner:</b> Intelligent time-management and tailored local experiences based explicitly on your daily routine.</li>
+                    <li style='margin-bottom: 10px;'><b>🤖 AI Health Companion:</b> Your 24/7 empathetic clinical assistant for real-time medical report analysis and dietary guidance.</li>
+                    <li><b>🇵🇰 Pakistan Tourism:</b> A premium, executive digital concierge for exploring the majestic topographies and heritage of Pakistan.</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        elif plan_nav == "⚙️ Activity Planner":
+            if submitted:
+                # Reconstruct routine from dict
+                routine = ", ".join([f"{k}: {v}" for k, v in routine_dict.items()])
+                
+                client = Groq(api_key=GROQ_KEY)
+                weather, err = get_current_weather(city, WEATHER_KEY)
+                if err: 
+                    st.error("Weather Error: Could not retrieve meteorological data.")
+                else:
+                    with st.spinner("🤖 Processing routine parameters, analyzing atmospheric telemetry, and synthesizing optimal web data..."):
+                        q_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}], model="llama-3.1-8b-instant")
+                        search_data = search_tavily(q_res.choices[0].message.content)
+                        final_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}], model="llama-3.3-70b-versatile")
+                        plan = final_res.choices[0].message.content
+                        st.markdown(plan)
+                        st.download_button("📥 Download Official Plan (PDF)", create_pdf(plan), "optimal_plan.pdf")
+                        
+                        df = get_forecast(city, WEATHER_KEY)
+                        if df is not None:
+                            st.divider()
+                            st.markdown(f"<h3 style='color:#0f172a; font-family:\"Segoe UI\", sans-serif;'>🌦️ 5-Day Atmospheric Projection: {city.title()}</h3>", unsafe_allow_html=True)
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Thermal Trend Projection", markers=True)
+                                st.plotly_chart(fig_temp, use_container_width=True)
+                            with c2:
+                                fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Precipitation Probability", range_y=[0, 100])
+                                st.plotly_chart(fig_rain, use_container_width=True)
+            else:
+                st.info("👈 Please define your routine parameters, select a geographic target, and designate your activity in the sidebar menu. Then initiate the generation sequence.")
 
 # --- TAB 2: HEALTH COMPANION ---
 with companion_tab:
