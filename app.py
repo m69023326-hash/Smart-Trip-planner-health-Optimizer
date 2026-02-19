@@ -199,6 +199,8 @@ if "medical_data" not in st.session_state:
     st.session_state.medical_data = ""
 if "last_audio" not in st.session_state:
     st.session_state.last_audio = None
+if "autoplay_audio" not in st.session_state:
+    st.session_state.autoplay_audio = None
 if "tourism_chat_history" not in st.session_state:
     st.session_state.tourism_chat_history = []
 if "admin_logged_in" not in st.session_state:
@@ -214,6 +216,7 @@ def clear_chat():
     st.session_state.chat_history = []
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
+    st.session_state.autoplay_audio = None
 
 def update_module():
     st.session_state.current_tourism_module = st.session_state.tourism_nav
@@ -1323,6 +1326,11 @@ with companion_tab:
             with st.expander("📋 Copy Text"): st.code(msg["content"], language="markdown")
             if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
                 st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
+                
+    # Place autoplay block immediately after rendering chat
+    if st.session_state.autoplay_audio:
+        st.audio(st.session_state.autoplay_audio, autoplay=True)
+        st.session_state.autoplay_audio = None
 
     st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
     if st.session_state.chat_history:
@@ -1350,7 +1358,7 @@ with companion_tab:
         lang = "UR" if "[LANG:UR]" in raw else "HI" if "[LANG:HI]" in raw else "EN"
         clean = raw.replace(f"[LANG:{lang}]", "").strip()
         st.session_state.chat_history.extend([{"role": "user", "content": f"🎙️ {txt}"}, {"role": "assistant", "content": clean}])
-        st.audio(asyncio.run(tts(clean, lang)), autoplay=True)
+        st.session_state.autoplay_audio = asyncio.run(tts(clean, lang))
         st.rerun()
 
     if prompt := st.chat_input("Message..."):
