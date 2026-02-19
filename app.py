@@ -208,7 +208,7 @@ if "admin_logged_in" not in st.session_state:
 if "show_info_panel" not in st.session_state:
     st.session_state.show_info_panel = True
 if "current_tourism_module" not in st.session_state:
-    st.session_state.current_tourism_module = "📊 Dashboard Overview"
+    st.session_state.current_tourism_module = "📊 Executive Dashboard"
 
 def clear_chat():
     st.session_state.chat_history = []
@@ -319,7 +319,6 @@ def weather_code_to_text(code):
 # TOURISM PAGES VIEWS
 # ============================================================
 def page_home():
-    # Inject Custom CSS specifically for the premium Home Dashboard look
     st.markdown("""
     <style>
     .premium-card {
@@ -355,7 +354,6 @@ def page_home():
     </style>
     """, unsafe_allow_html=True)
 
-    # Elite Hero Section
     st.markdown("""
     <div style='text-align:center; padding: 30px 0 10px 0;'>
         <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
@@ -387,7 +385,6 @@ def page_home():
     for i, dest in enumerate(dests[:4]):
         with cols[i % 4]:
             budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
-            # Formatting numbers beautifully
             budget_str = f"{budget:,}" if isinstance(budget, (int, float)) else str(budget)
             
             st.markdown(f"""
@@ -416,7 +413,6 @@ def page_home():
         ("📖", "Cultural Etiquette", "Guidelines for respectful and immersive travel.")
     ]
     
-    # Render Features beautifully in two rows
     cols1 = st.columns(4)
     for i in range(4):
         icon, title, desc = features[i]
@@ -443,7 +439,7 @@ def page_home():
             """, unsafe_allow_html=True)
 
 def page_destinations():
-    st.header("🗺️ Destination Guide")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🧭 Geospatial Destination Archive</h2>", unsafe_allow_html=True)
     dests = load_json("destinations.json")
     
     if not dests:
@@ -455,97 +451,97 @@ def page_destinations():
                 "altitude_m": 2438,
                 "best_season": "April - October",
                 "budget_per_day": {"budget": 5000},
-                "description": "Hunza Valley is one of the most breathtaking destinations in Pakistan, surrounded by snow-capped peaks including Rakaposhi (7,788m) and Ultar Sar. The valley is known for its stunning landscapes, ancient forts, and the warmth of the Hunza people.",
-                "history": "Hunza was an independent princely state for over 900 years, ruled by the Mir of Hunza. The region was part of the ancient Silk Route and has connections to the legendary Shangri-La. It became part of Pakistan in 1974.",
-                "landmarks": [{"name": "Baltit Fort", "description": "A 700-year-old fort perched above Karimabad."}],
-                "activities": ["Trekking and hiking", "Visit ancient forts", "Boating at Attabad Lake"],
-                "transport": {"islamabad": {"road": "14-16 hours via Karakoram Highway"}},
-                "accommodation": {"budget": ["Backpacker hostels in Karimabad"], "luxury": ["Serena Hotel"]},
-                "connectivity": {"mobile_networks": ["SCOM (Best)", "Telenor"], "internet": "Available in most hotels", "tips": "Buy an SCOM SIM card in Gilgit."}
+                "description": "The Hunza Valley stands as one of Pakistan's most resplendent topographical marvels, ensconced by formidable snow-capped summits including Rakaposhi and Ultar Sar. The domain is globally recognized for its superlative landscapes, ancient fortified structures, and the profound hospitality of the indigenous populace.",
+                "history": "Historically functioning as an autonomous princely state for nearly a millennium under the sovereign rule of the Mir of Hunza, the region served as a pivotal node along the ancient Silk Route. It was fully integrated into the Federation of Pakistan in 1974. The territory is predominantly inhabited by the Burushaski-speaking demographic, utilizing a language isolate bereft of known genealogical affiliations.",
+                "landmarks": [{"name": "Baltit Fort", "description": "A heptacentennial fortress strategically positioned above Karimabad, currently functioning as a UNESCO-endorsed heritage conservatory."}],
+                "activities": ["High-altitude trekking and alpine ascents", "Historical fortification reconnaissance", "Nautical navigation across Attabad Lake"],
+                "transport": {"Islamabad": {"road": "14-16 hours via the Karakoram Highway corridor"}},
+                "accommodation": {"budget": ["Economical lodging facilities in Karimabad"], "luxury": ["Serena Hotel - Premium accommodations"]},
+                "connectivity": {"mobile_networks": ["SCOM (Optimal Infrastructure)", "Telenor"], "internet": "Broadband accessible in primary establishments", "tips": "Procurement of an SCOM cellular subscription in Gilgit is highly advised."}
             }
         ]
 
-    regions = sorted(set(d.get("region", "Unknown") for d in dests))
+    regions = sorted(set(d.get("region", "Unspecified Territory") for d in dests))
     col1, col2 = st.columns(2)
     with col1:
-        sel_region = st.selectbox("Filter by Region", ["All Regions"] + regions)
+        sel_region = st.selectbox("Isolate by Provincial Territory", ["Comprehensive Archival View"] + regions)
     with col2:
-        sel_access = st.selectbox("Filter by Access Level", ["All", "Easy", "Moderate", "Difficult"])
+        sel_access = st.selectbox("Isolate by Accessibility Threshold", ["Unrestricted", "Easy", "Moderate", "Difficult"])
 
     filtered = dests
-    if sel_region != "All Regions":
+    if sel_region != "Comprehensive Archival View":
         filtered = [d for d in filtered if d.get("region") == sel_region]
-    if sel_access != "All":
+    if sel_access != "Unrestricted":
         filtered = [d for d in filtered if d.get("access_level") == sel_access]
 
     if not filtered:
-        st.info("No destinations match your filters.")
+        st.info("No topographical records match the designated parameters.")
         return
 
-    selected = st.selectbox("Select a Destination", [d["name"] for d in filtered])
+    selected = st.selectbox("Designate a Specific Geographic Locale", [d["name"] for d in filtered])
     dest = next(d for d in filtered if d["name"] == selected)
 
-    st.subheader(f"📍 {dest['name']} — {dest.get('region', 'N/A')}")
+    st.markdown(f"<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>📍 {dest['name']} — <span style='color: #64748b; font-weight: 400;'>{dest.get('region', 'Unspecified')}</span></h3>", unsafe_allow_html=True)
     
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Access Level", dest.get("access_level", "N/A"))
-    c2.metric("Altitude", f"{dest.get('altitude_m', 'N/A')}m")
-    c3.metric("Best Season", dest.get("best_season", "N/A"))
+    c1.metric("Accessibility Threshold", dest.get("access_level", "N/A"))
+    c2.metric("Topographical Elevation", f"{dest.get('altitude_m', 'N/A')}m")
+    c3.metric("Optimal Transit Window", dest.get("best_season", "N/A"))
     
     budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
-    c4.metric("Budget/day", f"PKR {budget:,}+" if isinstance(budget, int) else f"PKR {budget}+")
+    c4.metric("Estimated Daily Expenditure", f"PKR {budget:,}+" if isinstance(budget, int) else f"PKR {budget}+")
 
-    st.markdown(f"📄 **Description:** {dest.get('description', '')}")
+    st.markdown(f"<p style='font-size: 1.05em; color: #334155; line-height: 1.7; font-family: \"Georgia\", serif;'><b>📄 Topographical Synopsis:</b> {dest.get('description', '')}</p>", unsafe_allow_html=True)
 
-    with st.expander("📜 Historical Background", expanded=False):
-        st.write(dest.get("history", "No history available."))
+    with st.expander("🏛️ Historical & Heritage Context", expanded=False):
+        st.markdown(f"<p style='color: #334155; font-family: \"Georgia\", serif; line-height: 1.6;'>{dest.get('history', 'Historical records currently unavailable.')}</p>", unsafe_allow_html=True)
 
     if "landmarks" in dest and dest["landmarks"]:
-        with st.expander("🏛️ Key Landmarks", expanded=False):
+        with st.expander(" monument 🏛️ Key Architectural & Natural Landmarks", expanded=False):
             for lm in dest["landmarks"]:
-                st.markdown(f"**{lm['name']}** — {lm['description']}")
+                st.markdown(f"<b style='color:#0f172a;'>{lm['name']}</b> — <span style='color:#475569;'>{lm['description']}</span>", unsafe_allow_html=True)
 
     if "activities" in dest and dest["activities"]:
-        with st.expander("🎯 Recommended Activities", expanded=False):
+        with st.expander("⛷️ Recommended Expeditionary Excursions", expanded=False):
             for act in dest["activities"]:
-                st.markdown(f"- {act}")
+                st.markdown(f"<li style='color:#475569;'>{act}</li>", unsafe_allow_html=True)
 
     if "transport" in dest and dest["transport"]:
-        with st.expander("🚌 Transportation Details", expanded=False):
+        with st.expander("🚆 Logistical & Transit Framework", expanded=False):
             for origin, modes in dest["transport"].items():
-                st.markdown(f"**From {origin.replace('_',' ').title()}:**")
+                st.markdown(f"<b style='color:#0f172a;'>Originating from {origin.replace('_',' ').title()}:</b>", unsafe_allow_html=True)
                 for mode, info in modes.items():
-                    st.markdown(f"  - *{mode.title()}:* {info}")
+                    st.markdown(f"<li style='color:#475569;'><i>{mode.title()}:</i> {info}</li>", unsafe_allow_html=True)
 
     if "accommodation" in dest and dest["accommodation"]:
-        with st.expander("🏨 Accommodation", expanded=False):
+        with st.expander("🏨 Premium Lodging & Accommodations", expanded=False):
             for tier, hotels in dest["accommodation"].items():
-                st.markdown(f"**{tier.title()}:**")
+                st.markdown(f"<b style='color:#0f172a;'>{tier.title()} Classification:</b>", unsafe_allow_html=True)
                 for h in hotels:
-                    st.markdown(f"  - {h}")
+                    st.markdown(f"<li style='color:#475569;'>{h}</li>", unsafe_allow_html=True)
 
     if "connectivity" in dest and dest["connectivity"]:
-        with st.expander("📱 Connectivity", expanded=False):
+        with st.expander("📡 Telecommunication Infrastructure", expanded=False):
             conn = dest["connectivity"]
-            st.markdown(f"**Networks:** {', '.join(conn.get('mobile_networks', []))}")
-            st.markdown(f"**Internet:** {conn.get('internet', 'N/A')}")
-            st.markdown(f"**💡 Tip:** {conn.get('tips', 'N/A')}")
+            st.markdown(f"<p style='color:#475569;'><b>Cellular Networks:</b> {', '.join(conn.get('mobile_networks', []))}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:#475569;'><b>Broadband Access:</b> {conn.get('internet', 'N/A')}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:#047857;'><b>💡 Strategic Advisory:</b> {conn.get('tips', 'N/A')}</p>", unsafe_allow_html=True)
 
 def page_weather():
-    st.header("🌤️ Weather Forecast")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🌤️ Meteorological Forecast & Conditions</h2>", unsafe_allow_html=True)
     dests = load_json("destinations.json")
     if not dests: return
-    selected = st.selectbox("Select Destination", [d["name"] for d in dests], key="w_dest")
+    selected = st.selectbox("Designate Geographic Locale for Atmospheric Analysis", [d["name"] for d in dests], key="w_dest")
     dest = next(d for d in dests if d["name"] == selected)
     weather = fetch_weather_tourism(dest.get("latitude", 30), dest.get("longitude", 70))
     if weather and "current" in weather:
         c1, c2 = st.columns(2)
-        c1.metric("Temperature", f"{weather['current']['temperature_2m']}°C")
-        c2.metric("Conditions", weather_code_to_text(weather['current']['weather_code']))
+        c1.metric("Thermal Reading (Celsius)", f"{weather['current']['temperature_2m']}°C")
+        c2.metric("Atmospheric Condition", weather_code_to_text(weather['current']['weather_code']))
 
 def page_smart_assistant():
-    st.header("💬 AI Travel Assistant")
-    if prompt := st.chat_input("Ask about Pakistan tourism..."):
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🧠 Artificial Intelligence Concierge</h2>", unsafe_allow_html=True)
+    if prompt := st.chat_input("Inquire regarding Pakistani topography, heritage, or logistics..."):
         st.session_state.tourism_chat_history.append({"role": "user", "content": prompt})
     for msg in st.session_state.tourism_chat_history:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -558,7 +554,7 @@ def page_smart_assistant():
         st.session_state.tourism_chat_history.append({"role": "assistant", "content": reply})
 
 def page_maps():
-    st.header("📍 Interactive Map of Pakistan")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🗺️ Interactive Geospatial Mapping</h2>", unsafe_allow_html=True)
     destinations = load_json("destinations.json")
     
     if not destinations:
@@ -573,13 +569,13 @@ def page_maps():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        show_dest = st.checkbox("📍 Show Destinations", value=True)
+        show_dest = st.checkbox("📍 Display Topographical Markers", value=True)
     with col2:
-        show_routes = st.checkbox("🛣️ Show Major Routes", value=True)
+        show_routes = st.checkbox("🛣️ Illuminate Primary Transit Arteries", value=True)
     with col3:
-        map_lang = st.radio("🌐 Map Language", ["English", "اردو (Urdu)"], horizontal=True, key="map_lang")
+        map_lang = st.radio("🌐 Linguistic Preference", ["English", "اردو (Urdu)"], horizontal=True, key="map_lang")
         
-    st.markdown("🟢 **Easy Access** | 🟠 **Moderate** | 🔴 **Difficult**")
+    st.markdown("<p style='font-family: \"Segoe UI\", sans-serif; color:#475569;'>🟢 <b>High Accessibility</b> | 🟠 <b>Intermediate Accessibility</b> | 🔴 <b>Restricted / Expeditionary</b></p>", unsafe_allow_html=True)
     
     marker_colors = {"Easy": "#4CAF50", "Moderate": "#FF9800", "Difficult": "#F44336"}
     markers_data = []
@@ -623,8 +619,8 @@ def page_maps():
         <style>
             body {{ margin: 0; padding: 0; }}
             #map {{ width: 100%; height: 580px; border-radius: 12px; border: 1px solid #ccc; }}
-            .dest-popup h4 {{ margin: 0 0 5px; color: #1B5E20; font-family: sans-serif; }}
-            .dest-popup p {{ margin: 2px 0; font-size: 13px; font-family: sans-serif; }}
+            .dest-popup h4 {{ margin: 0 0 5px; color: #1B5E20; font-family: 'Segoe UI', sans-serif; font-weight: bold; }}
+            .dest-popup p {{ margin: 2px 0; font-size: 13px; font-family: 'Segoe UI', sans-serif; }}
             .dest-popup hr {{ margin: 5px 0; border-color: #eee; }}
         </style>
     </head>
@@ -652,10 +648,10 @@ def page_maps():
                     '<h4>' + m.name + '</h4>' +
                     '<p style="color:#555;">' + m.region + '</p>' +
                     '<hr>' +
-                    '<p>⛰️ Altitude: ' + m.altitude + '</p>' +
-                    '<p>📍 Access: <b style="color:'+m.color+';">' + m.access + '</b></p>' +
-                    '<p>📅 Best: ' + m.season + '</p>' +
-                    '<p>💰 ' + m.budget + '</p>' +
+                    '<p>⛰️ Elevation: ' + m.altitude + '</p>' +
+                    '<p>📍 Index: <b style="color:'+m.color+';">' + m.access + '</b></p>' +
+                    '<p>📅 Optimal: ' + m.season + '</p>' +
+                    '<p>💳 ' + m.budget + '</p>' +
                     '</div>';
                 
                 L.circleMarker([m.lat, m.lng], {{
@@ -677,7 +673,7 @@ def page_maps():
     components.html(map_html, height=600)
 
 def page_budget():
-    st.header("📈 Trip Budget Calculator")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>📊 Financial Architecture & Resource Allocation</h2>", unsafe_allow_html=True)
     
     budget_data = load_json("budget_templates.json")
     destinations = load_json("destinations.json")
@@ -689,32 +685,32 @@ def page_budget():
         budget_data = {
             "travel_styles": ["Budget", "Standard", "Luxury"],
             "categories": [
-                {"name": "Accommodation", "icon": "🏨", "budget": 2000, "standard": 5000, "luxury": 15000},
-                {"name": "Food (3 meals)", "icon": "🍔", "budget": 1200, "standard": 3000, "luxury": 8000},
-                {"name": "Local Transport", "icon": "🚕", "budget": 800, "standard": 2500, "luxury": 8000},
-                {"name": "Activities & Entry Fees", "icon": "🎟️", "budget": 300, "standard": 1000, "luxury": 3000},
-                {"name": "Communication (SIM/Data)", "icon": "📱", "budget": 150, "standard": 300, "luxury": 500},
-                {"name": "Miscellaneous", "icon": "🛍️", "budget": 500, "standard": 1500, "luxury": 5000}
+                {"name": "Premium Accommodations", "icon": "🏨", "budget": 2000, "standard": 5000, "luxury": 15000},
+                {"name": "Culinary Sustenance", "icon": "🍽️", "budget": 1200, "standard": 3000, "luxury": 8000},
+                {"name": "Logistical Transit", "icon": "🚙", "budget": 800, "standard": 2500, "luxury": 8000},
+                {"name": "Excursions & Admissions", "icon": "🎟️", "budget": 300, "standard": 1000, "luxury": 3000},
+                {"name": "Telecommunications", "icon": "📡", "budget": 150, "standard": 300, "luxury": 500},
+                {"name": "Contingency Capital", "icon": "💼", "budget": 500, "standard": 1500, "luxury": 5000}
             ],
             "currency_rates": {
                 "USD": 0.0036, "EUR": 0.0033, "GBP": 0.0028, "AED": 0.013, "CNY": 0.026
             },
             "tips": [
-                "Use local transport like Careem or InDrive instead of traditional taxis.",
-                "Eat at local dhabas for authentic and cheap food.",
-                "Book accommodation in advance during peak season (June-August)."
+                "Utilize verified ride-hailing networks (Careem/InDrive) in lieu of traditional municipal taxis to ensure pricing transparency.",
+                "Engage with localized gastronomic establishments for an authentic and economically optimized culinary experience.",
+                "Execute lodging reservations pre-emptively during peak meteorological windows (June–August) to avert demand-surge pricing."
             ]
         }
 
-    st.subheader("Configure Your Trip")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>Parametrize Your Expedition</h4>", unsafe_allow_html=True)
     
     c1, c2 = st.columns(2)
     with c1:
-        sel_dest = st.selectbox("Destination", [d["name"] for d in destinations], key="bp_dest")
-        num_days = st.slider("Number of Days", 1, 30, 5)
+        sel_dest = st.selectbox("Designate Primary Hub", [d["name"] for d in destinations], key="bp_dest")
+        num_days = st.slider("Expedition Duration (Days)", 1, 30, 5)
     with c2:
-        style = st.selectbox("Travel Style", budget_data.get("travel_styles", ["Budget", "Standard", "Luxury"]))
-        num_people = st.slider("Number of Travelers", 1, 10, 2)
+        style = st.selectbox("Designate Expenditure Tier", budget_data.get("travel_styles", ["Budget", "Standard", "Luxury"]))
+        num_people = st.slider("Total Personnel Count", 1, 10, 2)
         
     style_key = style.lower()
     categories = budget_data.get("categories", [])
@@ -729,65 +725,64 @@ def page_budget():
         cost = daily * num_days * num_people
         total += cost
         items.append({
-            "Category": f"{cat.get('icon','')} {cat['name']}", 
-            "Daily/Person (PKR)": f"{daily:,}", 
-            "Total (PKR)": f"{cost:,}"
+            "Financial Category": f"{cat.get('icon','')} {cat['name']}", 
+            "Per Capita Daily Allocation (PKR)": f"{daily:,}", 
+            "Cumulative Valuation (PKR)": f"{cost:,}"
         })
         pie_data.append(cost)
         pie_labels.append(cat['name'])
         
     st.divider()
     c1, c2, c3 = st.columns(3)
-    c1.metric("💵 Total Budget", f"PKR {total:,}")
-    c2.metric("👤 Per Person", f"PKR {total // max(num_people,1):,}")
-    c3.metric("📅 Per Day", f"PKR {total // max(num_days,1):,}")
+    c1.metric("💵 Total Capital Required", f"PKR {total:,}")
+    c2.metric("👤 Per Capita Liability", f"PKR {total // max(num_people,1):,}")
+    c3.metric("📅 Daily Burn Rate", f"PKR {total // max(num_days,1):,}")
     
     st.dataframe(pd.DataFrame(items), use_container_width=True, hide_index=True)
     
-    st.subheader("📊 Expense Distribution")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif; margin-top:20px;'>Proportional Expenditure Allocation</h4>", unsafe_allow_html=True)
     fig = px.pie(values=pie_data, names=pie_labels, color_discrete_sequence=px.colors.qualitative.Set3)
     fig.update_traces(textposition="inside", textinfo="percent+label")
     st.plotly_chart(fig, use_container_width=True)
     
-    st.subheader("💱 Currency Conversion")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif; margin-top:10px;'>Global Currency Conversion</h4>", unsafe_allow_html=True)
     rates = budget_data.get("currency_rates", {})
-    sel_currency = st.selectbox("Convert to", [c for c in rates.keys()])
+    sel_currency = st.selectbox("Designate Target Currency", [c for c in rates.keys()])
     rate = rates.get(sel_currency, 1)
-    st.info(f"**PKR {total:,}** ≈ **{sel_currency} {total * rate:,.2f}**")
+    st.info(f"**Calculated Exchange:** PKR {total:,} ≈ **{sel_currency} {total * rate:,.2f}**")
     
     st.divider()
-    st.subheader("💡 Money-Saving Tips")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>💡 Strategic Fiscal Optimization Directives</h4>", unsafe_allow_html=True)
     for tip in budget_data.get("tips", []):
-        st.markdown(f"- {tip}")
+        st.markdown(f"<li style='color:#475569; font-family: \"Georgia\", serif;'>{tip}</li>", unsafe_allow_html=True)
 
 def page_emergency():
-    st.header("🛡️ Emergency Contacts")
-    st.error("**In case of emergency, dial immediately:** Police **15** | Rescue **1122** | Edhi **115** | Fire **16**")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🛡️ Critical Response & Emergency Protocols</h2>", unsafe_allow_html=True)
+    st.error("**In the event of an exigency, initiate contact immediately:** Law Enforcement **15** | Rapid Rescue **1122** | Medical Evacuation **115** | Fire Services **16**")
     
     data = load_json("emergency_contacts.json")
     
     if not data:
         data = {
             "national": [
-                {"service": "Police Emergency", "number": "15", "coverage": "Nationwide"},
-                {"service": "Rescue 1122", "number": "1122", "coverage": "Punjab, KPK, Islamabad, AJK, GB"},
-                {"service": "Edhi Foundation Ambulance", "number": "115", "coverage": "Nationwide"},
-                {"service": "Fire Brigade", "number": "16", "coverage": "Nationwide"},
-                {"service": "Pakistan Tourism Helpline", "number": "1422", "coverage": "Nationwide"},
-                {"service": "Motorway Police", "number": "130", "coverage": "All Motorways"},
-                {"service": "FIA Complaint Cell", "number": "9911", "coverage": "Nationwide"},
-                {"service": "Disaster Management (NDMA)", "number": "051-9205037", "coverage": "Nationwide"},
-                {"service": "Citizen Complaint (PM Portal)", "number": "1099", "coverage": "Nationwide"}
+                {"service": "Federal Police Emergency Command", "number": "15", "coverage": "Nationwide"},
+                {"service": "Rapid Deployment Rescue 1122", "number": "1122", "coverage": "Punjab, KPK, Islamabad, AJK, GB"},
+                {"service": "Edhi Foundation Medical Evacuation", "number": "115", "coverage": "Nationwide"},
+                {"service": "Municipal Fire Brigade Services", "number": "16", "coverage": "Nationwide"},
+                {"service": "National Tourism Assistance Protocol", "number": "1422", "coverage": "Nationwide"},
+                {"service": "Federal Motorway Security Forces", "number": "130", "coverage": "All Federal Transit Arteries"},
+                {"service": "Federal Investigation Agency (FIA)", "number": "9911", "coverage": "Nationwide"},
+                {"service": "National Disaster Management Authority", "number": "051-9205037", "coverage": "Nationwide"}
             ],
             "regional": {
                 "Punjab": {
                     "rescue": "1122",
                     "police": "15",
                     "hospitals": [
-                        {"name": "Mayo Hospital Lahore", "city": "Lahore", "phone": "042-99211111"},
-                        {"name": "Services Hospital Lahore", "city": "Lahore", "phone": "042-99200601"},
-                        {"name": "Nishtar Hospital Multan", "city": "Multan", "phone": "061-9200432"},
-                        {"name": "Allied Hospital Faisalabad", "city": "Faisalabad", "phone": "041-9210079"}
+                        {"name": "Mayo Premier Medical Facility", "city": "Lahore", "phone": "042-99211111"},
+                        {"name": "Services Hospital Complex", "city": "Lahore", "phone": "042-99200601"},
+                        {"name": "Nishtar Hospital Pavilion", "city": "Multan", "phone": "061-9200432"},
+                        {"name": "Allied Regional Medical Center", "city": "Faisalabad", "phone": "041-9210079"}
                     ]
                 },
                 "Sindh": {
@@ -795,71 +790,71 @@ def page_emergency():
                     "police": "15",
                     "hospitals": [
                         {"name": "Jinnah Postgraduate Medical Centre", "city": "Karachi", "phone": "021-99201300"},
-                        {"name": "Civil Hospital Karachi", "city": "Karachi", "phone": "021-99215740"}
+                        {"name": "Civil Hospital Central Infrastructure", "city": "Karachi", "phone": "021-99215740"}
                     ]
                 },
                 "Gilgit-Baltistan": {
                     "rescue": "1122",
                     "police": "15",
                     "hospitals": [
-                        {"name": "DHQ Hospital Gilgit", "city": "Gilgit", "phone": "05811-920253"},
-                        {"name": "DHQ Hospital Skardu", "city": "Skardu", "phone": "05815-920282"}
+                        {"name": "District Headquarters (DHQ) Gilgit", "city": "Gilgit", "phone": "05811-920253"},
+                        {"name": "District Headquarters (DHQ) Skardu", "city": "Skardu", "phone": "05815-920282"}
                     ]
                 }
             },
             "embassies": [
-                {"country": "United States", "city": "Islamabad", "phone": "051-2014000", "address": "Diplomatic Enclave, Ramna 5"},
+                {"country": "United States of America", "city": "Islamabad", "phone": "051-2014000", "address": "Diplomatic Enclave, Ramna 5"},
                 {"country": "United Kingdom", "city": "Islamabad", "phone": "051-2012000", "address": "Diplomatic Enclave, Ramna 5"},
-                {"country": "China", "city": "Islamabad", "phone": "051-2260113", "address": "No. 1, Zhou-Enlai Avenue, Diplomatic Enclave"}
+                {"country": "People's Republic of China", "city": "Islamabad", "phone": "051-2260113", "address": "No. 1, Zhou-Enlai Avenue, Diplomatic Enclave"}
             ],
             "tourist_police": {
-                "description": "Special police units established to assist tourists.",
+                "description": "Specialized constabulary units deployed specifically to facilitate, protect, and escort international and domestic travelers.",
                 "contacts": [
-                    {"service": "Islamabad Tourist Police", "phone": "1015"}
+                    {"service": "Islamabad Tourism Constabulary", "phone": "1015"}
                 ]
             }
         }
 
-    st.subheader("📞 National Emergency Numbers")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>📞 Federal Emergency Infrastructures</h4>", unsafe_allow_html=True)
     for contact in data.get("national", []):
-        c1, c2, c3 = st.columns([3, 2, 3])
-        c1.write(f"**{contact['service']}**")
+        c1, c2, c3 = st.columns([4, 2, 3])
+        c1.markdown(f"<b style='color:#334155;'>{contact['service']}</b>", unsafe_allow_html=True)
         c2.code(contact["number"])
-        c3.write(contact["coverage"])
+        c3.markdown(f"<span style='color:#64748b;'>{contact['coverage']}</span>", unsafe_allow_html=True)
 
     st.divider()
-    st.subheader("🏥 Regional Hospitals & Services")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>🏥 Provincial Medical & Security Apparatus</h4>", unsafe_allow_html=True)
     regions = list(data.get("regional", {}).keys())
-    sel_region = st.selectbox("Select Region", regions, key="emg_region")
+    sel_region = st.selectbox("Designate Provincial Jurisdiction", regions, key="emg_region")
     region_data = data["regional"][sel_region]
     
     c1, c2 = st.columns(2)
-    c1.metric("Rescue", region_data.get("rescue", "N/A"))
-    c2.metric("Police", region_data.get("police", "N/A"))
+    c1.metric("Rapid Evacuation Protocols", region_data.get("rescue", "N/A"))
+    c2.metric("Law Enforcement Apparatus", region_data.get("police", "N/A"))
     
     if region_data.get("hospitals"):
-        st.markdown("**Hospitals:**")
+        st.markdown("<b style='color:#0f172a;'>Primary Medical Facilities:</b>", unsafe_allow_html=True)
         for h in region_data["hospitals"]:
-            st.markdown(f"- 🏥 **{h['name']}** ({h['city']}) — `{h['phone']}`")
+            st.markdown(f"<li style='color:#475569;'>⚕️ <b>{h['name']}</b> ({h['city']}) — <code style='color:#b91c1c;'>{h['phone']}</code></li>", unsafe_allow_html=True)
             
     st.divider()
-    st.subheader("🏛️ Embassies & Consulates in Islamabad")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>🏛️ Diplomatic Missions & Consulates</h4>", unsafe_allow_html=True)
     for emb in data.get("embassies", []):
-        with st.expander(f"🇺🇳 {emb['country']} — {emb['city']}"):
-            st.write(f"**Phone:** {emb['phone']}")
-            st.write(f"**Address:** {emb['address']}")
+        with st.expander(f"🛂 Sovereign Territory: {emb['country']} — {emb['city']}"):
+            st.markdown(f"<p style='color:#334155;'><b>Encrypted Channel / Phone:</b> {emb['phone']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:#334155;'><b>Geospatial Coordinates:</b> {emb['address']}</p>", unsafe_allow_html=True)
             
     tp = data.get("tourist_police", {})
     if tp:
         st.divider()
-        st.subheader("👮 Tourist Police")
+        st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>👮 Specialized Tourism Constabulary</h4>", unsafe_allow_html=True)
         st.info(tp.get("description", ""))
         for c in tp.get("contacts", []):
-            st.markdown(f"- **{c['service']}**: `{c['phone']}`")
+            st.markdown(f"<li style='color:#475569;'><b>{c['service']}</b>: <code>{c['phone']}</code></li>", unsafe_allow_html=True)
 
 def page_gallery():
-    st.header("🖼️ Visual Gallery")
-    st.write("Immerse yourself in the breathtaking landscapes and rich heritage of Pakistan.")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🖼️ Curated Visual Archives</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: \"Georgia\", serif;'>Engage with a high-fidelity visual compendium showcasing the profound topographical and architectural heritage of Pakistan.</p>", unsafe_allow_html=True)
     
     st.markdown("""
     <style>
@@ -887,8 +882,9 @@ def page_gallery():
             padding: 10px;
             margin: 0;
             font-size: 0.95em;
-            font-weight: 500;
-            color: #333;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            color: #1e293b;
             border-top: 1px solid #eee;
         }
     </style>
@@ -972,83 +968,83 @@ def page_gallery():
             }
         ]
 
-    dest_names = ["All Destinations"] + [d["name"] for d in dests]
-    sel = st.selectbox("Filter by Destination", dest_names, key="gal_dest")
+    dest_names = ["Isolate Comprehensive Archive"] + [d["name"] for d in dests]
+    sel = st.selectbox("Designate Archival Target", dest_names, key="gal_dest")
     
     st.divider()
     
-    show_dests = dests if sel == "All Destinations" else [d for d in dests if d["name"] == sel]
+    show_dests = dests if sel == "Isolate Comprehensive Archive" else [d for d in dests if d["name"] == sel]
     
     for dest in show_dests:
         images = dest.get("gallery_images", [])
         if images:
-            st.markdown(f"### 📍 {dest['name']} — <span style='color:gray; font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>📍 {dest['name']} — <span style='color:#64748b; font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span></h3>", unsafe_allow_html=True)
             cols = st.columns(3)
             for i, img_url in enumerate(images):
                 with cols[i % 3]:
                     st.markdown(f"""
                     <div class="gallery-img-container">
                         <img src="{img_url}" alt="{dest['name']}">
-                        <p class="gallery-img-caption">View of {dest['name']}</p>
+                        <p class="gallery-img-caption">Topographical Capture of {dest['name']}</p>
                     </div>
                     """, unsafe_allow_html=True)
             st.write("\n")
             st.divider()
 
 def page_travel_tips():
-    st.header("📌 Travel Guidelines")
-    st.write("Prepare for your journey to Pakistan with these practical guidelines covering culture, safety, packing, and logistics to ensure a smooth and respectful trip.")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>📖 Comprehensive Expeditionary Directives</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: \"Georgia\", serif;'>Assimilate these strategic protocols encompassing cultural integration, personal security, and logistical preparedness to ensure an optimal and deferential traversal of the region.</p>", unsafe_allow_html=True)
     
     tips_data = [
         {
-            "title": "🎒 Packing Essentials",
+            "title": "💼 Essential Provisioning & Requisites",
             "items": [
-                "Versatile clothing layers for varying temperatures (especially in the north).",
-                "Sturdy hiking boots or comfortable walking shoes.",
-                "Sun protection: Sunscreen, sunglasses, and a hat.",
-                "Power bank and universal travel adapter (Type C/D plugs are common).",
-                "A reusable water bottle with a purification filter.",
-                "Basic first-aid kit and personal medications.",
-                "Modest swimwear if visiting beaches or hotel pools."
+                "Deploy versatile, multi-layered garments to counteract severe thermal fluctuations (particularly imperative in northern alpine zones).",
+                "Equip oneself with high-traction, structurally reinforced footwear for uneven topographies.",
+                "Implement rigorous ultraviolet mitigation protocols: SPF barrier, ocular protection, and cranial coverage.",
+                "Procure portable energetic reservoirs (power banks) and universal electrical adaptors (Type C/D form factors dominate the region).",
+                "Maintain a sustainable hydration vessel integrated with microbiological filtration apparatus.",
+                "Retain a comprehensive pharmaceutical kit comprising requisite personal medications and primary first-aid implements.",
+                "Pack conservative aquatic attire exclusively designated for isolated hotel facilities or coastal environments."
             ]
         },
         {
-            "title": "🤝 Local Customs & Etiquette",
+            "title": "🤝 Societal Norms & Behavioral Etiquette",
             "items": [
-                "Dress modestly. For women, covering shoulders and legs is recommended; a headscarf (dupatta) is handy for visiting religious sites. For men, avoid very short shorts in public.",
-                "Always remove shoes before entering a mosque or someone's home.",
-                "Use your right hand for eating and passing objects.",
-                "Public displays of affection (PDA) are culturally frowned upon.",
-                "Respect local traditions and ask permission before taking photos of people, especially women."
+                "Adhere strictly to conservative sartorial standards. Female constituents are strongly advised to utilize a 'dupatta' (fabric drape) whilst traversing religious sanctuaries. Male constituents should eschew abbreviated garments in public domain.",
+                "It is a mandatory societal imperative to divest oneself of footwear prior to entering ecclesiastical structures and private domiciles.",
+                "Exclusively utilize the right appendage for the transfer of objects and gastronomic consumption, aligned with regional purity paradigms.",
+                "Overt manifestations of romantic affection (PDA) are culturally verboten and socially censured.",
+                "Exhibit profound deference to local inhabitants; explicit verbal authorization must be acquired prior to capturing photographic documentation of individuals, particularly women."
             ]
         },
         {
-            "title": "🛡️ Safety Tips",
+            "title": "🛡️ Security Protocols & Risk Mitigation",
             "items": [
-                "Stay informed about current travel advisories for specific regions.",
-                "Keep copies of important documents (passport, visa) separate from originals.",
-                "Use reputable registered taxis or ride-hailing apps like Careem/InDrive.",
-                "Avoid travelling alone at night in unfamiliar or isolated areas.",
-                "Be cautious with street food if you have a sensitive stomach; stick to bottled water.",
-                "Keep emergency numbers handy (Police 15, Rescue 1122)."
+                "Continuously monitor and evaluate diplomatic travel advisories regarding specific geopolitical jurisdictions.",
+                "Strategically partition certified duplications of critical identification (visas, passports) from their original counterparts.",
+                "Exclusively employ authenticated and corporately monitored transit networks (e.g., Careem, InDrive).",
+                "Circumvent solitary pedestrian traversal through unfamiliar or insufficiently illuminated municipal sectors post-crepuscule.",
+                "Exercise extreme vigilance regarding uncertified street cuisine; mandate the exclusive consumption of factory-sealed hydration products.",
+                "Memorize and maintain immediate access to federal response networks (Law Enforcement: 15, Rapid Rescue: 1122)."
             ]
         },
         {
-            "title": "💵 Money & Currency",
+            "title": "💳 Fiscal Operations & Currency Dynamics",
             "items": [
-                "The currency is the Pakistani Rupee (PKR).",
-                "Cash is king in remote areas and smaller bazaars. Carry sufficient small denominations.",
-                "ATMs are widely available in major cities but may be scarce in rural northern areas.",
-                "Inform your bank about your travel plans to avoid card blocks.",
-                "Currency exchange is best done at authorized dealers or banks in major cities."
+                "The sovereign monetary unit is the Pakistani Rupee (PKR).",
+                "Physical capital (cash) remains the paramount transactional medium in rural peripheries and traditional bazaars. Ensure an adequate supply of lower-denomination currency.",
+                "Automated Teller Machines (ATMs) are ubiquitous within metropolitan hubs but become increasingly sporadic in remote northern altitudes.",
+                "Pre-emptively notify domestic financial institutions of intended geographic displacement to neutralize automated fraud-prevention card blocks.",
+                "Execute currency conversion exclusively via federally sanctioned financial institutions or certified exchange brokerages."
             ]
         },
         {
-            "title": "🗣️ Language & Communication",
+            "title": "🗣️ Linguistic Nuances & Interpersonal Discourse",
             "items": [
-                "Urdu and English are the official languages. English is widely understood in major cities and tourist hubs.",
-                "Learning a few basic Urdu phrases (like 'Assalam-o-Alaikum' for hello, 'Shukriya' for thank you) goes a long way.",
-                "Get a local SIM card (e.g., Zong, Jazz, SCOM for the north) upon arrival for easy navigation and communication."
+                "Urdu operates as the lingua franca, while English is a co-official medium deployed extensively across administrative, commercial, and metropolitan sectors.",
+                "The deployment of rudimentary Urdu salutations—such as 'Assalam-o-Alaikum' (Greetings) and 'Shukriya' (Gratitude)—precipitates significant reciprocal goodwill from the indigenous population.",
+                "Procure a localized telecommunications subscription (SIM card) immediately upon arrival to secure uninterrupted navigational and communicative capabilities."
             ]
         }
     ]
@@ -1056,120 +1052,120 @@ def page_travel_tips():
     for category in tips_data:
         with st.expander(category["title"]):
             for item in category["items"]:
-                st.markdown(f"- {item}")
+                st.markdown(f"<li style='color:#475569; font-family: \"Georgia\", serif;'>{item}</li>", unsafe_allow_html=True)
                 
     st.divider()
     
-    st.subheader("✅ Do's and ❌ Don'ts")
+    st.markdown("<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>✅ Imperatives and ❌ Prohibitions</h3>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("### ✅ Do's")
+        st.markdown("<h4 style='color: #047857; font-family: \"Segoe UI\", sans-serif;'>✅ Operational Imperatives</h4>", unsafe_allow_html=True)
         dos = [
-            "Do dress modestly, especially women, particularly when visiting mosques and religious sites",
-            "Do ask permission before photographing local people, especially women",
-            "Do learn basic Urdu greetings: 'Assalam-o-Alaikum' (Hello), 'Shukriya' (Thank you), 'Kya Haal Hai' (How are you?)",
-            "Do accept offers of tea (chai) — it's a significant gesture of hospitality",
-            "Do remove your shoes before entering mosques, homes, and some shops",
-            "Do respect prayer times — shops and services may close briefly during prayer",
-            "Do try local cuisine — Pakistani food is world-renowned for its flavors",
-            "Do tip porters, guides, and hotel staff (10-15% is customary)",
-            "Do carry warm clothing even in summer if visiting northern areas (temperatures drop sharply at night)",
-            "Do haggle at bazaars and markets — it's expected and part of the experience"
+            "Do adhere to conservative sartorial standards, particularly for women, specifically when navigating religious sanctuaries.",
+            "Do secure explicit authorization prior to initiating photographic capture of the local populace.",
+            "Do execute fundamental Urdu salutations: 'Assalam-o-Alaikum' (Hello), 'Shukriya' (Thank you), 'Kya Haal Hai' (How are you?).",
+            "Do graciously accept offerings of steeped tea (chai)—a paramount manifestation of regional hospitality.",
+            "Do divest footwear prior to crossing the threshold of mosques, private residences, and specific commercial establishments.",
+            "Do accommodate the diurnal prayer schedule; commercial operations may temporarily suspend activities during these intervals.",
+            "Do engage with indigenous gastronomy—the regional culinary profile is internationally acclaimed.",
+            "Do execute gratuity distributions to service personnel, guides, and porters (a 10-15% margin is standard).",
+            "Do retain insulated thermal layers even during the summer solstice when operating in high-altitude zones.",
+            "Do engage in strategic fiscal negotiation (haggling) within traditional market environments; it is a culturally anticipated interaction."
         ]
         for d in dos:
-            st.markdown(f"- {d}")
+            st.markdown(f"<li style='color:#475569; font-size:0.95em;'>{d}</li>", unsafe_allow_html=True)
             
     with c2:
-        st.markdown("### ❌ Don'ts")
+        st.markdown("<h4 style='color: #b91c1c; font-family: \"Segoe UI\", sans-serif;'>❌ Strict Prohibitions</h4>", unsafe_allow_html=True)
         donts = [
-            "Don't eat or drink in public during the fasting hours of Ramadan (even if you're not Muslim)",
-            "Don't wear revealing clothing in public areas",
-            "Don't photograph military installations, checkpoints, or security forces",
-            "Don't discuss politics or controversial topics with strangers",
-            "Don't use your left hand for eating or handing items to others (left hand is considered unclean)",
-            "Don't point your feet at people or religious texts",
-            "Don't consume alcohol in public (it is prohibited for Muslims and restricted for foreigners)",
-            "Don't travel to restricted or prohibited areas without a No Objection Certificate (NOC)",
-            "Don't litter — especially in natural and protected areas",
-            "Don't make negative comments about religion or cultural practices"
+            "Do not consume sustenance or hydration in public domains during the diurnal fasting parameters of Ramadan, irrespective of personal theological affiliations.",
+            "Do not deploy abbreviated or revealing garments within the public sphere.",
+            "Do not execute photographic captures of military infrastructure, defensive perimeters, or uniformed security personnel.",
+            "Do not initiate discourse regarding volatile geopolitical or theological paradigms with unverified individuals.",
+            "Do not deploy the left appendage for the transfer of items or nutritional consumption, as it contravenes established purity doctrines.",
+            "Do not orient the plantar aspect of your feet toward individuals or theological manuscripts.",
+            "Do not consume ethanol-based intoxicating beverages in the public domain (subject to stringent federal prohibition).",
+            "Do not penetrate restricted sovereign or border territories bereft of a federally issued No Objection Certificate (NOC).",
+            "Do not disperse non-biodegradable refuse, particularly within ecologically protected alpine and aquatic zones.",
+            "Do not articulate disparaging assessments regarding regional theological convictions or established cultural methodologies."
         ]
         for d in donts:
-            st.markdown(f"- {d}")
+            st.markdown(f"<li style='color:#475569; font-size:0.95em;'>{d}</li>", unsafe_allow_html=True)
             
     st.divider()
     
-    st.subheader("📚 Cultural Notes")
+    st.markdown("<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>📚 Advanced Societal Context</h3>", unsafe_allow_html=True)
     cultural_notes = [
-        {"topic": "Hospitality", "desc": "Pakistani hospitality is legendary. Locals will often go out of their way to help tourists. Don't be surprised if strangers invite you for tea or a meal — this is a genuine cultural tradition, not a scam."},
-        {"topic": "Religion", "desc": "Islam is the state religion and permeates daily life. Visitors are expected to respect Islamic traditions. During the holy month of Ramadan, eating, drinking, and smoking in public during daylight hours are legally restricted and culturally insensitive."},
-        {"topic": "Language", "desc": "While Urdu is the national language, English is co-official and widely used in government, business, and education. You will find English speakers easily in major cities, though learning a few Urdu phrases is highly appreciated by locals."},
-        {"topic": "Currency", "desc": "Pakistani Rupee (PKR) is the local currency. Credit cards are accepted at major hotels and restaurants in cities but NOT in rural/northern areas. Always carry sufficient cash when traveling outside major cities."},
-        {"topic": "Dress Code", "desc": "Modest clothing is expected. Men: long pants and shirts. Women: loose clothing covering arms and legs, a scarf/dupatta is recommended for religious sites. Shalwar Kameez (traditional dress) is comfortable and culturally appropriate."},
-        {"topic": "Permits", "desc": "Some areas require a No Objection Certificate (NOC) for foreign tourists, particularly in border regions (parts of GB, AJK, Balochistan). Check with your tour operator or local authorities before traveling."}
+        {"topic": "Paradigms of Hospitality", "desc": "Pakistani hospitality represents a foundational societal pillar. The indigenous population will frequently deploy extraordinary measures to assist foreign entities. Invitations to partake in culinary or tea-based engagements are profound reflections of genuine cultural tradition, absent of ulterior commercial motives."},
+        {"topic": "Theological Dominance", "desc": "Islam operates as the paramount state religion, dictating the rhythm of daily societal functions. Explorers are explicitly required to defer to these Islamic traditions. Notably, during the holy month of Ramadan, the public ingestion of food, liquids, or combustible inhalants during daylight hours is both legally constrained and perceived as culturally antagonistic."},
+        {"topic": "Linguistic Distribution", "desc": "While Urdu commands the status of the national medium, English functions comprehensively as the co-official language of jurisprudence, corporate commerce, and higher academia. Consequently, anglophone communication is seamlessly executed in metropolitan parameters, though the deployment of fundamental Urdu syntax generates significant cultural rapport."},
+        {"topic": "Fiscal Infrastructure", "desc": "The domestic economic system is anchored by the Pakistani Rupee (PKR). Electronic transaction processing (credit infrastructure) is exclusively operational within elite metropolitan commercial zones and hospitality sectors. It is an absolute requisite to secure physical fiat currency prior to navigating into rural or high-altitude sectors."},
+        {"topic": "Sartorial Parameters", "desc": "Modesty in attire is non-negotiable. Male entities are advised to utilize full-length trousers and shirts. Female entities must deploy voluminous garments obscuring the extremities; a scarf (dupatta) is requisite for access to religious perimeters. The traditional 'Shalwar Kameez' offers optimal climatic comfort and maximum cultural alignment."},
+        {"topic": "Bureaucratic Access Requirements", "desc": "Specific geographic classifications—notably border adjacent sectors in Gilgit-Baltistan, Azad Jammu & Kashmir, and Balochistan—mandate the procurement of a federal 'No Objection Certificate' (NOC) for foreign nationals. Verification with authoritative operators prior to mobilization is essential."}
     ]
     
     for note in cultural_notes:
         with st.expander(f"📖 {note['topic']}"):
-            st.write(note['desc'])
+            st.markdown(f"<p style='color:#475569; font-family: \"Georgia\", serif; line-height:1.6;'>{note['desc']}</p>", unsafe_allow_html=True)
 
 def page_communication():
-    st.header("📡 Connectivity Access")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>📡 Telecommunication & Digital Connectivity</h2>", unsafe_allow_html=True)
     
-    st.subheader("📶 Mobile Network Operators in Pakistan")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>📶 Cellular Infrastructure Providers</h4>", unsafe_allow_html=True)
     operators = [
-        {"name": "Jazz (Mobilink)", "tech": "4G/LTE", "coverage": "Best overall coverage, excellent in urban and good in northern areas", "tourist_sim": "Yes — Jazz Super SIM at airports"},
-        {"name": "Zong (CMPak)", "tech": "4G/LTE", "coverage": "Second-best coverage, strong in GB and northern areas", "tourist_sim": "Yes — available at airports and franchise centers"},
-        {"name": "Telenor Pakistan", "tech": "4G/LTE", "coverage": "Good urban coverage, limited in remote northern areas", "tourist_sim": "Yes — Telenor Easy Card"},
-        {"name": "Ufone (PTCL)", "tech": "4G/LTE", "coverage": "Good in Punjab and urban areas, limited in GB", "tourist_sim": "Yes — available at select outlets"},
-        {"name": "SCOM", "tech": "3G", "coverage": "Exclusive to AJK and Gilgit-Baltistan", "tourist_sim": "Limited availability"},
+        {"Provider Identity": "Jazz (Mobilink)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Superior macro-coverage; optimal performance in metropolitan hubs and resilient signal in northern alpine regions.", "Tourist Pre-paid Availability": "Affirmed — 'Jazz Super SIM' provisioned at primary aeronautical hubs."},
+        {"Provider Identity": "Zong (CMPak)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Secondary macro-coverage; exceptional penetration in Gilgit-Baltistan and extreme northern vectors.", "Tourist Pre-paid Availability": "Affirmed — Attainable at terminal kiosks and franchised corporate centers."},
+        {"Provider Identity": "Telenor Pakistan", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Competent urban penetration; progressively degrades in remote expeditionary sectors.", "Tourist Pre-paid Availability": "Affirmed — 'Telenor Easy Card' architecture."},
+        {"Provider Identity": "Ufone (PTCL)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Reliable within the Punjab province and urban sectors; highly restrictive functionality in Gilgit-Baltistan.", "Tourist Pre-paid Availability": "Affirmed — Restricted to designated corporate outlets."},
+        {"Provider Identity": "SCOM", "Spectrum Tech": "3G/4G", "Topographical Coverage": "Exclusive monopolistic provider for Azad Jammu & Kashmir and deeply remote Gilgit-Baltistan parameters.", "Tourist Pre-paid Availability": "Highly Conditional — Acquired via regional military/administrative depots."},
     ]
     df_ops = pd.DataFrame(operators)
     st.dataframe(df_ops, use_container_width=True, hide_index=True)
     
     st.divider()
     
-    st.subheader("🪪 How to Get a Local SIM Card (Foreigners)")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>🪪 Protocols for Acquiring Foreigner Telecommunication Subscriptions</h4>", unsafe_allow_html=True)
     steps = [
-        "1. **Documents Needed:** Valid passport with visa, one passport-size photo",
-        "2. **Where to Buy:** Airport counters (recommended), franchise centers in any city",
-        "3. **Biometric Verification:** Fingerprint and photo will be taken (mandatory for all SIMs in Pakistan)",
-        "4. **Cost:** PKR 200-500 for the SIM + data packages from PKR 300-1,000 for 10-30GB data",
-        "5. **Recommended:** Jazz or Zong for best coverage in tourist areas and northern Pakistan",
-        "6. **Activation Time:** Usually instant to 2 hours after biometric registration"
+        "1. **Required Documentation:** A legally valid international passport embedded with a certified entry visa, coupled with one physical passport-dimensional photograph.",
+        "2. **Authorized Procurement Vectors:** Aeronautical terminal counters (highly advised for immediate integration), or certified corporate franchise nodes within major municipalities.",
+        "3. **Biometric Authentication:** Mandatory federal processing requiring fingerprint scanning and facial capture (a non-negotiable security protocol for all telecommunication modules within the Republic).",
+        "4. **Fiscal Outlay:** Hardware acquisition ranges between PKR 200–500. Ancillary data provisions (10-30GB) span an additional PKR 300–1,000.",
+        "5. **Strategic Recommendation:** Jazz or Zong infrastructure is strongly endorsed for maximal up-time during traversal of northern tourist corridors.",
+        "6. **Activation Latency:** Module initialization generally occurs instantaneously, or within a maximum latency window of 120 minutes post-biometric verification."
     ]
     for step in steps:
-        st.markdown(step)
+        st.markdown(f"<p style='color:#475569;'>{step}</p>", unsafe_allow_html=True)
         
     st.divider()
     
-    st.subheader("⚠️ Connectivity by Region")
+    st.markdown("<h4 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif;'>⚠️ Topographical Network Distribution</h4>", unsafe_allow_html=True)
     conn_data = [
-        {"Region": "Islamabad/Lahore/Karachi", "Coverage": "Excellent 4G/LTE + WiFi", "Status": "🟢"},
-        {"Region": "Swat / Naran / Kaghan", "Coverage": "Good 3G/4G in main towns", "Status": "🟢"},
-        {"Region": "Hunza / Gilgit", "Coverage": "3G/4G in towns, limited in remote areas", "Status": "🟡"},
-        {"Region": "Skardu", "Coverage": "3G/4G in city, none in Deosai", "Status": "🟡"},
-        {"Region": "Fairy Meadows", "Coverage": "NO coverage at all", "Status": "🔴"},
-        {"Region": "Kalash Valley", "Coverage": "Very limited 2G only", "Status": "🔴"},
-        {"Region": "Neelum Valley (deep)", "Coverage": "Limited to no coverage", "Status": "🔴"},
+        {"Provincial / Topographical Sector": "Islamabad / Lahore / Karachi", "Signal Integrity Parameter": "Uninterrupted 4G/LTE + Broad WiFi Saturation", "Operational Status": "🟢 Optimal"},
+        {"Provincial / Topographical Sector": "Swat / Naran / Kaghan Valleys", "Signal Integrity Parameter": "Competent 3G/4G penetration confined to principal municipal zones", "Operational Status": "🟢 Optimal"},
+        {"Provincial / Topographical Sector": "Hunza / Gilgit Epicenters", "Signal Integrity Parameter": "3G/4G functional in townships; rapid degradation upon entering peripheral limits", "Operational Status": "🟡 Intermittent"},
+        {"Provincial / Topographical Sector": "Skardu Proper", "Signal Integrity Parameter": "3G/4G functional within city perimeters; absolute blackout at Deosai Plains", "Operational Status": "🟡 Intermittent"},
+        {"Provincial / Topographical Sector": "Fairy Meadows Base Camp", "Signal Integrity Parameter": "Absolute telecommunication blackout", "Operational Status": "🔴 Null / Void"},
+        {"Provincial / Topographical Sector": "Kalash Valley Territories", "Signal Integrity Parameter": "Severely restricted; localized strictly to legacy 2G spectrums", "Operational Status": "🔴 Null / Void"},
+        {"Provincial / Topographical Sector": "Deep Neelum Valley Operations", "Signal Integrity Parameter": "Highly constrained to non-existent connectivity", "Operational Status": "🔴 Null / Void"},
     ]
     df_conn = pd.DataFrame(conn_data)
     st.dataframe(df_conn, use_container_width=True, hide_index=True)
 
 def page_admin():
-    st.header("⚙️ Administration Panel")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>⚙️ Administrative Command Console</h2>", unsafe_allow_html=True)
     if not st.session_state.admin_logged_in:
-        pw = st.text_input("Admin Password:", type="password")
-        if st.button("Login"):
+        pw = st.text_input("Deploy Cryptographic Access Key:", type="password")
+        if st.button("Initiate Authentication Handshake"):
             if hashlib.sha256(pw.encode()).hexdigest() == get_admin_hash():
                 st.session_state.admin_logged_in = True
                 st.rerun()
-            else: st.error("Invalid")
+            else: st.error("Authentication Failure: Cryptographic mismatch.")
     else:
-        st.success("Logged in")
-        if st.button("Logout"): 
+        st.success("Authentication Validated: Level 1 Clearance Achieved.")
+        if st.button("Terminate Session"): 
             st.session_state.admin_logged_in = False
             st.rerun()
-        st.info("Admin features active. Use JSON files in the 'data' folder to manage extensive records.")
+        st.info("System Configuration Active: Modulate the internal JSON architecture within the 'data' directory to execute extensive systemic alterations.")
 
 # ============================================================
 # MAIN APP LAYOUT
@@ -1269,7 +1265,7 @@ with tourism_tab:
     # Header area with Toggle Button
     header_col, toggle_col = st.columns([8.5, 1.5])
     with header_col:
-        st.markdown("### 🇵🇰 Pakistan Tourism Hub")
+        st.markdown("<h3 style='color:#0f172a; font-family:\"Segoe UI\", sans-serif; font-weight:800;'>🇵🇰 Pakistan Tourism Hub</h3>", unsafe_allow_html=True)
     with toggle_col:
         if st.button("☰ Toggle Panel", use_container_width=True):
             st.session_state.show_info_panel = not st.session_state.show_info_panel
@@ -1278,17 +1274,17 @@ with tourism_tab:
     st.divider()
     
     tourism_pages = {
-        "📊 Dashboard Overview": page_home,
-        "🗺️ Destination Guide": page_destinations,
-        "📍 Interactive Maps": page_maps,
-        "🌤️ Weather Forecast": page_weather,
-        "💬 AI Assistant": page_smart_assistant,
-        "📈 Budget Calculator": page_budget,
-        "🛡️ Emergency Contacts": page_emergency,
-        "🖼️ Visual Gallery": page_gallery,
-        "📌 Travel Guidelines": page_travel_tips,
-        "📡 Connectivity": page_communication,
-        "⚙️ Administration": page_admin,
+        "📊 Executive Dashboard": page_home,
+        "🧭 Geospatial Archive": page_destinations,
+        "🗺️ Interactive Mapping": page_maps,
+        "🌤️ Meteorological Data": page_weather,
+        "🧠 AI Concierge": page_smart_assistant,
+        "📉 Financial Architecture": page_budget,
+        "🛡️ Emergency Protocols": page_emergency,
+        "🖼️ Visual Archives": page_gallery,
+        "📖 Expedition Directives": page_travel_tips,
+        "📡 Telecommunications": page_communication,
+        "⚙️ Command Console": page_admin,
     }
     
     # Layout rendering based on Toggle State
