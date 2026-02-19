@@ -266,7 +266,7 @@ def page_home():
     
     dests = load_json("destinations.json")
     
-    # Fallback to default data if JSON is empty so it looks exactly like the image
+    # Fallback to default data if JSON is empty
     if not dests:
         dests = [
             {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "best_season": "April - October", "budget_per_day": {"budget": 5000}},
@@ -311,15 +311,116 @@ def page_home():
 def page_destinations():
     st.header("🏔️ Tourist Destinations")
     dests = load_json("destinations.json")
-    if not dests: st.warning("No destinations data."); return
-    selected = st.selectbox("Select a Destination", [d["name"] for d in dests])
-    dest = next(d for d in dests if d["name"] == selected)
-    st.subheader(f"📍 {dest['name']} — {dest['region']}")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Altitude", f"{dest.get('altitude_m', 'N/A')}m")
-    c2.metric("Best Season", dest.get("best_season", "N/A"))
-    if 'budget_per_day' in dest: c3.metric("Budget/day", f"PKR {dest['budget_per_day'].get('budget', 'N/A')}+")
-    st.write(dest.get("description", ""))
+    
+    # Smart Fallback Data if JSON is empty (restores the view from the screenshot)
+    if not dests:
+        dests = [
+            {
+                "name": "Hunza Valley",
+                "region": "Gilgit-Baltistan",
+                "access_level": "Moderate",
+                "altitude_m": 2438,
+                "best_season": "April - October",
+                "budget_per_day": {"budget": 5000},
+                "description": "Hunza Valley is one of the most breathtaking destinations in Pakistan, surrounded by snow-capped peaks including Rakaposhi (7,788m) and Ultar Sar. The valley is known for its stunning landscapes, ancient forts, and the warmth of the Hunza people.",
+                "history": "Hunza was an independent princely state for over 900 years, ruled by the Mir of Hunza. The region was part of the ancient Silk Route and has connections to the legendary Shangri-La. It became part of Pakistan in 1974. The area is home to the Burushaski-speaking people, whose language is a language isolate with no known relatives.",
+                "landmarks": [
+                    {"name": "Baltit Fort", "description": "A 700-year-old fort perched above Karimabad, offering panoramic views of the valley. Now a UNESCO-supported heritage museum."},
+                    {"name": "Altit Fort", "description": "An even older fort at the base of the valley, dating back 1,100 years."}
+                ],
+                "activities": ["Trekking and hiking", "Visit ancient forts", "Try local walnut cake and apricot oil", "Boating at Attabad Lake"],
+                "transport": {
+                    "islamabad": {"road": "14-16 hours via Karakoram Highway", "air": "1 hour flight to Gilgit, then 2 hours by road"}
+                },
+                "accommodation": {
+                    "budget": ["Backpacker hostels in Karimabad", "Local guest houses"],
+                    "standard": ["Mid-range hotels with valley views"],
+                    "luxury": ["Serena Hotel", "Luxus Hunza (Attabad Lake)"]
+                },
+                "connectivity": {
+                    "mobile_networks": ["SCOM (Best)", "Telenor"],
+                    "internet": "Available in most hotels but can be slow/unstable",
+                    "tips": "Buy an SCOM SIM card in Gilgit or Aliabad for best coverage."
+                }
+            },
+            {
+                "name": "Skardu", "region": "Gilgit-Baltistan", "access_level": "Moderate", "altitude_m": 2228, "best_season": "May - September", "budget_per_day": {"budget": 6000},
+                "description": "Skardu is the main gateway to the 8,000m peaks of the Karakoram.",
+                "history": "Capital of Baltistan, Skardu has a rich Tibetan-influenced culture."
+            }
+        ]
+
+    # Filters Section
+    regions = sorted(set(d.get("region", "Unknown") for d in dests))
+    col1, col2 = st.columns(2)
+    with col1:
+        sel_region = st.selectbox("Filter by Region", ["All Regions"] + regions)
+    with col2:
+        sel_access = st.selectbox("Filter by Access Level", ["All", "Easy", "Moderate", "Difficult"])
+
+    # Filter Logic
+    filtered = dests
+    if sel_region != "All Regions":
+        filtered = [d for d in filtered if d.get("region") == sel_region]
+    if sel_access != "All":
+        filtered = [d for d in filtered if d.get("access_level") == sel_access]
+
+    if not filtered:
+        st.info("No destinations match your filters.")
+        return
+
+    # Selector and Display
+    selected = st.selectbox("Select a Destination", [d["name"] for d in filtered])
+    dest = next(d for d in filtered if d["name"] == selected)
+
+    st.subheader(f"📍 {dest['name']} — {dest.get('region', 'N/A')}")
+    
+    # 4-Column Metrics
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Access Level", dest.get("access_level", "N/A"))
+    c2.metric("Altitude", f"{dest.get('altitude_m', 'N/A')}m")
+    c3.metric("Best Season", dest.get("best_season", "N/A"))
+    
+    budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
+    c4.metric("Budget/day", f"PKR {budget:,}+" if isinstance(budget, int) else f"PKR {budget}+")
+
+    # Description
+    st.markdown(f"📄 **Description:** {dest.get('description', '')}")
+
+    # Expandable Sections
+    with st.expander("📜 Historical Background", expanded=False):
+        st.write(dest.get("history", "No history available."))
+
+    if "landmarks" in dest and dest["landmarks"]:
+        with st.expander("🏛️ Key Landmarks", expanded=False):
+            for lm in dest["landmarks"]:
+                st.markdown(f"**{lm['name']}** — {lm['description']}")
+
+    if "activities" in dest and dest["activities"]:
+        with st.expander("🎯 Recommended Activities", expanded=False):
+            for act in dest["activities"]:
+                st.markdown(f"- {act}")
+
+    if "transport" in dest and dest["transport"]:
+        with st.expander("🚌 Transportation Details", expanded=False):
+            for origin, modes in dest["transport"].items():
+                st.markdown(f"**From {origin.replace('_',' ').title()}:**")
+                for mode, info in modes.items():
+                    st.markdown(f"  - *{mode.title()}:* {info}")
+
+    if "accommodation" in dest and dest["accommodation"]:
+        with st.expander("🏨 Accommodation", expanded=False):
+            for tier, hotels in dest["accommodation"].items():
+                st.markdown(f"**{tier.title()}:**")
+                for h in hotels:
+                    st.markdown(f"  - {h}")
+
+    if "connectivity" in dest and dest["connectivity"]:
+        with st.expander("📱 Connectivity", expanded=False):
+            conn = dest["connectivity"]
+            st.markdown(f"**Networks:** {', '.join(conn.get('mobile_networks', []))}")
+            st.markdown(f"**Internet:** {conn.get('internet', 'N/A')}")
+            st.markdown(f"**💡 Tip:** {conn.get('tips', 'N/A')}")
 
 def page_weather():
     st.header("🌦️ Destination Weather")
