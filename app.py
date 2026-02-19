@@ -25,7 +25,7 @@ st.markdown("""
         border: 1px solid #e0e0e0;
         height: 50px;
         width: 100%;
-        text-align: left; /* Left align text for vertical list */
+        text-align: left; 
         padding-left: 20px;
         transition: all 0.2s;
         font-weight: 500;
@@ -33,7 +33,7 @@ st.markdown("""
     .stButton>button:hover {
         background-color: #e8eaed;
         border-color: #d2d2d2;
-        transform: translateX(5px); /* Subtle slide effect */
+        transform: translateX(5px); 
         color: #000;
     }
     
@@ -53,16 +53,14 @@ st.markdown("""
     }
 
     /* Input Toolbar Styling */
-    /* Make the popover button circular and align it */
     div[data-testid="stPopover"] > button {
         border-radius: 50%;
         height: 48px;
         width: 48px;
         border: 1px solid #ddd;
-        margin-top: 28px; /* Alignment fix to match audio player height */
+        margin-top: 28px; 
     }
     
-    /* Remove extra padding from audio widget to align with popover */
     .stAudioInput {
         margin-top: 0px;
     }
@@ -192,37 +190,36 @@ with main_tab:
 with companion_tab:
     client = Groq(api_key=GROQ_KEY)
 
-    # 1. Zero State (Centered Greeting, Vertical Left Suggestions)
+    # 1. Zero State
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
         
-        # Professional Vertical Layout: Buttons on Left, Empty space on Right
-        col_buttons, col_space = st.columns([1, 2]) # 1/3 width for buttons, 2/3 empty
+        col_buttons, col_space = st.columns([1, 2]) 
         
         with col_buttons:
             if st.button("📄 Share Reports & Get Analysis"):
-                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! Please upload your medical report using the ➕ button below."})
+                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! 🩺 Please upload your medical report using the ➕ button below. What else can I do for you today? ✨"})
                 st.rerun()
-            
             if st.button("🥦 Prepare a Diet Plan"):
                 st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
                 st.rerun()
-                
             if st.button("🎬 Suggest Movies"):
                 st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
                 st.rerun()
-                
             if st.button("🩺 Check Symptoms"):
                 st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
                 st.rerun()
 
     # 2. Chat History Display
-    for msg in st.session_state.chat_history:
+    for i, msg in enumerate(st.session_state.chat_history):
         st.chat_message(msg["role"]).write(msg["content"])
+        # If the user says "yes" to a PDF in chat, provide a quick download button for the previous AI message
+        if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
+            prev_msg = st.session_state.chat_history[i-1]["content"]
+            st.download_button("📥 Download Document", create_pdf(prev_msg), f"document_{i}.pdf", key=f"dl_{i}")
 
     # 3. PROFESSIONAL INPUT TOOLBAR
-    # Tightly aligned row: [Plus Icon] [Voice Bar]
     col_plus, col_voice = st.columns([0.08, 0.92]) 
     
     with col_plus:
@@ -234,22 +231,28 @@ with companion_tab:
 
     # --- LOGIC HANDLING ---
 
-    # A. File Upload
+    # A. File Upload (Diet Plan System Prompt)
     if uploaded_file:
         with st.spinner("Analyzing Document..."):
             txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
             st.session_state.medical_data = txt
             st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded: {uploaded_file.name}"})
             
+            sys_prompt = """
+            You are a helpful nutritionist. 
+            Rule 1: Always use emojis 🍎🥦. 
+            Rule 2: At the very end of your diet plan, you MUST ask: "Do you want its PDF file? 📄"
+            """
             res = client.chat.completions.create(
-                messages=[{"role": "user", "content": f"Analyze this medical data: {txt}. Give diet plan."}],
+                messages=[{"role": "system", "content": sys_prompt}, 
+                          {"role": "user", "content": f"Analyze this medical data: {txt}. Give diet plan."}],
                 model="llama-3.3-70b-versatile"
             )
             resp = res.choices[0].message.content
             st.session_state.chat_history.append({"role": "assistant", "content": resp})
             st.rerun()
 
-    # B. Voice Logic
+    # B. Voice Logic (Voice System Prompt)
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
         with st.spinner("Listening..."):
@@ -257,8 +260,15 @@ with companion_tab:
             st.chat_message("user").write(f"🎙️ {txt}")
             st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {txt}"})
             
+            sys_msg = """
+            You are a friendly AI companion. 
+            1. Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN].
+            2. ALWAYS use emojis 😊.
+            3. If creating a plan, end by asking: "Do you want its PDF file? 📄"
+            4. If answering a normal question, end by asking: "What else can I do for you today? ✨"
+            """
             res = client.chat.completions.create(
-                messages=[{"role": "system", "content": "Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN]."}, {"role": "user", "content": txt}],
+                messages=[{"role": "system", "content": sys_msg}, {"role": "user", "content": txt}],
                 model="llama-3.3-70b-versatile"
             )
             raw = res.choices[0].message.content
@@ -271,14 +281,24 @@ with companion_tab:
             st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
             st.audio(asyncio.run(tts(clean_text, lang)), autoplay=True)
 
-    # C. Text Logic
+    # C. Text Logic (Text System Prompt)
     if prompt := st.chat_input("Message..."):
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         st.chat_message("user").write(prompt)
         
-        context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else ""
+        context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else "No medical context."
+        
+        sys_prompt = f"""
+        You are a highly empathetic and helpful AI Companion.
+        Follow these rules strictly:
+        1. Always use relevant emojis throughout your response to make it engaging and friendly 🌟.
+        2. If the user asks you to create any kind of plan (diet plan, routine, trip plan, etc.), after providing the plan, you MUST ask exactly: "Do you want its PDF file? 📄"
+        3. For all other general questions, always end your reply by asking a polite follow-up question like "What else can I do for you today? 😊" or "How else can I help? ✨".
+        {context}
+        """
+        
         res = client.chat.completions.create(
-            messages=[{"role": "system", "content": "Helpful health assistant. " + context}, {"role": "user", "content": prompt}],
+            messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile"
         )
         resp = res.choices[0].message.content
