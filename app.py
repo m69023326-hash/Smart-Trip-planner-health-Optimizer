@@ -722,6 +722,92 @@ def page_emergency():
         for c in tp.get("contacts", []):
             st.markdown(f"- **{c['service']}**: `{c['phone']}`")
 
+def page_gallery():
+    st.header("📸 Photo Gallery")
+    st.write("Immerse yourself in the breathtaking landscapes and rich heritage of Pakistan.")
+    
+    # Inject Custom CSS for stunning image hover effects
+    st.markdown("""
+    <style>
+        div[data-testid="stImage"] img {
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            object-fit: cover;
+            height: 250px;
+        }
+        div[data-testid="stImage"] img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    dests = load_json("destinations.json")
+    
+    # Smart Fallback Data with high-quality stunning URLs
+    if not dests or not any(d.get("gallery_images") for d in dests):
+        dests = [
+            {
+                "name": "Hunza Valley",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1589553416260-f586c8f1514f?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1627896157734-4bc0a2b027b4?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1600100397608-f010f423b971?q=80&w=1000&auto=format&fit=crop"
+                ]
+            },
+            {
+                "name": "Skardu",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1621217036665-27a3c75eb2a7?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1595166373721-653557e4e164?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1633511116666-9eebc3f25b2d?q=80&w=1000&auto=format&fit=crop"
+                ]
+            },
+            {
+                "name": "Lahore",
+                "region": "Punjab",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1584288079521-4f1816bb6e4b?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1610408552174-8b65e90dcb0a?q=80&w=1000&auto=format&fit=crop", 
+                    "https://images.unsplash.com/photo-1620358823101-b6a482b8a0df?q=80&w=1000&auto=format&fit=crop"
+                ]
+            },
+            {
+                "name": "Swat Valley",
+                "region": "Khyber Pakhtunkhwa",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1624389964522-42171850119b?q=80&w=1000&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1650367310574-12eb60f09a15?q=80&w=1000&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1601931535038-1647a7b8e5c6?q=80&w=1000&auto=format&fit=crop"
+                ]
+            }
+        ]
+
+    # Dropdown Filter
+    dest_names = ["All Destinations"] + [d["name"] for d in dests]
+    sel = st.selectbox("Filter by Destination", dest_names, key="gal_dest")
+    
+    st.divider()
+    
+    show_dests = dests if sel == "All Destinations" else [d for d in dests if d["name"] == sel]
+    
+    for dest in show_dests:
+        images = dest.get("gallery_images", [])
+        if images:
+            st.markdown(f"### 📍 {dest['name']} — <span style='color:gray; font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span>", unsafe_allow_html=True)
+            
+            # 3-Column Grid
+            cols = st.columns(3)
+            for i, img_url in enumerate(images):
+                with cols[i % 3]:
+                    st.image(img_url, use_container_width=True, caption=f"View of {dest['name']}")
+            st.write("\n")
+            st.divider()
+
 def page_admin():
     st.header("🔐 Admin Panel")
     if not st.session_state.admin_logged_in:
@@ -843,6 +929,7 @@ with tourism_tab:
         "🤖 Smart Assistant": page_smart_assistant,
         "💰 Budget Planner": page_budget,
         "🚨 Emergency Info": page_emergency,
+        "📸 Photo Gallery": page_gallery,
         "🔐 Admin Panel": page_admin,
     }
     
