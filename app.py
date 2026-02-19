@@ -426,7 +426,6 @@ def page_maps():
     st.header("🗺️ Interactive Map of Pakistan")
     destinations = load_json("destinations.json")
     
-    # Enhanced Fallback Data with Coordinates
     if not destinations:
         destinations = [
             {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "latitude": 36.3167, "longitude": 74.6500, "altitude_m": 2438, "best_season": "April - October", "budget_per_day": {"budget": 5000}},
@@ -437,7 +436,6 @@ def page_maps():
             {"name": "Mohenjo-Daro", "region": "Sindh", "access_level": "Easy", "latitude": 27.3292, "longitude": 68.1389, "altitude_m": 47, "best_season": "November - February", "budget_per_day": {"budget": 3500}}
         ]
 
-    # Map Controls (3 Columns)
     col1, col2, col3 = st.columns(3)
     with col1:
         show_dest = st.checkbox("📍 Show Destinations", value=True)
@@ -448,7 +446,6 @@ def page_maps():
         
     st.markdown("🟢 **Easy Access** | 🟠 **Moderate** | 🔴 **Difficult**")
     
-    # Process Markers Data
     marker_colors = {"Easy": "#4CAF50", "Moderate": "#FF9800", "Difficult": "#F44336"}
     markers_data = []
     if show_dest and destinations:
@@ -469,7 +466,6 @@ def page_maps():
             })
     markers_json = json.dumps(markers_data, ensure_ascii=False)
 
-    # Process Routes Data
     routes_data = []
     if show_routes:
         routes_data = [
@@ -481,7 +477,6 @@ def page_maps():
         ]
     routes_json = json.dumps(routes_data, ensure_ascii=False)
 
-    # Inject Leaflet Map with logic
     map_html = f"""
     <!DOCTYPE html>
     <html>
@@ -630,6 +625,102 @@ def page_budget():
     for tip in budget_data.get("tips", []):
         st.markdown(f"- {tip}")
 
+def page_emergency():
+    st.header("🚨 Emergency Information")
+    st.error("**In case of emergency, dial immediately:** Police **15** | Rescue **1122** | Edhi **115** | Fire **16**")
+    
+    data = load_json("emergency_contacts.json")
+    
+    if not data:
+        data = {
+            "national": [
+                {"service": "Police Emergency", "number": "15", "coverage": "Nationwide"},
+                {"service": "Rescue 1122", "number": "1122", "coverage": "Punjab, KPK, Islamabad, AJK, GB"},
+                {"service": "Edhi Foundation Ambulance", "number": "115", "coverage": "Nationwide"},
+                {"service": "Fire Brigade", "number": "16", "coverage": "Nationwide"},
+                {"service": "Pakistan Tourism Helpline", "number": "1422", "coverage": "Nationwide"},
+                {"service": "Motorway Police", "number": "130", "coverage": "All Motorways"},
+                {"service": "FIA Complaint Cell", "number": "9911", "coverage": "Nationwide"},
+                {"service": "Disaster Management (NDMA)", "number": "051-9205037", "coverage": "Nationwide"},
+                {"service": "Citizen Complaint (PM Portal)", "number": "1099", "coverage": "Nationwide"}
+            ],
+            "regional": {
+                "Punjab": {
+                    "rescue": "1122",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "Mayo Hospital Lahore", "city": "Lahore", "phone": "042-99211111"},
+                        {"name": "Services Hospital Lahore", "city": "Lahore", "phone": "042-99200601"},
+                        {"name": "Nishtar Hospital Multan", "city": "Multan", "phone": "061-9200432"},
+                        {"name": "Allied Hospital Faisalabad", "city": "Faisalabad", "phone": "041-9210079"}
+                    ]
+                },
+                "Sindh": {
+                    "rescue": "1122 / 115",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "Jinnah Postgraduate Medical Centre", "city": "Karachi", "phone": "021-99201300"},
+                        {"name": "Civil Hospital Karachi", "city": "Karachi", "phone": "021-99215740"}
+                    ]
+                },
+                "Gilgit-Baltistan": {
+                    "rescue": "1122",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "DHQ Hospital Gilgit", "city": "Gilgit", "phone": "05811-920253"},
+                        {"name": "DHQ Hospital Skardu", "city": "Skardu", "phone": "05815-920282"}
+                    ]
+                }
+            },
+            "embassies": [
+                {"country": "United States", "city": "Islamabad", "phone": "051-2014000", "address": "Diplomatic Enclave, Ramna 5"},
+                {"country": "United Kingdom", "city": "Islamabad", "phone": "051-2012000", "address": "Diplomatic Enclave, Ramna 5"},
+                {"country": "China", "city": "Islamabad", "phone": "051-2260113", "address": "No. 1, Zhou-Enlai Avenue, Diplomatic Enclave"}
+            ],
+            "tourist_police": {
+                "description": "Special police units established to assist tourists.",
+                "contacts": [
+                    {"service": "Islamabad Tourist Police", "phone": "1015"}
+                ]
+            }
+        }
+
+    st.subheader("📞 National Emergency Numbers")
+    for contact in data.get("national", []):
+        c1, c2, c3 = st.columns([3, 2, 3])
+        c1.write(f"**{contact['service']}**")
+        c2.code(contact["number"])
+        c3.write(contact["coverage"])
+
+    st.divider()
+    st.subheader("🏥 Regional Hospitals & Services")
+    regions = list(data.get("regional", {}).keys())
+    sel_region = st.selectbox("Select Region", regions, key="emg_region")
+    region_data = data["regional"][sel_region]
+    
+    c1, c2 = st.columns(2)
+    c1.metric("Rescue", region_data.get("rescue", "N/A"))
+    c2.metric("Police", region_data.get("police", "N/A"))
+    
+    if region_data.get("hospitals"):
+        st.markdown("**Hospitals:**")
+        for h in region_data["hospitals"]:
+            st.markdown(f"- 🏥 **{h['name']}** ({h['city']}) — `{h['phone']}`")
+            
+    st.divider()
+    st.subheader("🏛️ Embassies & Consulates in Islamabad")
+    for emb in data.get("embassies", []):
+        with st.expander(f"🇺🇳 {emb['country']} — {emb['city']}"):
+            st.write(f"**Phone:** {emb['phone']}")
+            st.write(f"**Address:** {emb['address']}")
+            
+    tp = data.get("tourist_police", {})
+    if tp:
+        st.divider()
+        st.subheader("👮 Tourist Police")
+        st.info(tp.get("description", ""))
+        for c in tp.get("contacts", []):
+            st.markdown(f"- **{c['service']}**: `{c['phone']}`")
 
 def page_admin():
     st.header("🔐 Admin Panel")
@@ -751,6 +842,7 @@ with tourism_tab:
         "🌦️ Weather": page_weather,
         "🤖 Smart Assistant": page_smart_assistant,
         "💰 Budget Planner": page_budget,
+        "🚨 Emergency Info": page_emergency,
         "🔐 Admin Panel": page_admin,
     }
     
