@@ -95,15 +95,63 @@ st.markdown("""
         background-color: #f0f2f6;
         transform: scale(1.1);
     }
-
-    /* Local Sidebar Radio Button Styling */
-    div[role="radiogroup"] > label {
-        padding: 10px;
-        border-radius: 8px;
-        transition: background-color 0.2s;
+    
+    /* ---------------------------------------------------- */
+    /* PROFESSIONAL INFORMATION PANEL (SIDEBAR) STYLING     */
+    /* ---------------------------------------------------- */
+    
+    .info-panel-header {
+        font-size: 24px !important;
+        font-weight: 800;
+        background: -webkit-linear-gradient(45deg, #1B5E20, #4CAF50);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
+
+    /* Target the radio group container */
+    div[role="radiogroup"] {
+        gap: 10px;
+    }
+
+    /* Style individual radio button rows as beautiful tabs */
+    div[role="radiogroup"] > label {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f3f5 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-weight: 600;
+        color: #495057;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        cursor: pointer;
+        width: 100%;
+        display: block;
+    }
+
+    /* Hover effect */
     div[role="radiogroup"] > label:hover {
-        background-color: #f0f2f6;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        border-color: #adb5bd;
+        color: #212529;
+    }
+
+    /* Completely hide the default circle radio button */
+    div[role="radiogroup"] > label > div:first-child {
+        display: none;
+    }
+
+    /* Style the actively selected tab */
+    div[role="radiogroup"] > label[aria-checked="true"] {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        border: 1px solid #81c784;
+        color: #1b5e20;
+        border-left: 6px solid #2e7d32;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -155,11 +203,20 @@ if "tourism_chat_history" not in st.session_state:
     st.session_state.tourism_chat_history = []
 if "admin_logged_in" not in st.session_state:
     st.session_state.admin_logged_in = False
+    
+# NEW STATE FOR INFORMATION PANEL TOGGLE & MEMORY
+if "show_info_panel" not in st.session_state:
+    st.session_state.show_info_panel = True
+if "current_tourism_module" not in st.session_state:
+    st.session_state.current_tourism_module = "📊 Dashboard Overview"
 
 def clear_chat():
     st.session_state.chat_history = []
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
+
+def update_module():
+    st.session_state.current_tourism_module = st.session_state.tourism_nav
 
 # ============================================================
 # HEALTH & PLANNER FUNCTIONS
@@ -302,14 +359,14 @@ def page_home():
     st.divider()
     st.subheader("📋 What This App Offers")
     features = [
-        ("🏔️","Destinations","10+ curated tourist destinations"),
+        ("🗺️","Destination Guide","10+ curated tourist destinations"),
         ("🤖","AI Assistant","Smart travel assistant powered by AI"),
-        ("💰","Budget Planner","Plan your trip budget"),
-        ("🗺️","Interactive Maps","Explore Pakistan visually"),
-        ("🌦️","Weather Info","Real-time weather data"),
-        ("🚨","Emergency","Quick access to emergency contacts"),
-        ("📸","Photo Gallery","Visual tour of Pakistan"),
-        ("📜","Travel Tips","Safety & cultural guidelines")
+        ("📈","Budget Planner","Plan your trip budget"),
+        ("📍","Interactive Maps","Explore Pakistan visually"),
+        ("🌤️","Weather Info","Real-time weather data"),
+        ("🛡️","Emergency Info","Quick access to emergency contacts"),
+        ("🖼️","Photo Gallery","Visual tour of Pakistan"),
+        ("📌","Travel Tips","Safety & cultural guidelines")
     ]
     
     cols = st.columns(4)
@@ -318,7 +375,7 @@ def page_home():
             st.markdown(f"**{icon} {title}**\n\n<span style='font-size:0.9em;color:#666;'>{desc}</span>", unsafe_allow_html=True)
 
 def page_destinations():
-    st.header("🏔️ Tourist Destinations")
+    st.header("🗺️ Destination Guide")
     dests = load_json("destinations.json")
     
     if not dests:
@@ -407,7 +464,7 @@ def page_destinations():
             st.markdown(f"**💡 Tip:** {conn.get('tips', 'N/A')}")
 
 def page_weather():
-    st.header("🌦️ Destination Weather")
+    st.header("🌤️ Weather Forecast")
     dests = load_json("destinations.json")
     if not dests: return
     selected = st.selectbox("Select Destination", [d["name"] for d in dests], key="w_dest")
@@ -419,7 +476,7 @@ def page_weather():
         c2.metric("Conditions", weather_code_to_text(weather['current']['weather_code']))
 
 def page_smart_assistant():
-    st.header("🤖 Pakistan Tourism AI")
+    st.header("💬 AI Travel Assistant")
     if prompt := st.chat_input("Ask about Pakistan tourism..."):
         st.session_state.tourism_chat_history.append({"role": "user", "content": prompt})
     for msg in st.session_state.tourism_chat_history:
@@ -433,7 +490,7 @@ def page_smart_assistant():
         st.session_state.tourism_chat_history.append({"role": "assistant", "content": reply})
 
 def page_maps():
-    st.header("🗺️ Interactive Map of Pakistan")
+    st.header("📍 Interactive Map of Pakistan")
     destinations = load_json("destinations.json")
     
     if not destinations:
@@ -552,7 +609,7 @@ def page_maps():
     components.html(map_html, height=600)
 
 def page_budget():
-    st.header("💰 Budget Planner")
+    st.header("📈 Trip Budget Calculator")
     
     budget_data = load_json("budget_templates.json")
     destinations = load_json("destinations.json")
@@ -581,7 +638,7 @@ def page_budget():
             ]
         }
 
-    st.subheader("🧮 Trip Budget Calculator")
+    st.subheader("Configure Your Trip")
     
     c1, c2 = st.columns(2)
     with c1:
@@ -636,7 +693,7 @@ def page_budget():
         st.markdown(f"- {tip}")
 
 def page_emergency():
-    st.header("🚨 Emergency Information")
+    st.header("🛡️ Emergency Contacts")
     st.error("**In case of emergency, dial immediately:** Police **15** | Rescue **1122** | Edhi **115** | Fire **16**")
     
     data = load_json("emergency_contacts.json")
@@ -733,10 +790,9 @@ def page_emergency():
             st.markdown(f"- **{c['service']}**: `{c['phone']}`")
 
 def page_gallery():
-    st.header("📸 Photo Gallery")
+    st.header("🖼️ Visual Gallery")
     st.write("Immerse yourself in the breathtaking landscapes and rich heritage of Pakistan.")
     
-    # Inject Custom CSS for stunning image hover effects and HTML rendering
     st.markdown("""
     <style>
         .gallery-img-container {
@@ -772,7 +828,6 @@ def page_gallery():
 
     dests = load_json("destinations.json")
     
-    # Smart Fallback Data with high-quality stunning URLs (6 images per city, 6 cities)
     if not dests or not any(d.get("gallery_images") for d in dests):
         dests = [
             {
@@ -849,7 +904,6 @@ def page_gallery():
             }
         ]
 
-    # Dropdown Filter
     dest_names = ["All Destinations"] + [d["name"] for d in dests]
     sel = st.selectbox("Filter by Destination", dest_names, key="gal_dest")
     
@@ -861,8 +915,6 @@ def page_gallery():
         images = dest.get("gallery_images", [])
         if images:
             st.markdown(f"### 📍 {dest['name']} — <span style='color:gray; font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span>", unsafe_allow_html=True)
-            
-            # 3-Column Grid using HTML/CSS to bypass Streamlit st.image() CDN blocks
             cols = st.columns(3)
             for i, img_url in enumerate(images):
                 with cols[i % 3]:
@@ -876,7 +928,7 @@ def page_gallery():
             st.divider()
 
 def page_travel_tips():
-    st.header("📜 Essential Travel Tips")
+    st.header("📌 Travel Guidelines")
     st.write("Prepare for your journey to Pakistan with these practical guidelines covering culture, safety, packing, and logistics to ensure a smooth and respectful trip.")
     
     tips_data = [
@@ -993,7 +1045,7 @@ def page_travel_tips():
             st.write(note['desc'])
 
 def page_communication():
-    st.header("📱 Communication Access")
+    st.header("📡 Connectivity Access")
     
     st.subheader("📶 Mobile Network Operators in Pakistan")
     operators = [
@@ -1036,7 +1088,7 @@ def page_communication():
     st.dataframe(df_conn, use_container_width=True, hide_index=True)
 
 def page_admin():
-    st.header("🔐 Admin Panel")
+    st.header("⚙️ Administration Panel")
     if not st.session_state.admin_logged_in:
         pw = st.text_input("Admin Password:", type="password")
         if st.button("Login"):
@@ -1146,30 +1198,58 @@ with companion_tab:
 
 # --- TAB 3: PAKISTAN TOURISM ---
 with tourism_tab:
-    st.markdown("### 🇵🇰 Pakistan Tourism Hub")
+    # Header area with Toggle Button
+    header_col, toggle_col = st.columns([8.5, 1.5])
+    with header_col:
+        st.markdown("### 🇵🇰 Pakistan Tourism Hub")
+    with toggle_col:
+        if st.button("☰ Toggle Panel", use_container_width=True):
+            st.session_state.show_info_panel = not st.session_state.show_info_panel
+            st.rerun()
+            
     st.divider()
     
     tourism_pages = {
-        "🏠 Home": page_home,
-        "🏔️ Destinations": page_destinations,
-        "🗺️ Interactive Map": page_maps,
-        "🌦️ Weather": page_weather,
-        "🤖 Smart Assistant": page_smart_assistant,
-        "💰 Budget Planner": page_budget,
-        "🚨 Emergency Info": page_emergency,
-        "📸 Photo Gallery": page_gallery,
-        "📜 Travel Tips": page_travel_tips,
-        "📱 Communication": page_communication,
-        "🔐 Admin Panel": page_admin,
+        "📊 Dashboard Overview": page_home,
+        "🗺️ Destination Guide": page_destinations,
+        "📍 Interactive Maps": page_maps,
+        "🌤️ Weather Forecast": page_weather,
+        "💬 AI Assistant": page_smart_assistant,
+        "📈 Budget Calculator": page_budget,
+        "🛡️ Emergency Contacts": page_emergency,
+        "🖼️ Visual Gallery": page_gallery,
+        "📌 Travel Guidelines": page_travel_tips,
+        "📡 Connectivity": page_communication,
+        "⚙️ Administration": page_admin,
     }
     
-    # Create a "Local Sidebar" specifically for this tab using columns
-    tour_sidebar_col, tour_content_col = st.columns([2, 8])
-    
-    with tour_sidebar_col:
-        st.markdown("#### 🧭 Navigate")
-        selection = st.radio("Modules", list(tourism_pages.keys()), key="tourism_nav", label_visibility="collapsed")
+    # Layout rendering based on Toggle State
+    if st.session_state.show_info_panel:
+        tour_sidebar_col, tour_content_col = st.columns([2.5, 7.5])
         
-    with tour_content_col:
-        # Render Selected Page
-        tourism_pages[selection]()
+        with tour_sidebar_col:
+            st.markdown("<div class='info-panel-header'>Information Panel</div>", unsafe_allow_html=True)
+            
+            # Determine the index of the currently selected module to preserve state
+            try:
+                current_idx = list(tourism_pages.keys()).index(st.session_state.current_tourism_module)
+            except ValueError:
+                current_idx = 0
+                
+            selection = st.radio(
+                "Modules", 
+                list(tourism_pages.keys()), 
+                index=current_idx,
+                key="tourism_nav", 
+                label_visibility="collapsed",
+                on_change=update_module
+            )
+            
+        with tour_content_col:
+            tourism_pages[selection]()
+            
+    else:
+        # If panel is hidden, render the currently saved module full-width
+        current_selection = st.session_state.current_tourism_module
+        if current_selection in tourism_pages:
+            tourism_pages[current_selection]()
