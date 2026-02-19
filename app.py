@@ -1,20 +1,27 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from groq import Groq
 import requests
 from fpdf import FPDF
 from tavily import TavilyClient
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import PyPDF2
 import base64
 import edge_tts
 import asyncio
 import tempfile
+import json
+import os
+import hashlib
+from datetime import datetime
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Pro Life Planner & Health Bot", page_icon="📍", layout="wide")
+# ============================================================
+# PAGE CONFIG & CSS
+# ============================================================
+st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
-# --- CUSTOM CSS FOR PROFESSIONAL UI & AUTO-SCROLL ---
 st.markdown("""
 <style>
     /* Gemini-style Vertical Suggestion Buttons */
@@ -91,7 +98,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SECRETS MANAGEMENT ---
+# ============================================================
+# SECRETS MANAGEMENT & CONFIG
+# ============================================================
 try:
     GROQ_KEY = st.secrets["groq_api_key"]
     WEATHER_KEY = st.secrets["weather_api_key"]
@@ -103,35 +112,55 @@ except KeyError:
     st.error("Missing keys in secrets.")
     st.stop()
 
-# --- INITIALIZE STATE ---
+# Tourism Config
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+TOURISM_SYSTEM_PROMPT = """You are the Pakistan Tourism Smart Assistant, an expert AI guide specializing exclusively in Pakistan tourism. You help tourists with:
+- Travel safety advice specific to Pakistani regions
+- Cultural guidance, local customs, dress codes, and etiquette
+- National and regional laws relevant to tourists
+- Finding trusted services (hospitals, money exchange, SIM vendors, embassies)
+- Destination recommendations, itineraries, and travel planning
+- Budget advice and money-saving tips
+Rules:
+1. ONLY answer questions related to Pakistan tourism and travel.
+2. If asked about non-Pakistan topics, politely redirect to Pakistan tourism.
+3. Be accurate, helpful, and safety-conscious.
+4. Mention emergency numbers when discussing safety: Police 15, Rescue 1122, Edhi 115.
+"""
+
+# ============================================================
+# INITIALIZE STATE
+# ============================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "medical_data" not in st.session_state:
     st.session_state.medical_data = ""
 if "last_audio" not in st.session_state:
     st.session_state.last_audio = None
+if "tourism_chat_history" not in st.session_state:
+    st.session_state.tourism_chat_history = []
+if "admin_logged_in" not in st.session_state:
+    st.session_state.admin_logged_in = False
 
-# Callback to clear chat
 def clear_chat():
     st.session_state.chat_history = []
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
 
-# --- FUNCTIONS ---
-
+# ============================================================
+# HEALTH & PLANNER FUNCTIONS
+# ============================================================
 def get_current_weather(city, api_key):
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
         response = requests.get(url).json()
         if response.get("cod") != 200: return None, "Error"
         main = response["main"]
-        data = {
-            "desc": response["weather"][0]["description"],
-            "temp": main["temp"],
-            "humidity": main["humidity"],
-            "feels_like": main["feels_like"]
-        }
-        return data, None
+        return {"desc": response["weather"][0]["description"], "temp": main["temp"], "humidity": main["humidity"], "feels_like": main["feels_like"]}, None
     except: return None, "Error"
 
 def get_forecast(city, api_key):
@@ -139,22 +168,11 @@ def get_forecast(city, api_key):
         url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
         res = requests.get(url).json()
         if res.get("cod") != "200": return None
-        
         data = []
         for i in res['list']:
             dt = pd.to_datetime(i['dt_txt'])
-            hour = dt.hour
-            day_night = "Day ☀️" if 6 <= hour < 18 else "Night 🌙"
-            
-            data.append({
-                "Datetime": i['dt_txt'],
-                "Date": dt.strftime('%Y-%m-%d'),
-                "Time": dt.strftime('%I:%M %p'),
-                "Period": day_night,
-                "Temperature (°C)": i['main']['temp'],
-                "Rain Chance (%)": int(i.get('pop', 0) * 100),
-                "Condition": i['weather'][0]['description'].title()
-            })
+            day_night = "Day ☀️" if 6 <= dt.hour < 18 else "Night 🌙"
+            data.append({"Datetime": i['dt_txt'], "Date": dt.strftime('%Y-%m-%d'), "Time": dt.strftime('%I:%M %p'), "Period": day_night, "Temperature (°C)": i['main']['temp'], "Rain Chance (%)": int(i.get('pop', 0) * 100), "Condition": i['weather'][0]['description'].title()})
         return pd.DataFrame(data)
     except: return None
 
@@ -178,9 +196,7 @@ def analyze_image(file, client):
     return res.choices[0].message.content
 
 async def tts(text, lang):
-    voice = "en-US-AriaNeural"
-    if lang == "UR": voice = "ur-PK-UzmaNeural"
-    elif lang == "HI": voice = "hi-IN-SwaraNeural"
+    voice = "ur-PK-UzmaNeural" if lang == "UR" else "hi-IN-SwaraNeural" if lang == "HI" else "en-US-AriaNeural"
     comm = edge_tts.Communicate(text, voice)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
         await comm.save(f.name)
@@ -193,9 +209,142 @@ def create_pdf(text):
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# --- MAIN APP ---
-st.title("🗺️ Pro Life Planner & Health Assistant")
-main_tab, companion_tab = st.tabs(["📅 Trip Planner", "🤖 AI Health Companion"])
+# ============================================================
+# TOURISM FUNCTIONS
+# ============================================================
+def load_json(filename):
+    filepath = os.path.join(DATA_DIR, filename)
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return [] if filename == "destinations.json" else {}
+
+def save_json(filename, data):
+    filepath = os.path.join(DATA_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def get_admin_hash():
+    return hashlib.sha256("admin123".encode()).hexdigest()
+
+def sanitize_messages(messages):
+    if not messages: return messages
+    cleaned = [messages[0]]
+    for msg in messages[1:]:
+        if cleaned and msg["role"] == cleaned[-1]["role"] and msg["role"] != "system":
+            cleaned[-1] = {"role": msg["role"], "content": cleaned[-1]["content"] + "\n" + msg["content"]}
+        else: cleaned.append(msg)
+    return cleaned
+
+def fetch_weather_tourism(lat, lon):
+    params = {"latitude": lat, "longitude": lon, "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code", "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code", "timezone": "Asia/Karachi", "forecast_days": 7}
+    try:
+        resp = requests.get(OPEN_METEO_URL, params=params, timeout=10)
+        return resp.json()
+    except: return None
+
+def weather_code_to_text(code):
+    codes = {0:"☀️ Clear",1:"🌤️ Mainly Clear",2:"⛅ Partly Cloudy",3:"☁️ Overcast", 45:"🌫️ Foggy",51:"🌦️ Light Drizzle",61:"🌧️ Slight Rain",63:"🌧️ Moderate Rain",65:"🌧️ Heavy Rain",71:"🌨️ Slight Snow",95:"⛈️ Thunderstorm"}
+    return codes.get(code, f"Code {code}")
+
+def get_youtube_embed_url(url):
+    if "youtu.be/" in url: vid = url.split("youtu.be/")[1].split("?")[0].split("&")[0]
+    elif "watch?v=" in url: vid = url.split("watch?v=")[1].split("&")[0].split("?")[0]
+    elif "/embed/" in url: vid = url.split("/embed/")[1].split("?")[0].split("&")[0]
+    else: return url
+    return f"https://www.youtube.com/embed/{vid}"
+
+# ============================================================
+# TOURISM PAGES VIEWS
+# ============================================================
+def page_home():
+    st.markdown("<div style='text-align:center; padding:20px 0;'><h1 style='color:#1B5E20;'>🇵🇰 Welcome to Pakistan</h1><p>Your Complete Smart Tourism Guide</p></div>", unsafe_allow_html=True)
+    dests = load_json("destinations.json")
+    if dests:
+        st.subheader("🌟 Featured Destinations")
+        cols = st.columns(min(len(dests), 4))
+        for i, dest in enumerate(dests[:4]):
+            with cols[i % 4]:
+                st.markdown(f"<div style='background:linear-gradient(135deg,#E8F5E9,#C8E6C9);padding:15px;border-radius:12px;text-align:center;'><h4>{dest['name']}</h4><p>{dest['region']}</p></div>", unsafe_allow_html=True)
+
+def page_destinations():
+    st.header("🏔️ Tourist Destinations")
+    dests = load_json("destinations.json")
+    if not dests: st.warning("No destinations data."); return
+    selected = st.selectbox("Select a Destination", [d["name"] for d in dests])
+    dest = next(d for d in dests if d["name"] == selected)
+    st.subheader(f"📍 {dest['name']} — {dest['region']}")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Altitude", f"{dest.get('altitude_m', 'N/A')}m")
+    c2.metric("Best Season", dest.get("best_season", "N/A"))
+    if 'budget_per_day' in dest: c3.metric("Budget/day", f"PKR {dest['budget_per_day'].get('budget', 'N/A')}+")
+    st.write(dest.get("description", ""))
+
+def page_weather():
+    st.header("🌦️ Destination Weather")
+    dests = load_json("destinations.json")
+    if not dests: return
+    selected = st.selectbox("Select Destination", [d["name"] for d in dests], key="w_dest")
+    dest = next(d for d in dests if d["name"] == selected)
+    weather = fetch_weather_tourism(dest.get("latitude", 30), dest.get("longitude", 70))
+    if weather and "current" in weather:
+        c1, c2 = st.columns(2)
+        c1.metric("Temperature", f"{weather['current']['temperature_2m']}°C")
+        c2.metric("Conditions", weather_code_to_text(weather['current']['weather_code']))
+
+def page_smart_assistant():
+    st.header("🤖 Pakistan Tourism AI")
+    if prompt := st.chat_input("Ask about Pakistan tourism..."):
+        st.session_state.tourism_chat_history.append({"role": "user", "content": prompt})
+    for msg in st.session_state.tourism_chat_history:
+        st.chat_message(msg["role"]).write(msg["content"])
+    if prompt:
+        client = Groq(api_key=GROQ_KEY)
+        messages = [{"role": "system", "content": TOURISM_SYSTEM_PROMPT}] + st.session_state.tourism_chat_history
+        res = client.chat.completions.create(messages=sanitize_messages(messages), model="llama-3.3-70b-versatile")
+        reply = res.choices[0].message.content
+        st.chat_message("assistant").write(reply)
+        st.session_state.tourism_chat_history.append({"role": "assistant", "content": reply})
+
+def page_maps():
+    st.header("🗺️ Interactive Map")
+    dests = load_json("destinations.json")
+    markers = json.dumps([{"lat": d.get("latitude", 30), "lng": d.get("longitude", 70), "name": d["name"]} for d in dests if "latitude" in d])
+    html = f"""
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div id="map" style="width: 100%; height: 500px; border-radius: 10px;"></div>
+    <script>
+        var map = L.map('map').setView([30.37, 69.34], 5);
+        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png').addTo(map);
+        var markers = {markers};
+        markers.forEach(function(m) {{ L.marker([m.lat, m.lng]).addTo(map).bindPopup(m.name); }});
+    </script>
+    """
+    components.html(html, height=520)
+
+def page_admin():
+    st.header("🔐 Admin Panel")
+    if not st.session_state.admin_logged_in:
+        pw = st.text_input("Admin Password:", type="password")
+        if st.button("Login"):
+            if hashlib.sha256(pw.encode()).hexdigest() == get_admin_hash():
+                st.session_state.admin_logged_in = True
+                st.rerun()
+            else: st.error("Invalid")
+    else:
+        st.success("Logged in")
+        if st.button("Logout"): 
+            st.session_state.admin_logged_in = False
+            st.rerun()
+        st.info("Admin features active. Use JSON files in the 'data' folder to manage extensive records.")
+
+# ============================================================
+# MAIN APP LAYOUT
+# ============================================================
+st.title("🗺️ Ultimate Planner & Hub")
+main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
 
 # --- TAB 1: TRIP PLANNER ---
 with main_tab:
@@ -204,7 +353,6 @@ with main_tab:
         city = c1.text_input("City", "New York")
         mood = c1.text_input("Activity", "Relaxing walk")
         routine = c2.text_area("Routine", "Mon-Fri 9-5 work")
-        
         submitted = st.form_submit_button("🚀 Generate Plan")
 
     if submitted:
@@ -213,185 +361,94 @@ with main_tab:
         if err: st.error("Weather Error")
         else:
             with st.spinner("🤖 Analyzing weather, routines, and searching web..."):
-                q_res = client.chat.completions.create(
-                    messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}],
-                    model="llama-3.1-8b-instant"
-                )
+                q_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}], model="llama-3.1-8b-instant")
                 search_data = search_tavily(q_res.choices[0].message.content)
-                
-                final_res = client.chat.completions.create(
-                    messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}],
-                    model="llama-3.3-70b-versatile"
-                )
+                final_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}], model="llama-3.3-70b-versatile")
                 plan = final_res.choices[0].message.content
                 st.markdown(plan)
-                
                 st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
                 
                 df = get_forecast(city, WEATHER_KEY)
                 if df is not None:
                     st.divider()
-                    st.subheader(f"🌦️ 5-Day Weather Outlook: {city.title()}")
                     c1, c2 = st.columns(2)
-                    
                     with c1:
-                        fig_temp = px.line(
-                            df, x="Datetime", y="Temperature (°C)", 
-                            title="🌡️ Temperature Trend",
-                            markers=True,
-                            hover_data={"Datetime": False, "Date": True, "Time": True, "Period": True, "Condition": True}
-                        )
-                        fig_temp.update_traces(line_color='#FF5546', marker=dict(size=8, color='#4b90ff'))
-                        fig_temp.update_layout(xaxis_title="", yaxis_title="Temp (°C)", hovermode="x unified")
+                        fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Temp Trend", markers=True)
                         st.plotly_chart(fig_temp, use_container_width=True)
-                    
                     with c2:
-                        fig_rain = px.bar(
-                            df, x="Datetime", y="Rain Chance (%)", 
-                            title="☔ Chance of Rain / Storms",
-                            color="Rain Chance (%)", 
-                            color_continuous_scale="Blues",
-                            range_y=[0, 100], 
-                            hover_data={"Datetime": False, "Date": True, "Time": True, "Period": True, "Condition": True}
-                        )
-                        fig_rain.update_layout(xaxis_title="", yaxis_title="Probability (%)", coloraxis_showscale=False, hovermode="x unified")
+                        fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Rain Chance", range_y=[0, 100])
                         st.plotly_chart(fig_rain, use_container_width=True)
 
-# --- TAB 2: GEMINI-STYLE COMPANION ---
+# --- TAB 2: HEALTH COMPANION ---
 with companion_tab:
     client = Groq(api_key=GROQ_KEY)
-
-    # 1. Zero State
+    
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
-        
         col_buttons, col_space = st.columns([1, 2]) 
-        
         with col_buttons:
-            if st.button("📄 Share Reports & Get Analysis"):
-                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! 🩺 Please upload your medical report using the ➕ button below.\n\nWhat else can I do for you today? ✨"})
-                st.rerun()
-            if st.button("🥦 Prepare a Diet Plan"):
-                st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
-                st.rerun()
-            if st.button("🎬 Suggest Movies"):
-                st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
-                st.rerun()
-            if st.button("🩺 Check Symptoms"):
-                st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
-                st.rerun()
+            if st.button("📄 Share Reports & Get Analysis"): st.session_state.chat_history.append({"role": "assistant", "content": "Upload your report using the ➕ button below!"}); st.rerun()
+            if st.button("🥦 Prepare a Diet Plan"): st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."}); st.rerun()
 
-    # 2. Chat History Display with Copy Option
     for i, msg in enumerate(st.session_state.chat_history):
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
-            
-            # The Native Copy Feature via Expander
-            with st.expander("📋 Copy Text"):
-                st.code(msg["content"], language="markdown")
-                
-            # PDF Download link context
+            with st.expander("📋 Copy Text"): st.code(msg["content"], language="markdown")
             if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
-                prev_msg = st.session_state.chat_history[i-1]["content"]
-                st.download_button("📥 Download Document", create_pdf(prev_msg), f"document_{i}.pdf", key=f"dl_{i}")
+                st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
 
-    # Anchor for Auto-Scroll
     st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
-    
-    # Render Floating Auto-Scroll Arrow (Only if there are messages)
     if st.session_state.chat_history:
-        st.markdown('<a href="#chat-bottom" class="scroll-btn" title="Scroll to bottom">⬇️</a>', unsafe_allow_html=True)
+        st.markdown('<a href="#chat-bottom" class="scroll-btn">⬇️</a>', unsafe_allow_html=True)
 
-    # 3. PROFESSIONAL INPUT TOOLBAR (Now with Clear Chat)
     col_plus, col_clear, col_voice = st.columns([0.08, 0.08, 0.84]) 
-    
     with col_plus:
         with st.popover("➕", use_container_width=True):
             uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
-            
-    with col_clear:
-        # Added Clear Chat Button here!
-        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+    with col_clear: st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+    with col_voice: audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
-    with col_voice:
-        audio_val = st.audio_input("Voice", label_visibility="collapsed")
-
-    # --- LOGIC HANDLING ---
-
-    # A. File Upload (Diet Plan System Prompt)
     if uploaded_file:
-        with st.spinner("Analyzing Document..."):
-            txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
-            st.session_state.medical_data = txt
-            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded: {uploaded_file.name}"})
-            
-            sys_prompt = """
-            You are a helpful nutritionist. 
-            Rule 1: Always use emojis 🍎🥦. 
-            Rule 2: Format the diet plan beautifully. Use Markdown headers (###), bullet points, and leave EMPTY LINES between paragraphs so it is easy to read.
-            Rule 3: At the very end of your diet plan, on a NEW LINE, you MUST ask: "Do you want its PDF file? 📄"
-            """
-            res = client.chat.completions.create(
-                messages=[{"role": "system", "content": sys_prompt}, 
-                          {"role": "user", "content": f"Analyze this medical data: {txt}. Give diet plan."}],
-                model="llama-3.3-70b-versatile"
-            )
-            resp = res.choices[0].message.content
-            st.session_state.chat_history.append({"role": "assistant", "content": resp})
-            st.rerun()
+        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
+        st.session_state.medical_data = txt
+        res = client.chat.completions.create(messages=[{"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."}, {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}], model="llama-3.3-70b-versatile")
+        st.session_state.chat_history.extend([{"role": "user", "content": f"📎 {uploaded_file.name}"}, {"role": "assistant", "content": res.choices[0].message.content}])
+        st.rerun()
 
-    # B. Voice Logic (Voice System Prompt)
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        with st.spinner("Listening..."):
-            txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
-            st.chat_message("user").write(f"🎙️ {txt}")
-            st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {txt}"})
-            
-            sys_msg = """
-            You are a friendly AI companion. 
-            1. Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN].
-            2. ALWAYS use emojis 😊.
-            3. Format your text response professionally. Leave clear EMPTY LINES between different thoughts or sentences so it does not look like a single block of text.
-            4. If creating a plan, end on a NEW LINE asking: "Do you want its PDF file? 📄"
-            5. If answering a normal question, end on a NEW LINE asking: "What else can I do for you today? ✨"
-            """
-            res = client.chat.completions.create(
-                messages=[{"role": "system", "content": sys_msg}, {"role": "user", "content": txt}],
-                model="llama-3.3-70b-versatile"
-            )
-            raw = res.choices[0].message.content
-            lang = "EN"
-            if "[LANG:UR]" in raw: lang = "UR"
-            elif "[LANG:HI]" in raw: lang = "HI"
-            clean_text = raw.replace(f"[LANG:{lang}]", "").strip()
-            
-            st.chat_message("assistant").write(clean_text)
-            st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
-            st.audio(asyncio.run(tts(clean_text, lang)), autoplay=True)
-            st.rerun()
-
-    # C. Text Logic (Text System Prompt)
-    if prompt := st.chat_input("Message..."):
-        st.session_state.chat_history.append({"role": "user", "content": prompt})
-        
-        context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else "No medical context."
-        
-        sys_prompt = f"""
-        You are a highly empathetic and professional AI Companion.
-        Follow these rules strictly:
-        1. Always use relevant emojis to make your response engaging 🌟.
-        2. Format your responses beautifully using Markdown. You MUST use clear paragraph breaks (leave an empty line between different thoughts) and bullet points where helpful. Never write a single giant block of text.
-        3. If the user asks you to create a plan, leave an empty line at the end and ask exactly: "Do you want its PDF file? 📄"
-        4. For general questions, leave an empty line at the end and ask: "What else can I do for you today? 😊" or "How else can I help? ✨".
-        {context}
-        """
-        
-        res = client.chat.completions.create(
-            messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": prompt}],
-            model="llama-3.3-70b-versatile"
-        )
-        resp = res.choices[0].message.content
-        st.session_state.chat_history.append({"role": "assistant", "content": resp})
+        txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+        res = client.chat.completions.create(messages=[{"role": "system", "content": "Reply in same language. Use emojis."}, {"role": "user", "content": txt}], model="llama-3.3-70b-versatile")
+        raw = res.choices[0].message.content
+        lang = "UR" if "[LANG:UR]" in raw else "HI" if "[LANG:HI]" in raw else "EN"
+        clean = raw.replace(f"[LANG:{lang}]", "").strip()
+        st.session_state.chat_history.extend([{"role": "user", "content": f"🎙️ {txt}"}, {"role": "assistant", "content": clean}])
+        st.audio(asyncio.run(tts(clean, lang)), autoplay=True)
         st.rerun()
+
+    if prompt := st.chat_input("Message..."):
+        ctx = f"Medical Context: {st.session_state.medical_data}" if st.session_state.medical_data else ""
+        res = client.chat.completions.create(messages=[{"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"}, {"role": "user", "content": prompt}], model="llama-3.3-70b-versatile")
+        st.session_state.chat_history.extend([{"role": "user", "content": prompt}, {"role": "assistant", "content": res.choices[0].message.content}])
+        st.rerun()
+
+# --- TAB 3: PAKISTAN TOURISM ---
+with tourism_tab:
+    st.markdown("### 🇵🇰 Pakistan Tourism Hub")
+    
+    tourism_pages = {
+        "🏠 Home": page_home,
+        "🏔️ Destinations": page_destinations,
+        "🗺️ Interactive Map": page_maps,
+        "🌦️ Weather": page_weather,
+        "🤖 Smart Assistant": page_smart_assistant,
+        "🔐 Admin Panel": page_admin,
+    }
+    
+    # Sub-Navigation Dropdown
+    selection = st.selectbox("Navigate Tourism Modules:", list(tourism_pages.keys()), key="tourism_nav")
+    st.divider()
+    
+    # Render Selected Page
+    tourism_pages[selection]()
