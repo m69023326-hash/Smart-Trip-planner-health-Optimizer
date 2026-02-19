@@ -319,17 +319,57 @@ def weather_code_to_text(code):
 # TOURISM PAGES VIEWS
 # ============================================================
 def page_home():
+    # Inject Custom CSS specifically for the premium Home Dashboard look
     st.markdown("""
-    <div style='text-align:center; padding:20px 0;'>
-        <h1 style='font-size:2.8em; color:#1B5E20; margin-bottom: 0;'>🇵🇰 Welcome to Pakistan</h1>
-        <p style='font-size:1.3em; color:#555;'>Your Complete Smart Tourism Guide</p>
+    <style>
+    .premium-card {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border: 1px solid #e2e8f0;
+        border-top: 4px solid #047857;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .premium-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border-color: #cbd5e1;
+    }
+    .feature-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        height: 100%;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+        background: #ffffff;
+        border-color: #94a3b8;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Elite Hero Section
+    st.markdown("""
+    <div style='text-align:center; padding: 30px 0 10px 0;'>
+        <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
+            Discover <span style='color: #047857;'>Pakistan</span>
+        </h1>
+        <p style='font-size: 1.3em; color: #64748b; font-weight: 400; letter-spacing: 0.5px;'>Your Exclusive Digital Tourism Concierge</p>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    **Pakistan** — A land of breathtaking mountains, ancient civilizations, rich culture, and legendary hospitality. 
-    From the mighty Karakoram and Himalayan ranges to the ancient ruins of Mohenjo-daro, from the vibrant streets of Lahore to the serene valleys of Hunza and Swat — Pakistan offers experiences that rival the world's best destinations.
-    """)
+    <div style='font-size: 1.1em; color: #334155; line-height: 1.8; text-align: center; max-width: 900px; margin: 0 auto 40px auto; font-family: "Georgia", serif;'>
+    Embark on an unparalleled expedition through a land of majestic topographies, profound heritage, and legendary hospitality. From the formidable peaks of the Karakoram range to the vibrant, cosmopolitan pulse of Lahore, we curate an elite travel experience tailored for the discerning explorer.
+    </div>
+    """, unsafe_allow_html=True)
     
     dests = load_json("destinations.json")
     
@@ -341,38 +381,66 @@ def page_home():
             {"name": "Lahore", "region": "Punjab", "access_level": "Easy", "best_season": "October - March", "budget_per_day": {"budget": 3000}}
         ]
         
-    st.subheader("🌟 Featured Destinations")
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>✨ Curated Destinations</h2>", unsafe_allow_html=True)
+    
     cols = st.columns(min(len(dests), 4))
     for i, dest in enumerate(dests[:4]):
         with cols[i % 4]:
             budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
-            st.markdown(f"""
-            <div style='background:linear-gradient(135deg,#E8F5E9,#C8E6C9);padding:20px;
-            border-radius:15px;text-align:center;margin:5px 0;min-height:220px; color:#333; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-            <h3 style='color:#1B5E20;margin:0; font-weight:bold;'>{dest.get('name', 'N/A')}</h3>
-            <p style='color:#555;font-size:0.9em;margin-bottom:15px;'>{dest.get('region', 'N/A')}</p>
-            <p style='font-size:0.85em; margin:5px;'>📍 <span style='color:#d32f2f;'>{dest.get('access_level', 'N/A')} Access</span></p>
-            <p style='font-size:0.85em; margin:5px;'>📅 <span style='color:#1976d2;'>{dest.get('best_season', 'N/A')}</span></p>
-            <p style='font-size:0.9em; margin-top:15px; color:#d84315; font-weight:bold;'>💰 From PKR {budget:,}/day</p>
-            </div>""", unsafe_allow_html=True)
+            # Formatting numbers beautifully
+            budget_str = f"{budget:,}" if isinstance(budget, (int, float)) else str(budget)
             
-    st.divider()
-    st.subheader("📋 What This App Offers")
+            st.markdown(f"""
+            <div class="premium-card">
+                <h3 style='color: #0f172a; font-size: 1.4em; font-weight: 800; margin: 0 0 5px 0; font-family: "Segoe UI", sans-serif;'>{dest.get('name', 'N/A')}</h3>
+                <p style='color: #64748b; font-size: 0.85em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 20px 0;'>{dest.get('region', 'N/A')}</p>
+                <div style='display: flex; flex-direction: column; gap: 8px;'>
+                    <div style='font-size: 0.9em; color: #475569;'>🧭 <b style='color:#334155;'>Accessibility:</b> {dest.get('access_level', 'N/A')}</div>
+                    <div style='font-size: 0.9em; color: #475569;'>🌤️ <b style='color:#334155;'>Optimal Window:</b> {dest.get('best_season', 'N/A')}</div>
+                    <div style='font-size: 1.05em; color: #047857; font-weight: 700; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px;'>💳 Starts at PKR {budget_str} / day</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🏛️ Premium Concierge Services</h2>", unsafe_allow_html=True)
+    
     features = [
-        ("🗺️","Destination Guide","10+ curated tourist destinations"),
-        ("🤖","AI Assistant","Smart travel assistant powered by AI"),
-        ("📈","Budget Planner","Plan your trip budget"),
-        ("📍","Interactive Maps","Explore Pakistan visually"),
-        ("🌤️","Weather Info","Real-time weather data"),
-        ("🛡️","Emergency Info","Quick access to emergency contacts"),
-        ("🖼️","Photo Gallery","Visual tour of Pakistan"),
-        ("📌","Travel Tips","Safety & cultural guidelines")
+        ("🗺️", "Destination Intelligence", "Comprehensive insights into elite locales."),
+        ("🧠", "AI Travel Strategist", "Personalized cognitive assistance for your itinerary."),
+        ("📊", "Financial Architect", "Precision budget forecasting and resource allocation."),
+        ("🧭", "Geospatial Navigation", "High-fidelity interactive mapping systems."),
+        ("🌤️", "Meteorological Data", "Real-time atmospheric conditions and forecasts."),
+        ("🛡️", "Security Protocol", "Immediate access to critical emergency networks."),
+        ("🖼️", "Visual Archive", "Curated high-resolution photographic galleries."),
+        ("📖", "Cultural Etiquette", "Guidelines for respectful and immersive travel.")
     ]
     
-    cols = st.columns(4)
-    for i, (icon, title, desc) in enumerate(features):
-        with cols[i % 4]:
-            st.markdown(f"**{icon} {title}**\n\n<span style='font-size:0.9em;color:#666;'>{desc}</span>", unsafe_allow_html=True)
+    # Render Features beautifully in two rows
+    cols1 = st.columns(4)
+    for i in range(4):
+        icon, title, desc = features[i]
+        with cols1[i]:
+            st.markdown(f"""
+            <div class="feature-card">
+                <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
+                <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
+                <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
+            </div>
+            <br>
+            """, unsafe_allow_html=True)
+            
+    cols2 = st.columns(4)
+    for i in range(4, 8):
+        icon, title, desc = features[i]
+        with cols2[i-4]:
+            st.markdown(f"""
+            <div class="feature-card">
+                <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
+                <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
+                <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
 def page_destinations():
     st.header("🗺️ Destination Guide")
