@@ -865,6 +865,69 @@ def page_gallery():
             st.write("\n")
             st.divider()
 
+def page_travel_tips():
+    st.header("📜 Essential Travel Tips")
+    st.write("Prepare for your journey to Pakistan with these practical guidelines covering culture, safety, packing, and logistics to ensure a smooth and respectful trip.")
+    
+    tips_data = [
+        {
+            "title": "🎒 Packing Essentials",
+            "items": [
+                "Versatile clothing layers for varying temperatures (especially in the north).",
+                "Sturdy hiking boots or comfortable walking shoes.",
+                "Sun protection: Sunscreen, sunglasses, and a hat.",
+                "Power bank and universal travel adapter (Type C/D plugs are common).",
+                "A reusable water bottle with a purification filter.",
+                "Basic first-aid kit and personal medications.",
+                "Modest swimwear if visiting beaches or hotel pools."
+            ]
+        },
+        {
+            "title": "🤝 Local Customs & Etiquette",
+            "items": [
+                "Dress modestly. For women, covering shoulders and legs is recommended; a headscarf (dupatta) is handy for visiting religious sites. For men, avoid very short shorts in public.",
+                "Always remove shoes before entering a mosque or someone's home.",
+                "Use your right hand for eating and passing objects.",
+                "Public displays of affection (PDA) are culturally frowned upon.",
+                "Respect local traditions and ask permission before taking photos of people, especially women."
+            ]
+        },
+        {
+            "title": "🛡️ Safety Tips",
+            "items": [
+                "Stay informed about current travel advisories for specific regions.",
+                "Keep copies of important documents (passport, visa) separate from originals.",
+                "Use reputable registered taxis or ride-hailing apps like Careem/InDrive.",
+                "Avoid travelling alone at night in unfamiliar or isolated areas.",
+                "Be cautious with street food if you have a sensitive stomach; stick to bottled water.",
+                "Keep emergency numbers handy (Police 15, Rescue 1122)."
+            ]
+        },
+        {
+            "title": "💵 Money & Currency",
+            "items": [
+                "The currency is the Pakistani Rupee (PKR).",
+                "Cash is king in remote areas and smaller bazaars. Carry sufficient small denominations.",
+                "ATMs are widely available in major cities but may be scarce in rural northern areas.",
+                "Inform your bank about your travel plans to avoid card blocks.",
+                "Currency exchange is best done at authorized dealers or banks in major cities."
+            ]
+        },
+        {
+            "title": "🗣️ Language & Communication",
+            "items": [
+                "Urdu and English are the official languages. English is widely understood in major cities and tourist hubs.",
+                "Learning a few basic Urdu phrases (like 'Assalam-o-Alaikum' for hello, 'Shukriya' for thank you) goes a long way.",
+                "Get a local SIM card (e.g., Zong, Jazz, SCOM for the north) upon arrival for easy navigation and communication."
+            ]
+        }
+    ]
+    
+    for category in tips_data:
+        with st.expander(category["title"]):
+            for item in category["items"]:
+                st.markdown(f"- {item}")
+
 def page_admin():
     st.header("🔐 Admin Panel")
     if not st.session_state.admin_logged_in:
@@ -987,6 +1050,7 @@ with tourism_tab:
         "💰 Budget Planner": page_budget,
         "🚨 Emergency Info": page_emergency,
         "📸 Photo Gallery": page_gallery,
+        "📜 Travel Tips": page_travel_tips,
         "🔐 Admin Panel": page_admin,
     }
     
