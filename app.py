@@ -726,63 +726,115 @@ def page_gallery():
     st.header("📸 Photo Gallery")
     st.write("Immerse yourself in the breathtaking landscapes and rich heritage of Pakistan.")
     
-    # Inject Custom CSS for stunning image hover effects
+    # Inject Custom CSS for stunning image hover effects and HTML rendering
     st.markdown("""
     <style>
-        div[data-testid="stImage"] img {
-            border-radius: 12px;
+        .gallery-img-container {
+            overflow: hidden;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            object-fit: cover;
-            height: 250px;
+            background-color: white;
         }
-        div[data-testid="stImage"] img:hover {
-            transform: scale(1.03);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        .gallery-img-container:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
             z-index: 10;
+        }
+        .gallery-img-container img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-img-caption {
+            text-align: center;
+            padding: 10px;
+            margin: 0;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #333;
+            border-top: 1px solid #eee;
         }
     </style>
     """, unsafe_allow_html=True)
 
     dests = load_json("destinations.json")
     
-    # Smart Fallback Data with high-quality stunning URLs
+    # Smart Fallback Data with high-quality stunning URLs (6 images per city, 6 cities)
     if not dests or not any(d.get("gallery_images") for d in dests):
         dests = [
             {
                 "name": "Hunza Valley",
                 "region": "Gilgit-Baltistan",
                 "gallery_images": [
-                    "https://images.unsplash.com/photo-1589553416260-f586c8f1514f?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1627896157734-4bc0a2b027b4?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1600100397608-f010f423b971?q=80&w=1000&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1589553416260-f586c8f1514f?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1627896157734-4bc0a2b027b4?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1600100397608-f010f423b971?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1542358814-c18d1840801a?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
                 ]
             },
             {
                 "name": "Skardu",
                 "region": "Gilgit-Baltistan",
                 "gallery_images": [
-                    "https://images.unsplash.com/photo-1621217036665-27a3c75eb2a7?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1595166373721-653557e4e164?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1633511116666-9eebc3f25b2d?q=80&w=1000&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1621217036665-27a3c75eb2a7?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1595166373721-653557e4e164?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1633511116666-9eebc3f25b2d?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1434394354979-a235cd36269d?auto=format&fit=crop&w=800&q=80"
                 ]
             },
             {
                 "name": "Lahore",
                 "region": "Punjab",
                 "gallery_images": [
-                    "https://images.unsplash.com/photo-1584288079521-4f1816bb6e4b?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1610408552174-8b65e90dcb0a?q=80&w=1000&auto=format&fit=crop", 
-                    "https://images.unsplash.com/photo-1620358823101-b6a482b8a0df?q=80&w=1000&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1584288079521-4f1816bb6e4b?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1610408552174-8b65e90dcb0a?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1620358823101-b6a482b8a0df?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=800&q=80"
                 ]
             },
             {
                 "name": "Swat Valley",
                 "region": "Khyber Pakhtunkhwa",
                 "gallery_images": [
-                    "https://images.unsplash.com/photo-1624389964522-42171850119b?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1650367310574-12eb60f09a15?q=80&w=1000&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1601931535038-1647a7b8e5c6?q=80&w=1000&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1624389964522-42171850119b?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1650367310574-12eb60f09a15?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1601931535038-1647a7b8e5c6?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Islamabad",
+                "region": "Capital Territory",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1601004838634-11883c8c7eb2?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1579208035657-320d3f2fcb9f?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Fairy Meadows",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1483728642387-6c3ba6c6af5f?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1506744626753-1492d2426c11?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80"
                 ]
             }
         ]
@@ -800,11 +852,16 @@ def page_gallery():
         if images:
             st.markdown(f"### 📍 {dest['name']} — <span style='color:gray; font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span>", unsafe_allow_html=True)
             
-            # 3-Column Grid
+            # 3-Column Grid using HTML/CSS to bypass Streamlit st.image() CDN blocks
             cols = st.columns(3)
             for i, img_url in enumerate(images):
                 with cols[i % 3]:
-                    st.image(img_url, use_container_width=True, caption=f"View of {dest['name']}")
+                    st.markdown(f"""
+                    <div class="gallery-img-container">
+                        <img src="{img_url}" alt="{dest['name']}">
+                        <p class="gallery-img-caption">View of {dest['name']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
             st.write("\n")
             st.divider()
 
