@@ -1,0 +1,8 @@
+streamlit
+groq
+requests
+fpdf
+tavily-python
+plotly
+pandas
+PyPDF2
