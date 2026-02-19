@@ -10,10 +10,42 @@ import base64
 import edge_tts
 import asyncio
 import tempfile
-import re
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Pro Life Planner & Health Bot", page_icon="📍", layout="wide")
+
+# --- CUSTOM CSS FOR GEMINI LOOK ---
+st.markdown("""
+<style>
+    .stButton>button {
+        border-radius: 20px;
+        background-color: #f0f2f6; 
+        color: black;
+        border: none;
+        height: 80px;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #e0e2e6;
+        transform: scale(1.02);
+    }
+    .big-font {
+        font-size: 50px !important;
+        font-weight: 600;
+        text-align: center;
+        background: -webkit-linear-gradient(45deg, #4b90ff, #ff5546);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .sub-font {
+        font-size: 20px !important;
+        text-align: center;
+        color: gray;
+        margin-bottom: 40px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- SECRETS MANAGEMENT ---
 try:
@@ -21,382 +53,206 @@ try:
     WEATHER_KEY = st.secrets["weather_api_key"]
     TAVILY_KEY = st.secrets["tavily_api_key"]
 except FileNotFoundError:
-    st.error("Secrets file not found. Please check your .streamlit/secrets.toml file.")
+    st.error("Secrets file not found.")
     st.stop()
-except KeyError as e:
-    st.error(f"Missing key in secrets: {e}. Please add it to Hugging Face Settings.")
+except KeyError:
+    st.error("Missing keys in secrets.")
     st.stop()
 
-# --- INITIALIZE SESSION STATE ---
+# --- INITIALIZE STATE ---
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "medical_data" not in st.session_state:
     st.session_state.medical_data = ""
 
-# --- TOOLS & FUNCTIONS ---
+# --- FUNCTIONS ---
 
 def get_current_weather(city, api_key):
-    """Fetches current weather snapshot."""
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
         response = requests.get(url).json()
-        if response.get("cod") != 200:
-            return None, f"Error: {response.get('message', 'Unknown error')}"
-        
+        if response.get("cod") != 200: return None, "Error"
         main = response["main"]
-        weather_desc = response["weather"][0]["description"]
         data = {
-            "desc": weather_desc,
+            "desc": response["weather"][0]["description"],
             "temp": main["temp"],
             "humidity": main["humidity"],
             "feels_like": main["feels_like"]
         }
         return data, None
-    except Exception as e:
-        return None, f"Weather fetch failed: {str(e)}"
+    except: return None, "Error"
 
 def get_forecast(city, api_key):
-    """Fetches 5-day/3-hour forecast for graphs."""
     try:
         url = f"http://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&units=metric"
-        response = requests.get(url).json()
-        if response.get("cod") != "200":
-            return None
-        
-        forecast_list = []
-        for item in response['list']:
-            forecast_list.append({
-                "Date": item['dt_txt'],
-                "Temperature (°C)": item['main']['temp'],
-                "Rain Chance (%)": item.get('pop', 0) * 100,
-                "Condition": item['weather'][0]['main']
-            })
-        return pd.DataFrame(forecast_list)
-    except:
-        return None
+        res = requests.get(url).json()
+        if res.get("cod") != "200": return None
+        data = []
+        for i in res['list']:
+            data.append({"Date": i['dt_txt'], "Temperature (°C)": i['main']['temp'], "Rain Chance (%)": i.get('pop', 0)*100})
+        return pd.DataFrame(data)
+    except: return None
 
-def search_places_tavily(query):
-    """Finds places using Tavily AI."""
+def search_tavily(query):
     try:
         tavily = TavilyClient(api_key=TAVILY_KEY)
-        response = tavily.search(query=query, search_depth="basic", max_results=3)
-        
-        results = []
-        for result in response.get('results', []):
-            title = result.get('title', 'No Title')
-            content = result.get('content', 'No Content')
-            url = result.get('url', '#')
-            results.append(f"- **{title}**: {content} [Link]({url})")
-            
-        return "\n".join(results) if results else "No results found."
-    except Exception as e:
-        return f"Tavily Search Error: {str(e)}"
+        res = tavily.search(query=query, max_results=3)
+        return "\n".join([f"- {r['title']}: {r['url']}" for r in res['results']])
+    except: return "No results."
 
-def extract_text_from_pdf(pdf_file):
-    """Extracts text from uploaded PDF."""
-    try:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
-    except Exception as e:
-        return f"Error reading PDF: {e}"
+def extract_pdf(file):
+    reader = PyPDF2.PdfReader(file)
+    return "".join([p.extract_text() for p in reader.pages])
 
-def encode_image(image_file):
-    """Encodes image to base64 for API."""
-    return base64.b64encode(image_file.read()).decode('utf-8')
+def analyze_image(file, client):
+    img = base64.b64encode(file.read()).decode('utf-8')
+    res = client.chat.completions.create(
+        messages=[{"role": "user", "content": [{"type": "text", "text": "Extract text."}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img}"}}]}],
+        model="llama-3.2-90b-vision-preview"
+    )
+    return res.choices[0].message.content
 
-def analyze_medical_image(image_file, client):
-    """Uses Vision model to read medical reports from images."""
-    base64_image = encode_image(image_file)
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Transcribe this medical report text exactly. Do not interpret yet, just extract the data."},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}",
-                            },
-                        },
-                    ],
-                }
-            ],
-            model="llama-3.2-90b-vision-preview",
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        return f"Error analyzing image: {e}"
+async def tts(text, lang):
+    voice = "en-US-AriaNeural"
+    if lang == "UR": voice = "ur-PK-UzmaNeural"
+    elif lang == "HI": voice = "hi-IN-SwaraNeural"
+    comm = edge_tts.Communicate(text, voice)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
+        await comm.save(f.name)
+        return f.name
 
-def create_pdf(plan_text):
-    """Generates a PDF of the trip/diet plan."""
+def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="Your AI Health & Trip Plan", ln=True, align='C')
-    pdf.ln(10)
-    pdf.set_font("Arial", size=11)
-    sanitized_text = plan_text.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 10, txt=sanitized_text)
+    pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# --- VOICE LOGIC (SMART LANGUAGE DETECTION) ---
-
-async def text_to_speech_edge(text, language_code):
-    """Generates audio using the correct voice for the detected language."""
-    voice = "en-US-AriaNeural" # Default
-    if language_code == "UR":
-        voice = "ur-PK-UzmaNeural"
-    elif language_code == "HI":
-        voice = "hi-IN-SwaraNeural"
-        
-    communicate = edge_tts.Communicate(text, voice)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-        await communicate.save(tmp_file.name)
-        return tmp_file.name
-
-# --- MAIN APP LAYOUT ---
-
+# --- MAIN APP ---
 st.title("🗺️ Pro Life Planner & Health Assistant")
-
-# Consolidated Layout: Just 2 Main Tabs
 main_tab, companion_tab = st.tabs(["📅 Trip Planner", "🤖 AI Health Companion"])
 
-# ==========================================
-# TAB 1: TRIP PLANNER (UNCHANGED)
-# ==========================================
+# --- TAB 1: TRIP PLANNER ---
 with main_tab:
-    st.markdown("### 🌍 Plan your perfect week")
-    with st.form("user_input_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            user_city = st.text_input("Current City:", "Multan")
-            user_needs = st.text_input("Specific Activity/Mood:", "Relaxing outdoor walk")
-        with col2:
-            user_routine = st.text_area("Your Routine/Schedule:", height=100, 
-                                        placeholder="e.g., I work Mon-Fri 9-5. I am free Sunday.")
-        
-        submitted = st.form_submit_button("🚀 Generate Plan & Analysis")
-
-    if submitted:
-        with st.spinner("🤖 Analyzing weather, routines, and searching web..."):
-            try:
-                client = Groq(api_key=GROQ_KEY)
-                current_weather, error_msg = get_current_weather(user_city, WEATHER_KEY)
-                forecast_df = get_forecast(user_city, WEATHER_KEY)
-
-                if error_msg:
-                    st.error(error_msg)
-                    st.stop()
-
-                weather_summary = f"{current_weather['desc']}, {current_weather['temp']}°C"
-
-                search_query_prompt = f"""
-                Context: User in '{user_city}' wants '{user_needs}'.
-                Task: Write a precise KEYWORD search query. 
-                Rules: Use keywords only. Add 'best' and current year.
-                Example: "best family parks Multan 2025"
-                Output: ONLY query string. No quotes.
-                """
-                
-                search_q_response = client.chat.completions.create(
-                    messages=[{"role": "user", "content": search_query_prompt}],
-                    model="llama-3.1-8b-instant" 
-                )
-                search_query = search_q_response.choices[0].message.content.strip().replace('"', '')
-                
-                places_info = search_places_tavily(search_query)
-
-                final_prompt = f"""
-                You are an expert Trip Planner.
-                **User Data:** Routine: {user_routine}, Prefs: {user_needs}, City: {user_city}
-                **Live Data:** Weather: {weather_summary}, Search Results: {places_info}
-                **Directives:**
-                1. Suggest best time for trip based on routine.
-                2. Suggest places from search results.
-                3. Health tips based on weather ({current_weather['temp']}°C).
-                """
-
-                completion = client.chat.completions.create(
-                    messages=[{"role": "system", "content": "You are a helpful assistant."},
-                              {"role": "user", "content": final_prompt}],
-                    model="llama-3.3-70b-versatile",
-                    temperature=0.6,
-                )
-                result_text = completion.choices[0].message.content
-                
-                st.success("Analysis Complete!")
-                st.subheader("📝 Your Personalized Plan")
-                st.markdown(result_text)
-                
-                pdf_bytes = create_pdf(result_text)
-                st.download_button("📥 Download Plan PDF", pdf_bytes, "trip_plan.pdf", "application/pdf")
-
-                st.divider()
-                st.subheader(f"🌦️ Weather Intelligence: {user_city.title()}")
-                
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Temperature", f"{current_weather['temp']}°C", f"Feels like {current_weather['feels_like']}°C")
-                m2.metric("Condition", current_weather['desc'].title())
-                m3.metric("Humidity", f"{current_weather['humidity']}%")
-
-                if forecast_df is not None:
-                    col_g1, col_g2 = st.columns(2)
-                    with col_g1:
-                        st.markdown("##### 📈 5-Day Temperature")
-                        fig_temp = px.line(forecast_df, x="Date", y="Temperature (°C)", markers=True)
-                        st.plotly_chart(fig_temp, use_container_width=True)
-                    with col_g2:
-                        st.markdown("##### ☔ Rainfall Chance")
-                        fig_rain = px.bar(forecast_df, x="Date", y="Rain Chance (%)", color="Rain Chance (%)")
-                        st.plotly_chart(fig_rain, use_container_width=True)
-
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
-
-# ==========================================
-# TAB 2: AI HEALTH COMPANION (ALL-IN-ONE)
-# ==========================================
-with companion_tab:
-    st.header("💬 AI Health Companion")
-    st.caption("Chat with me, upload reports, or talk naturally in your language.")
-
-    # --- CHAT HISTORY DISPLAY ---
-    # We display chat first so new inputs appear below (standard chat app feel)
-    chat_container = st.container()
-    with chat_container:
-        for message in st.session_state.chat_history:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-    # --- MULTIMEDIA INPUT TOOLBAR ---
-    # This is the "Industrial" touch: A toolbar above the chat input
-    with st.popover("➕ Multimedia Options (Upload / Voice)", use_container_width=True):
-        st.markdown("### 📎 Upload Report or 🎙️ Speak")
-        
-        # 1. File Uploader
-        uploaded_file = st.file_uploader("Upload Medical Report (PDF/Img)", type=["pdf", "png", "jpg", "jpeg"], key="chat_uploader")
-        
-        # 2. Audio Input
-        audio_value = st.audio_input("Press to Record Voice", key="chat_audio")
-
-    # --- LOGIC: HANDLE UPLOADS & VOICE ---
-    
-    # CASE A: FILE UPLOADED
-    if uploaded_file:
-        with st.spinner("📄 Analyzing Document..."):
+    with st.form("trip_form"):
+        c1, c2 = st.columns(2)
+        city = c1.text_input("City", "New York")
+        mood = c1.text_input("Activity", "Relaxing walk")
+        routine = c2.text_area("Routine", "Mon-Fri 9-5 work")
+        if st.form_submit_button("🚀 Generate Plan"):
             client = Groq(api_key=GROQ_KEY)
-            extracted_text = ""
-            if uploaded_file.type == "application/pdf":
-                extracted_text = extract_text_from_pdf(uploaded_file)
+            weather, err = get_current_weather(city, WEATHER_KEY)
+            if err: st.error("Weather Error")
             else:
-                extracted_text = analyze_medical_image(uploaded_file, client)
+                q_res = client.chat.completions.create(
+                    messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}],
+                    model="llama-3.1-8b-instant"
+                )
+                search_data = search_tavily(q_res.choices[0].message.content)
+                
+                final_res = client.chat.completions.create(
+                    messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}],
+                    model="llama-3.3-70b-versatile"
+                )
+                plan = final_res.choices[0].message.content
+                st.markdown(plan)
+                st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
+                
+                # Graphs
+                df = get_forecast(city, WEATHER_KEY)
+                if df is not None:
+                    c1, c2 = st.columns(2)
+                    c1.plotly_chart(px.line(df, x="Date", y="Temperature (°C)", title="Temp Trend"))
+                    c2.plotly_chart(px.bar(df, x="Date", y="Rain Chance (%)", title="Rain Chance"))
+
+# --- TAB 2: GEMINI-STYLE COMPANION ---
+with companion_tab:
+    
+    # 1. Zero State (The "Gemini" Look)
+    if not st.session_state.chat_history:
+        st.markdown('<p class="big-font">Hello dear, how can I help you?</p>', unsafe_allow_html=True)
+        st.markdown('<p class="sub-font">So tell me what you want</p>', unsafe_allow_html=True)
+        
+        # Suggestion Chips (Buttons)
+        c1, c2 = st.columns(2)
+        if c1.button("📄 You can share your reports with me"):
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload your report using the ➕ icon below!"})
+            st.rerun()
+        if c2.button("🥦 We could prepare a diet plan"):
+            st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
+            st.rerun()
             
-            # Save data to session
-            st.session_state.medical_data = extracted_text
-            
-            # Generate Analysis
-            diet_prompt = f"""
-            Act as a Nutritionist. 
-            Patient Data: {extracted_text}
-            Task: Summarize findings and give a diet plan. Avoid foods & Eat foods list.
-            Disclaimer: You are an AI.
-            """
-            completion = client.chat.completions.create(
-                messages=[{"role": "user", "content": diet_prompt}],
-                model="llama-3.3-70b-versatile"
-            )
-            analysis_text = completion.choices[0].message.content
-            
-            # Add to Chat
-            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded Report: {uploaded_file.name}"})
-            st.session_state.chat_history.append({"role": "assistant", "content": analysis_text})
+        c3, c4 = st.columns(2)
+        if c3.button("🎬 I can help you in suggesting movies"):
+            st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
+            st.rerun()
+        if c4.button("🩺 Explain my symptoms"):
+            st.session_state.chat_history.append({"role": "user", "content": "I have a headache and fever."})
             st.rerun()
 
-    # CASE B: VOICE INPUT
-    if audio_value:
-        with st.spinner("👂 Listening..."):
-            client = Groq(api_key=GROQ_KEY)
-            try:
-                # Transcribe
-                transcription = client.audio.transcriptions.create(
-                    file=("voice.wav", audio_value),
-                    model="whisper-large-v3-turbo",
-                    response_format="text"
-                )
-                
-                # Add User Voice to Chat
-                st.session_state.chat_history.append({"role": "user", "content": f"🎙️ (Voice): {transcription}"})
-                
-                # Generate AI Response
-                system_prompt = """
-                You are a voice assistant. Detect language (EN/UR/HI). 
-                Reply in same language. Start with code [LANG:XX].
-                Keep it short.
-                """
-                context = ""
-                if st.session_state.medical_data:
-                    context = f"Medical Context: {st.session_state.medical_data[:500]}..."
+    # 2. Chat History Display
+    for msg in st.session_state.chat_history:
+        st.chat_message(msg["role"]).write(msg["content"])
 
-                messages = [{"role": "system", "content": system_prompt + context}]
-                messages.append({"role": "user", "content": transcription})
-                
-                completion = client.chat.completions.create(
-                    messages=messages,
-                    model="llama-3.3-70b-versatile",
-                    temperature=0.7
-                )
-                raw_response = completion.choices[0].message.content
-                
-                # Parse Language
-                lang_code = "EN"
-                ai_text = raw_response
-                if "[LANG:UR]" in raw_response: lang_code = "UR"; ai_text = raw_response.replace("[LANG:UR]", "").strip()
-                elif "[LANG:HI]" in raw_response: lang_code = "HI"; ai_text = raw_response.replace("[LANG:HI]", "").strip()
-                elif "[LANG:EN]" in raw_response: lang_code = "EN"; ai_text = raw_response.replace("[LANG:EN]", "").strip()
+    # 3. The "Action Bar" (Upload & Voice Icons)
+    # We use a popover to mimic the "+" menu in messaging apps
+    with st.popover("➕ Add File / Voice", use_container_width=True):
+        c_upload, c_voice = st.columns(2)
+        uploaded_file = c_upload.file_uploader("Upload Report", type=["pdf", "jpg", "png"], label_visibility="collapsed")
+        audio_val = c_voice.audio_input("Voice Note", label_visibility="collapsed")
 
-                # Add AI Reply to Chat
-                st.session_state.chat_history.append({"role": "assistant", "content": f"🔊 {ai_text}"})
-                
-                # Speak It
-                audio_file = asyncio.run(text_to_speech_edge(ai_text, lang_code))
-                st.audio(audio_file, format="audio/mp3", autoplay=True)
-                
-            except Exception as e:
-                st.error(f"Voice Error: {e}")
+    # 4. Handle Inputs (Logic)
+    client = Groq(api_key=GROQ_KEY)
 
-    # CASE C: TEXT INPUT (Standard Chat)
-    if prompt := st.chat_input("Type a message..."):
+    # A. File Upload Logic
+    if uploaded_file:
+        with st.spinner("Analyzing..."):
+            txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
+            st.session_state.medical_data = txt
+            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded: {uploaded_file.name}"})
+            
+            res = client.chat.completions.create(
+                messages=[{"role": "user", "content": f"Analyze this medical data: {txt}. Give diet plan."}],
+                model="llama-3.3-70b-versatile"
+            )
+            st.session_state.chat_history.append({"role": "assistant", "content": res.choices[0].message.content})
+            st.rerun()
+
+    # B. Voice Logic
+    if audio_val:
+        with st.spinner("Listening..."):
+            text = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+            st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {text}"})
+            
+            # Detect Language & Reply
+            sys_msg = "Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN]."
+            res = client.chat.completions.create(
+                messages=[{"role": "system", "content": sys_msg}, {"role": "user", "content": text}],
+                model="llama-3.3-70b-versatile"
+            )
+            raw = res.choices[0].message.content
+            
+            lang = "EN"
+            if "[LANG:UR]" in raw: lang = "UR"
+            elif "[LANG:HI]" in raw: lang = "HI"
+            clean_text = raw.replace(f"[LANG:{lang}]", "").strip()
+            
+            st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
+            
+            # Auto-play audio
+            audio_file = asyncio.run(tts(clean_text, lang))
+            st.audio(audio_file, autoplay=True)
+            st.rerun()
+
+    # C. Text Logic
+    if prompt := st.chat_input("Message..."):
         st.session_state.chat_history.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                try:
-                    client = Groq(api_key=GROQ_KEY)
-                    context_data = ""
-                    if st.session_state.medical_data:
-                        context_data = f"Medical Report Context: {st.session_state.medical_data[:2000]}"
-
-                    messages = [{"role": "system", "content": f"You are a helpful Health Coach. {context_data}"}]
-                    for msg in st.session_state.chat_history[-5:]: 
-                        messages.append({"role": msg["role"], "content": msg["content"]}) # Simplified msg object
-
-                    chat_completion = client.chat.completions.create(
-                        messages=messages,
-                        model="llama-3.3-70b-versatile",
-                        temperature=0.7,
-                    )
-                    
-                    response = chat_completion.choices[0].message.content
-                    st.markdown(response)
-                    st.session_state.chat_history.append({"role": "assistant", "content": response})
-                    
-                except Exception as e:
-                    st.error(f"Chat Error: {str(e)}")
+        
+        context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else ""
+        res = client.chat.completions.create(
+            messages=[{"role": "system", "content": "You are a helpful health assistant. " + context}, 
+                      {"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile"
+        )
+        st.session_state.chat_history.append({"role": "assistant", "content": res.choices[0].message.content})
+        st.rerun()
