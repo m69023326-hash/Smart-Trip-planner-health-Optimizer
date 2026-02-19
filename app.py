@@ -320,53 +320,53 @@ def weather_code_to_text(code):
 # ============================================================
 def page_home():
     st.markdown("""
-    <style>
-    .premium-card {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        border: 1px solid #e2e8f0;
-        border-top: 4px solid #047857;
-        border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-    .premium-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        border-color: #cbd5e1;
-    }
-    .feature-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        height: 100%;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    .feature-card:hover {
-        background: #ffffff;
-        border-color: #94a3b8;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    </style>
+<style>
+.premium-card {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border: 1px solid #e2e8f0;
+    border-top: 4px solid #047857;
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+.premium-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+.feature-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.feature-card:hover {
+    background: #ffffff;
+    border-color: #94a3b8;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+</style>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style='text-align:center; padding: 30px 0 10px 0;'>
-        <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
-            Discover <span style='color: #047857;'>Pakistan</span>
-        </h1>
-        <p style='font-size: 1.3em; color: #64748b; font-weight: 400; letter-spacing: 0.5px;'>Your Exclusive Digital Tourism Concierge</p>
-    </div>
+<div style='text-align:center; padding: 30px 0 10px 0;'>
+    <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
+        Discover <span style='color: #047857;'>Pakistan</span>
+    </h1>
+    <p style='font-size: 1.3em; color: #64748b; font-weight: 400; letter-spacing: 0.5px;'>Your Exclusive Digital Tourism Concierge</p>
+</div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    <div style='font-size: 1.1em; color: #334155; line-height: 1.8; text-align: center; max-width: 900px; margin: 0 auto 40px auto; font-family: "Georgia", serif;'>
-    Embark on an unparalleled expedition through a land of majestic topographies, profound heritage, and legendary hospitality. From the formidable peaks of the Karakoram range to the vibrant, cosmopolitan pulse of Lahore, we curate an elite travel experience tailored for the discerning explorer.
-    </div>
+<div style='font-size: 1.1em; color: #334155; line-height: 1.8; text-align: center; max-width: 900px; margin: 0 auto 40px auto; font-family: "Georgia", serif;'>
+Embark on an unparalleled expedition through a land of majestic topographies, profound heritage, and legendary hospitality. From the formidable peaks of the Karakoram range to the vibrant, cosmopolitan pulse of Lahore, we curate an elite travel experience tailored for the discerning explorer.
+</div>
     """, unsafe_allow_html=True)
     
     dests = load_json("destinations.json")
@@ -388,15 +388,15 @@ def page_home():
             budget_str = f"{budget:,}" if isinstance(budget, (int, float)) else str(budget)
             
             st.markdown(f"""
-            <div class="premium-card">
-                <h3 style='color: #0f172a; font-size: 1.4em; font-weight: 800; margin: 0 0 5px 0; font-family: "Segoe UI", sans-serif;'>{dest.get('name', 'N/A')}</h3>
-                <p style='color: #64748b; font-size: 0.85em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 20px 0;'>{dest.get('region', 'N/A')}</p>
-                <div style='display: flex; flex-direction: column; gap: 8px;'>
-                    <div style='font-size: 0.9em; color: #475569;'>🧭 <b style='color:#334155;'>Accessibility:</b> {dest.get('access_level', 'N/A')}</div>
-                    <div style='font-size: 0.9em; color: #475569;'>🌤️ <b style='color:#334155;'>Optimal Window:</b> {dest.get('best_season', 'N/A')}</div>
-                    <div style='font-size: 1.05em; color: #047857; font-weight: 700; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px;'>💳 Starts at PKR {budget_str} / day</div>
-                </div>
-            </div>
+<div class="premium-card">
+    <h3 style='color: #0f172a; font-size: 1.4em; font-weight: 800; margin: 0 0 5px 0; font-family: "Segoe UI", sans-serif;'>{dest.get('name', 'N/A')}</h3>
+    <p style='color: #64748b; font-size: 0.85em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 20px 0;'>{dest.get('region', 'N/A')}</p>
+    <div style='display: flex; flex-direction: column; gap: 8px;'>
+        <div style='font-size: 0.9em; color: #475569;'>🧭 <b style='color:#334155;'>Accessibility:</b> {dest.get('access_level', 'N/A')}</div>
+        <div style='font-size: 0.9em; color: #475569;'>🌤️ <b style='color:#334155;'>Optimal Window:</b> {dest.get('best_season', 'N/A')}</div>
+        <div style='font-size: 1.05em; color: #047857; font-weight: 700; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px;'>💳 Starts at PKR {budget_str} / day</div>
+    </div>
+</div>
             """, unsafe_allow_html=True)
             
     st.markdown("<br>", unsafe_allow_html=True)
@@ -418,12 +418,12 @@ def page_home():
         icon, title, desc = features[i]
         with cols1[i]:
             st.markdown(f"""
-            <div class="feature-card">
-                <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
-                <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
-                <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
-            </div>
-            <br>
+<div class="feature-card">
+    <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
+    <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
+    <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
+</div>
+<br>
             """, unsafe_allow_html=True)
             
     cols2 = st.columns(4)
@@ -431,11 +431,11 @@ def page_home():
         icon, title, desc = features[i]
         with cols2[i-4]:
             st.markdown(f"""
-            <div class="feature-card">
-                <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
-                <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
-                <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
-            </div>
+<div class="feature-card">
+    <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
+    <h4 style='color: #1e293b; font-size: 1.05em; font-weight: 700; margin: 0 0 10px 0; font-family: "Segoe UI", sans-serif;'>{title}</h4>
+    <p style='color: #64748b; font-size: 0.85em; line-height: 1.5; margin: 0;'>{desc}</p>
+</div>
             """, unsafe_allow_html=True)
 
 def page_destinations():
@@ -1252,30 +1252,25 @@ with main_tab:
     with plan_content_col:
         if plan_nav == "📖 App Overview":
             st.markdown("""
-            <div style='padding: 30px; background: linear-gradient(145deg, #ffffff, #f8f9fa); border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
-                <h2 style='color: #0f172a; font-family: "Segoe UI", sans-serif; font-weight: 800; margin-bottom: 20px; text-align: center;'>Welcome to Your Ultimate Life & Health Planner 🌟</h2>
-                
-                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
-                In today's hyper-connected, fast-paced world, time slips through our fingers seamlessly. We know you are navigating an incredibly busy life. Balancing professional demands, family obligations, and personal goals often leaves little room to actually breathe and <em>enjoy</em> your surroundings.
-                </p>
-                
-                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
-                Our AI platform acts as your personal time-architect. By simply outlining your weekly routine, we identify those hidden pockets of free time. Whether you have just a couple of hours on a Wednesday evening or an entire open Sunday, we curate the perfect activity—be it a relaxing walk, an immersive local trip, or a cozy dining experience—allowing you to truly savor your city without the mental fatigue of planning.
-                </p>
-                
-                <p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 30px;'>
-                But life isn't just about managing time; it's about safeguarding your physical well-being. Living with conditions such as asthma, diabetes, or high blood pressure requires vigilant, constant management. We deeply understand that your doctor is not always immediately available at 11 PM to interpret a sudden lab report or suggest an urgent dietary adjustment. This AI platform perfectly fills that gap with a compassionate touch. Simply share your medical reports, and our sophisticated Health Companion will instantly analyze your specific clinical constraints to prepare a safe, personalized diet and wellness plan—ensuring you are always looked after, day or night.
-                </p>
-                
-                <hr style='border-color: #cbd5e1; margin-bottom: 20px;'>
-                
-                <h4 style='color: #047857; font-family: "Segoe UI", sans-serif; font-weight: 700; margin-bottom: 15px;'>Platform Capabilities</h4>
-                <ul style='color: #475569; font-size: 1.05em; line-height: 1.6; font-family: "Segoe UI", sans-serif;'>
-                    <li style='margin-bottom: 10px;'><b>📅 Trip Planner:</b> Intelligent time-management and tailored local experiences based explicitly on your daily routine.</li>
-                    <li style='margin-bottom: 10px;'><b>🤖 AI Health Companion:</b> Your 24/7 empathetic clinical assistant for real-time medical report analysis and dietary guidance.</li>
-                    <li><b>🇵🇰 Pakistan Tourism:</b> A premium, executive digital concierge for exploring the majestic topographies and heritage of Pakistan.</li>
-                </ul>
-            </div>
+<div style='padding: 30px; background: linear-gradient(145deg, #ffffff, #f8f9fa); border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+<h2 style='color: #0f172a; font-family: "Segoe UI", sans-serif; font-weight: 800; margin-bottom: 20px; text-align: center;'>Welcome to Your Ultimate Life & Health Planner 🌟</h2>
+<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
+In today's hyper-connected, fast-paced world, time slips through our fingers seamlessly. We know you are navigating an incredibly busy life. Balancing professional demands, family obligations, and personal goals often leaves little room to actually breathe and <em>enjoy</em> your surroundings.
+</p>
+<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 20px;'>
+Our AI platform acts as your personal time-architect. By simply outlining your weekly routine, we identify those hidden pockets of free time. Whether you have just a couple of hours on a Wednesday evening or an entire open Sunday, we curate the perfect activity—be it a relaxing walk, an immersive local trip, or a cozy dining experience—allowing you to truly savor your city without the mental fatigue of planning.
+</p>
+<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: "Georgia", serif; margin-bottom: 30px;'>
+But life isn't just about managing time; it's about safeguarding your physical well-being. Living with conditions such as asthma, diabetes, or high blood pressure requires vigilant, constant management. We deeply understand that your doctor is not always immediately available at 11 PM to interpret a sudden lab report or suggest an urgent dietary adjustment. This AI platform perfectly fills that gap with a compassionate touch. Simply share your medical reports, and our sophisticated Health Companion will instantly analyze your specific clinical constraints to prepare a safe, personalized diet and wellness plan—ensuring you are always looked after, day or night.
+</p>
+<hr style='border-color: #cbd5e1; margin-bottom: 20px;'>
+<h4 style='color: #047857; font-family: "Segoe UI", sans-serif; font-weight: 700; margin-bottom: 15px;'>Platform Capabilities</h4>
+<ul style='color: #475569; font-size: 1.05em; line-height: 1.6; font-family: "Segoe UI", sans-serif;'>
+<li style='margin-bottom: 10px;'><b>📅 Trip Planner:</b> Intelligent time-management and tailored local experiences based explicitly on your daily routine.</li>
+<li style='margin-bottom: 10px;'><b>🤖 AI Health Companion:</b> Your 24/7 empathetic clinical assistant for real-time medical report analysis and dietary guidance.</li>
+<li><b>🇵🇰 Pakistan Tourism:</b> A premium, executive digital concierge for exploring the majestic topographies and heritage of Pakistan.</li>
+</ul>
+</div>
             """, unsafe_allow_html=True)
             
         elif plan_nav == "⚙️ Activity Planner":
