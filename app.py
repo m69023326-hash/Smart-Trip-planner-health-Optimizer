@@ -14,49 +14,57 @@ import tempfile
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Pro Life Planner & Health Bot", page_icon="📍", layout="wide")
 
-# --- CUSTOM CSS FOR GEMINI LOOK ---
+# --- CUSTOM CSS FOR PROFESSIONAL UI ---
 st.markdown("""
 <style>
-    /* Gemini-style Suggestion Buttons */
+    /* Gemini-style Vertical Suggestion Buttons */
     .stButton>button {
-        border-radius: 20px;
-        background-color: #f0f2f6; 
-        color: black;
-        border: none;
-        height: 60px;
+        border-radius: 12px;
+        background-color: #f8f9fa; 
+        color: #333;
+        border: 1px solid #e0e0e0;
+        height: 50px;
         width: 100%;
-        transition: all 0.3s;
+        text-align: left; /* Left align text for vertical list */
+        padding-left: 20px;
+        transition: all 0.2s;
+        font-weight: 500;
     }
     .stButton>button:hover {
-        background-color: #dbe0e6;
-        transform: scale(1.02);
+        background-color: #e8eaed;
+        border-color: #d2d2d2;
+        transform: translateX(5px); /* Subtle slide effect */
+        color: #000;
     }
     
-    /* Center Greeting */
-    .greeting-container {
-        text-align: center;
-        margin-top: 40px;
-        margin-bottom: 40px;
-    }
-    .big-font {
-        font-size: 38px !important;
+    /* Greeting Styles */
+    .greeting-header {
+        font-size: 42px !important;
         font-weight: 600;
-        background: -webkit-linear-gradient(45deg, #4b90ff, #ff5546);
+        background: -webkit-linear-gradient(0deg, #4b90ff, #ff5546);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
     }
-    .sub-font {
-        font-size: 18px !important;
-        color: #666;
-        margin-top: 5px;
+    .greeting-sub {
+        font-size: 20px !important;
+        color: #5f6368;
+        margin-bottom: 30px;
     }
 
-    /* Input Toolbar Styling - Making the + button look like an icon */
+    /* Input Toolbar Styling */
+    /* Make the popover button circular and align it */
     div[data-testid="stPopover"] > button {
         border-radius: 50%;
-        height: 45px;
-        width: 45px;
+        height: 48px;
+        width: 48px;
         border: 1px solid #ddd;
+        margin-top: 28px; /* Alignment fix to match audio player height */
+    }
+    
+    /* Remove extra padding from audio widget to align with popover */
+    .stAudioInput {
+        margin-top: 0px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -184,46 +192,44 @@ with main_tab:
 with companion_tab:
     client = Groq(api_key=GROQ_KEY)
 
-    # 1. Zero State
+    # 1. Zero State (Centered Greeting, Vertical Left Suggestions)
     if not st.session_state.chat_history:
-        st.markdown("""
-        <div class="greeting-container">
-            <div class="big-font">Hello dear, how can I help you?</div>
-            <div class="sub-font">Tell me what you want or use the options below</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
+        st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
         
-        c1, c2 = st.columns(2)
-        if c1.button("📄 Share Reports & Get Analysis"):
-            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload your report using the ➕ button!"})
-            st.rerun()
-        if c2.button("🥦 Prepare a Diet Plan"):
-            st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
-            st.rerun()
+        # Professional Vertical Layout: Buttons on Left, Empty space on Right
+        col_buttons, col_space = st.columns([1, 2]) # 1/3 width for buttons, 2/3 empty
+        
+        with col_buttons:
+            if st.button("📄 Share Reports & Get Analysis"):
+                st.session_state.chat_history.append({"role": "assistant", "content": "Sure! Please upload your medical report using the ➕ button below."})
+                st.rerun()
             
-        c3, c4 = st.columns(2)
-        if c3.button("🎬 Suggest Movies"):
-            st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
-            st.rerun()
-        if c4.button("🩺 Check Symptoms"):
-            st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
-            st.rerun()
+            if st.button("🥦 Prepare a Diet Plan"):
+                st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
+                st.rerun()
+                
+            if st.button("🎬 Suggest Movies"):
+                st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
+                st.rerun()
+                
+            if st.button("🩺 Check Symptoms"):
+                st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
+                st.rerun()
 
-    # 2. Chat History
+    # 2. Chat History Display
     for msg in st.session_state.chat_history:
         st.chat_message(msg["role"]).write(msg["content"])
 
-    # 3. COMPACT INPUT TOOLBAR
-    # We use columns to create a tight row of icons right above the chat input
-    col_plus, col_voice = st.columns([0.1, 0.9])
+    # 3. PROFESSIONAL INPUT TOOLBAR
+    # Tightly aligned row: [Plus Icon] [Voice Bar]
+    col_plus, col_voice = st.columns([0.08, 0.92]) 
     
     with col_plus:
-        # The "+" Icon is actually a small popover containing the file uploader
         with st.popover("➕", use_container_width=True):
             uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
             
     with col_voice:
-        # The Microphone is the native audio input widget
         audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
     # --- LOGIC HANDLING ---
@@ -247,12 +253,10 @@ with companion_tab:
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
         with st.spinner("Listening..."):
-            # Transcribe
             txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
             st.chat_message("user").write(f"🎙️ {txt}")
             st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {txt}"})
             
-            # Detect Lang & Reply
             res = client.chat.completions.create(
                 messages=[{"role": "system", "content": "Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN]."}, {"role": "user", "content": txt}],
                 model="llama-3.3-70b-versatile"
@@ -263,7 +267,6 @@ with companion_tab:
             elif "[LANG:HI]" in raw: lang = "HI"
             clean_text = raw.replace(f"[LANG:{lang}]", "").strip()
             
-            # Show & Speak
             st.chat_message("assistant").write(clean_text)
             st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
             st.audio(asyncio.run(tts(clean_text, lang)), autoplay=True)
