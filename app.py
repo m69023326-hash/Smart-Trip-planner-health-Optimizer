@@ -14,7 +14,7 @@ import tempfile
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Pro Life Planner & Health Bot", page_icon="📍", layout="wide")
 
-# --- CUSTOM CSS FOR PROFESSIONAL UI ---
+# --- CUSTOM CSS FOR PROFESSIONAL UI & AUTO-SCROLL ---
 st.markdown("""
 <style>
     /* Gemini-style Vertical Suggestion Buttons */
@@ -64,6 +64,30 @@ st.markdown("""
     .stAudioInput {
         margin-top: 0px;
     }
+
+    /* Floating Auto-Scroll Button */
+    .scroll-btn {
+        position: fixed;
+        bottom: 110px;
+        right: 40px;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        text-align: center;
+        line-height: 45px;
+        font-size: 20px;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        z-index: 1000;
+        transition: 0.3s;
+    }
+    .scroll-btn:hover {
+        background-color: #f0f2f6;
+        transform: scale(1.1);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,6 +109,12 @@ if "chat_history" not in st.session_state:
 if "medical_data" not in st.session_state:
     st.session_state.medical_data = ""
 if "last_audio" not in st.session_state:
+    st.session_state.last_audio = None
+
+# Callback to clear chat
+def clear_chat():
+    st.session_state.chat_history = []
+    st.session_state.medical_data = ""
     st.session_state.last_audio = None
 
 # --- FUNCTIONS ---
@@ -112,10 +142,8 @@ def get_forecast(city, api_key):
         
         data = []
         for i in res['list']:
-            # Parse Date and Time for better graph display
             dt = pd.to_datetime(i['dt_txt'])
             hour = dt.hour
-            # Determine Day or Night (6 AM to 6 PM is Day)
             day_night = "Day ☀️" if 6 <= hour < 18 else "Night 🌙"
             
             data.append({
@@ -200,14 +228,12 @@ with main_tab:
                 
                 st.download_button("📥 Download PDF", create_pdf(plan), "plan.pdf")
                 
-                # --- ENHANCED GRAPHS SECTION ---
                 df = get_forecast(city, WEATHER_KEY)
                 if df is not None:
                     st.divider()
                     st.subheader(f"🌦️ 5-Day Weather Outlook: {city.title()}")
                     c1, c2 = st.columns(2)
                     
-                    # 1. Temperature Graph (Enhanced)
                     with c1:
                         fig_temp = px.line(
                             df, x="Datetime", y="Temperature (°C)", 
@@ -219,14 +245,13 @@ with main_tab:
                         fig_temp.update_layout(xaxis_title="", yaxis_title="Temp (°C)", hovermode="x unified")
                         st.plotly_chart(fig_temp, use_container_width=True)
                     
-                    # 2. Rain Probability Graph (Enhanced)
                     with c2:
                         fig_rain = px.bar(
                             df, x="Datetime", y="Rain Chance (%)", 
                             title="☔ Chance of Rain / Storms",
                             color="Rain Chance (%)", 
                             color_continuous_scale="Blues",
-                            range_y=[0, 100], # Locks the Y-axis from 0 to 100%
+                            range_y=[0, 100], 
                             hover_data={"Datetime": False, "Date": True, "Time": True, "Period": True, "Condition": True}
                         )
                         fig_rain.update_layout(xaxis_title="", yaxis_title="Probability (%)", coloraxis_showscale=False, hovermode="x unified")
@@ -257,20 +282,38 @@ with companion_tab:
                 st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
                 st.rerun()
 
-    # 2. Chat History Display
+    # 2. Chat History Display with Copy Option
     for i, msg in enumerate(st.session_state.chat_history):
-        st.chat_message(msg["role"]).write(msg["content"])
-        if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
-            prev_msg = st.session_state.chat_history[i-1]["content"]
-            st.download_button("📥 Download Document", create_pdf(prev_msg), f"document_{i}.pdf", key=f"dl_{i}")
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+            
+            # The Native Copy Feature via Expander
+            with st.expander("📋 Copy Text"):
+                st.code(msg["content"], language="markdown")
+                
+            # PDF Download link context
+            if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
+                prev_msg = st.session_state.chat_history[i-1]["content"]
+                st.download_button("📥 Download Document", create_pdf(prev_msg), f"document_{i}.pdf", key=f"dl_{i}")
 
-    # 3. PROFESSIONAL INPUT TOOLBAR
-    col_plus, col_voice = st.columns([0.08, 0.92]) 
+    # Anchor for Auto-Scroll
+    st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
+    
+    # Render Floating Auto-Scroll Arrow (Only if there are messages)
+    if st.session_state.chat_history:
+        st.markdown('<a href="#chat-bottom" class="scroll-btn" title="Scroll to bottom">⬇️</a>', unsafe_allow_html=True)
+
+    # 3. PROFESSIONAL INPUT TOOLBAR (Now with Clear Chat)
+    col_plus, col_clear, col_voice = st.columns([0.08, 0.08, 0.84]) 
     
     with col_plus:
         with st.popover("➕", use_container_width=True):
             uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
             
+    with col_clear:
+        # Added Clear Chat Button here!
+        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+
     with col_voice:
         audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
@@ -327,11 +370,11 @@ with companion_tab:
             st.chat_message("assistant").write(clean_text)
             st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
             st.audio(asyncio.run(tts(clean_text, lang)), autoplay=True)
+            st.rerun()
 
     # C. Text Logic (Text System Prompt)
     if prompt := st.chat_input("Message..."):
         st.session_state.chat_history.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
         
         context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else "No medical context."
         
@@ -350,5 +393,5 @@ with companion_tab:
             model="llama-3.3-70b-versatile"
         )
         resp = res.choices[0].message.content
-        st.chat_message("assistant").write(resp)
         st.session_state.chat_history.append({"role": "assistant", "content": resp})
+        st.rerun()
