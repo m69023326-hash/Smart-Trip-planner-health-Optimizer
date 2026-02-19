@@ -319,6 +319,7 @@ def weather_code_to_text(code):
 # TOURISM PAGES VIEWS
 # ============================================================
 def page_home():
+    # Inject Custom CSS specifically for the premium Home Dashboard look
     st.markdown("""
     <style>
     .premium-card {
@@ -354,6 +355,7 @@ def page_home():
     </style>
     """, unsafe_allow_html=True)
 
+    # Elite Hero Section
     st.markdown("""
     <div style='text-align:center; padding: 30px 0 10px 0;'>
         <h1 style='font-size: 3.2em; font-weight: 800; color: #0f172a; font-family: "Segoe UI", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
@@ -385,6 +387,7 @@ def page_home():
     for i, dest in enumerate(dests[:4]):
         with cols[i % 4]:
             budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
+            # Formatting numbers beautifully
             budget_str = f"{budget:,}" if isinstance(budget, (int, float)) else str(budget)
             
             st.markdown(f"""
@@ -413,6 +416,7 @@ def page_home():
         ("📖", "Cultural Etiquette", "Guidelines for respectful and immersive travel.")
     ]
     
+    # Render Features beautifully in two rows
     cols1 = st.columns(4)
     for i in range(4):
         icon, title, desc = features[i]
@@ -529,15 +533,66 @@ def page_destinations():
 
 def page_weather():
     st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🌤️ Meteorological Forecast & Conditions</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: #334155; line-height: 1.8; font-family: \"Georgia\", serif;'>Access real-time atmospheric data and extended meteorological projections to meticulously plan your expeditionary window.</p>", unsafe_allow_html=True)
+    
     dests = load_json("destinations.json")
-    if not dests: return
+    
+    if not dests:
+        dests = [
+            {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "latitude": 36.3167, "longitude": 74.6500},
+            {"name": "Skardu", "region": "Gilgit-Baltistan", "latitude": 35.2971, "longitude": 75.6333},
+            {"name": "Swat Valley", "region": "Khyber Pakhtunkhwa", "latitude": 35.2227, "longitude": 72.4258},
+            {"name": "Lahore", "region": "Punjab", "latitude": 31.5204, "longitude": 74.3587},
+            {"name": "Islamabad", "region": "Capital Territory", "latitude": 33.6844, "longitude": 73.0479},
+            {"name": "Fairy Meadows", "region": "Gilgit-Baltistan", "latitude": 35.3850, "longitude": 74.5786}
+        ]
+
     selected = st.selectbox("Designate Geographic Locale for Atmospheric Analysis", [d["name"] for d in dests], key="w_dest")
     dest = next(d for d in dests if d["name"] == selected)
-    weather = fetch_weather_tourism(dest.get("latitude", 30), dest.get("longitude", 70))
+    
+    lat = dest.get("latitude", 30.3753)
+    lon = dest.get("longitude", 69.3451)
+    
+    with st.spinner("Acquiring real-time meteorological telemetry..."):
+        weather = fetch_weather_tourism(lat, lon)
+        
     if weather and "current" in weather:
-        c1, c2 = st.columns(2)
-        c1.metric("Thermal Reading (Celsius)", f"{weather['current']['temperature_2m']}°C")
-        c2.metric("Atmospheric Condition", weather_code_to_text(weather['current']['weather_code']))
+        st.markdown(f"<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif; margin-top: 20px;'>📍 Current Atmospheric Telemetry: {dest['name']}</h3>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Thermal Reading", f"{weather['current']['temperature_2m']} °C")
+        c2.metric("Relative Humidity", f"{weather['current']['relative_humidity_2m']} %")
+        c3.metric("Prevailing Conditions", weather_code_to_text(weather['current']['weather_code']))
+        
+        if "daily" in weather:
+            st.markdown("<h3 style='color: #1e293b; font-family: \"Segoe UI\", sans-serif; margin-top: 30px;'>📈 7-Day Extended Meteorological Projection</h3>", unsafe_allow_html=True)
+            daily = weather["daily"]
+            df = pd.DataFrame({
+                "Date": daily["time"],
+                "Maximum Thermal (°C)": daily["temperature_2m_max"],
+                "Minimum Thermal (°C)": daily["temperature_2m_min"],
+                "Precipitation Volume (mm)": daily["precipitation_sum"]
+            })
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df["Date"], y=df["Maximum Thermal (°C)"], name="Max Thermal", line=dict(color="#e11d48", width=3)))
+            fig.add_trace(go.Scatter(x=df["Date"], y=df["Minimum Thermal (°C)"], name="Min Thermal", line=dict(color="#0284c7", width=3)))
+            fig.add_trace(go.Bar(x=df["Date"], y=df["Precipitation Volume (mm)"], name="Precipitation", marker_color="#059669", opacity=0.3, yaxis="y2"))
+            
+            fig.update_layout(
+                yaxis2=dict(title="Precipitation (mm)", overlaying="y", side="right"),
+                yaxis=dict(title="Thermal Reading (°C)"),
+                legend=dict(orientation="h", y=1.12),
+                height=450,
+                margin=dict(l=20, r=20, t=40, b=20),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)"
+            )
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0')
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#e2e8f0')
+            
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.error("Meteorological telemetry currently inaccessible. Please initiate a retry sequence.")
 
 def page_smart_assistant():
     st.markdown("<h2 style='color: #0f172a; font-family: \"Segoe UI\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>🧠 Artificial Intelligence Concierge</h2>", unsafe_allow_html=True)
