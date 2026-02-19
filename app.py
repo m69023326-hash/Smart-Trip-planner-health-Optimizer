@@ -266,7 +266,6 @@ def page_home():
     
     dests = load_json("destinations.json")
     
-    # Fallback to default data if JSON is empty
     if not dests:
         dests = [
             {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "best_season": "April - October", "budget_per_day": {"budget": 5000}},
@@ -312,7 +311,6 @@ def page_destinations():
     st.header("🏔️ Tourist Destinations")
     dests = load_json("destinations.json")
     
-    # Smart Fallback Data if JSON is empty 
     if not dests:
         dests = [
             {
@@ -323,30 +321,12 @@ def page_destinations():
                 "best_season": "April - October",
                 "budget_per_day": {"budget": 5000},
                 "description": "Hunza Valley is one of the most breathtaking destinations in Pakistan, surrounded by snow-capped peaks including Rakaposhi (7,788m) and Ultar Sar. The valley is known for its stunning landscapes, ancient forts, and the warmth of the Hunza people.",
-                "history": "Hunza was an independent princely state for over 900 years, ruled by the Mir of Hunza. The region was part of the ancient Silk Route and has connections to the legendary Shangri-La. It became part of Pakistan in 1974. The area is home to the Burushaski-speaking people, whose language is a language isolate with no known relatives.",
-                "landmarks": [
-                    {"name": "Baltit Fort", "description": "A 700-year-old fort perched above Karimabad, offering panoramic views of the valley. Now a UNESCO-supported heritage museum."},
-                    {"name": "Altit Fort", "description": "An even older fort at the base of the valley, dating back 1,100 years."}
-                ],
-                "activities": ["Trekking and hiking", "Visit ancient forts", "Try local walnut cake and apricot oil", "Boating at Attabad Lake"],
-                "transport": {
-                    "islamabad": {"road": "14-16 hours via Karakoram Highway", "air": "1 hour flight to Gilgit, then 2 hours by road"}
-                },
-                "accommodation": {
-                    "budget": ["Backpacker hostels in Karimabad", "Local guest houses"],
-                    "standard": ["Mid-range hotels with valley views"],
-                    "luxury": ["Serena Hotel", "Luxus Hunza (Attabad Lake)"]
-                },
-                "connectivity": {
-                    "mobile_networks": ["SCOM (Best)", "Telenor"],
-                    "internet": "Available in most hotels but can be slow/unstable",
-                    "tips": "Buy an SCOM SIM card in Gilgit or Aliabad for best coverage."
-                }
-            },
-            {
-                "name": "Skardu", "region": "Gilgit-Baltistan", "access_level": "Moderate", "altitude_m": 2228, "best_season": "May - September", "budget_per_day": {"budget": 6000},
-                "description": "Skardu is the main gateway to the 8,000m peaks of the Karakoram.",
-                "history": "Capital of Baltistan, Skardu has a rich Tibetan-influenced culture."
+                "history": "Hunza was an independent princely state for over 900 years, ruled by the Mir of Hunza. The region was part of the ancient Silk Route and has connections to the legendary Shangri-La. It became part of Pakistan in 1974.",
+                "landmarks": [{"name": "Baltit Fort", "description": "A 700-year-old fort perched above Karimabad."}],
+                "activities": ["Trekking and hiking", "Visit ancient forts", "Boating at Attabad Lake"],
+                "transport": {"islamabad": {"road": "14-16 hours via Karakoram Highway"}},
+                "accommodation": {"budget": ["Backpacker hostels in Karimabad"], "luxury": ["Serena Hotel"]},
+                "connectivity": {"mobile_networks": ["SCOM (Best)", "Telenor"], "internet": "Available in most hotels", "tips": "Buy an SCOM SIM card in Gilgit."}
             }
         ]
 
@@ -443,21 +423,128 @@ def page_smart_assistant():
         st.session_state.tourism_chat_history.append({"role": "assistant", "content": reply})
 
 def page_maps():
-    st.header("🗺️ Interactive Map")
-    dests = load_json("destinations.json")
-    markers = json.dumps([{"lat": d.get("latitude", 30), "lng": d.get("longitude", 70), "name": d["name"]} for d in dests if "latitude" in d])
-    html = f"""
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <div id="map" style="width: 100%; height: 500px; border-radius: 10px;"></div>
-    <script>
-        var map = L.map('map').setView([30.37, 69.34], 5);
-        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png').addTo(map);
-        var markers = {markers};
-        markers.forEach(function(m) {{ L.marker([m.lat, m.lng]).addTo(map).bindPopup(m.name); }});
-    </script>
+    st.header("🗺️ Interactive Map of Pakistan")
+    destinations = load_json("destinations.json")
+    
+    # Enhanced Fallback Data with Coordinates
+    if not destinations:
+        destinations = [
+            {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "latitude": 36.3167, "longitude": 74.6500, "altitude_m": 2438, "best_season": "April - October", "budget_per_day": {"budget": 5000}},
+            {"name": "Skardu", "region": "Gilgit-Baltistan", "access_level": "Moderate", "latitude": 35.2971, "longitude": 75.6333, "altitude_m": 2228, "best_season": "May - September", "budget_per_day": {"budget": 6000}},
+            {"name": "Swat Valley", "region": "Khyber Pakhtunkhwa", "access_level": "Easy", "latitude": 35.2227, "longitude": 72.4258, "altitude_m": 980, "best_season": "March - October", "budget_per_day": {"budget": 4000}},
+            {"name": "Lahore", "region": "Punjab", "access_level": "Easy", "latitude": 31.5204, "longitude": 74.3587, "altitude_m": 217, "best_season": "October - March", "budget_per_day": {"budget": 3000}},
+            {"name": "Fairy Meadows", "region": "Gilgit-Baltistan", "access_level": "Difficult", "latitude": 35.3850, "longitude": 74.5786, "altitude_m": 3300, "best_season": "June - September", "budget_per_day": {"budget": 8000}},
+            {"name": "Mohenjo-Daro", "region": "Sindh", "access_level": "Easy", "latitude": 27.3292, "longitude": 68.1389, "altitude_m": 47, "best_season": "November - February", "budget_per_day": {"budget": 3500}}
+        ]
+
+    # Map Controls (3 Columns)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        show_dest = st.checkbox("📍 Show Destinations", value=True)
+    with col2:
+        show_routes = st.checkbox("🛣️ Show Major Routes", value=True)
+    with col3:
+        map_lang = st.radio("🌐 Map Language", ["English", "اردو (Urdu)"], horizontal=True, key="map_lang")
+        
+    st.markdown("🟢 **Easy Access** | 🟠 **Moderate** | 🔴 **Difficult**")
+    
+    # Process Markers Data
+    marker_colors = {"Easy": "#4CAF50", "Moderate": "#FF9800", "Difficult": "#F44336"}
+    markers_data = []
+    if show_dest and destinations:
+        for d in destinations:
+            color = marker_colors.get(d.get("access_level", ""), "#2196F3")
+            budget_val = d.get('budget_per_day', {}).get('budget', 'N/A')
+            budget_str = f"PKR {budget_val:,}+/day" if isinstance(budget_val, int) else f"PKR {budget_val}+/day"
+            markers_data.append({
+                "lat": d.get("latitude", 30.0),
+                "lng": d.get("longitude", 70.0),
+                "name": d.get("name", "Unknown"),
+                "region": d.get("region", "Unknown"),
+                "access": d.get("access_level", "N/A"),
+                "budget": budget_str,
+                "altitude": f"{d.get('altitude_m', 0):,}m",
+                "season": d.get("best_season", "N/A"),
+                "color": color
+            })
+    markers_json = json.dumps(markers_data, ensure_ascii=False)
+
+    # Process Routes Data
+    routes_data = []
+    if show_routes:
+        routes_data = [
+            {"name": "N-35 Karakoram Highway (KKH)", "color": "#1B5E20", "coords": [[35.92,74.31],[36.05,74.50],[36.32,74.65],[36.46,74.88],[36.30,75.10],[35.88,74.48],[35.55,75.20],[35.30,75.63]]},
+            {"name": "M-2 Motorway (Islamabad → Lahore)", "color": "#0D47A1", "coords": [[33.68,73.05],[33.50,73.10],[33.10,72.80],[32.70,72.60],[32.16,72.68],[31.85,73.50],[31.55,74.34]]},
+            {"name": "N-15 Swat Expressway", "color": "#6A1B9A", "coords": [[33.95,72.35],[34.20,72.10],[34.50,72.05],[34.77,72.36],[35.22,72.35]]},
+            {"name": "N-5 GT Road (Lahore → Karachi)", "color": "#E65100", "coords": [[31.55,74.34],[31.40,74.20],[30.20,71.47],[28.42,68.77],[27.60,68.35],[25.39,68.37],[24.86,67.08]]},
+            {"name": "N-25 RCD Highway (Karachi → Quetta)", "color": "#B71C1C", "coords": [[24.86,67.08],[25.50,66.60],[26.20,66.00],[27.00,66.50],[28.50,66.80],[29.50,66.90],[30.18,66.97]]}
+        ]
+    routes_json = json.dumps(routes_data, ensure_ascii=False)
+
+    # Inject Leaflet Map with logic
+    map_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            body {{ margin: 0; padding: 0; }}
+            #map {{ width: 100%; height: 580px; border-radius: 12px; border: 1px solid #ccc; }}
+            .dest-popup h4 {{ margin: 0 0 5px; color: #1B5E20; font-family: sans-serif; }}
+            .dest-popup p {{ margin: 2px 0; font-size: 13px; font-family: sans-serif; }}
+            .dest-popup hr {{ margin: 5px 0; border-color: #eee; }}
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            var map = L.map('map').setView([30.3753, 69.3451], 5);
+            var lang = '{"en" if map_lang == "English" else "ur"}';
+            
+            if (lang === 'en') {{
+                L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    maxZoom: 19
+                }}).addTo(map);
+            }} else {{
+                L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+                    attribution: '&copy; OpenStreetMap',
+                    maxZoom: 18
+                }}).addTo(map);
+            }}
+
+            var markers = {markers_json};
+            markers.forEach(function(m) {{
+                var popupContent = '<div class="dest-popup">' +
+                    '<h4>' + m.name + '</h4>' +
+                    '<p style="color:#555;">' + m.region + '</p>' +
+                    '<hr>' +
+                    '<p>⛰️ Altitude: ' + m.altitude + '</p>' +
+                    '<p>📍 Access: <b style="color:'+m.color+';">' + m.access + '</b></p>' +
+                    '<p>📅 Best: ' + m.season + '</p>' +
+                    '<p>💰 ' + m.budget + '</p>' +
+                    '</div>';
+                
+                L.circleMarker([m.lat, m.lng], {{
+                    radius: 10, fillColor: m.color, color: '#fff', weight: 2,
+                    opacity: 1, fillOpacity: 0.85
+                }}).addTo(map).bindPopup(popupContent).bindTooltip(m.name);
+            }});
+
+            var routes = {routes_json};
+            routes.forEach(function(r) {{
+                L.polyline(r.coords, {{
+                    color: r.color, weight: 3, dashArray: '8,6', opacity: 0.8
+                }}).addTo(map).bindTooltip(r.name, {{sticky: true}});
+            }});
+        </script>
+    </body>
+    </html>
     """
-    components.html(html, height=520)
+    components.html(map_html, height=600)
 
 def page_budget():
     st.header("💰 Budget Planner")
@@ -465,7 +552,6 @@ def page_budget():
     budget_data = load_json("budget_templates.json")
     destinations = load_json("destinations.json")
     
-    # Fallbacks for empty data
     if not destinations:
         destinations = [{"name": "Hunza Valley"}, {"name": "Skardu"}, {"name": "Swat Valley"}, {"name": "Lahore"}]
         
