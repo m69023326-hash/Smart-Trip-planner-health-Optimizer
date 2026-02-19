@@ -17,12 +17,13 @@ st.set_page_config(page_title="Pro Life Planner & Health Bot", page_icon="📍",
 # --- CUSTOM CSS FOR GEMINI LOOK ---
 st.markdown("""
 <style>
+    /* Gemini-style Suggestion Buttons */
     .stButton>button {
         border-radius: 20px;
         background-color: #f0f2f6; 
         color: black;
         border: none;
-        height: 80px;
+        height: 60px;
         width: 100%;
         transition: all 0.3s;
     }
@@ -30,23 +31,32 @@ st.markdown("""
         background-color: #dbe0e6;
         transform: scale(1.02);
     }
-    /* Centered Greeting */
+    
+    /* Center Greeting */
     .greeting-container {
         text-align: center;
-        margin-top: 50px;
-        margin-bottom: 50px;
+        margin-top: 40px;
+        margin-bottom: 40px;
     }
     .big-font {
-        font-size: 42px !important;
+        font-size: 38px !important;
         font-weight: 600;
         background: -webkit-linear-gradient(45deg, #4b90ff, #ff5546);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
     .sub-font {
-        font-size: 22px !important;
+        font-size: 18px !important;
         color: #666;
-        margin-top: 10px;
+        margin-top: 5px;
+    }
+
+    /* Input Toolbar Styling - Making the + button look like an icon */
+    div[data-testid="stPopover"] > button {
+        border-radius: 50%;
+        height: 45px;
+        width: 45px;
+        border: 1px solid #ddd;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -174,7 +184,7 @@ with main_tab:
 with companion_tab:
     client = Groq(api_key=GROQ_KEY)
 
-    # 1. Zero State (Show only if chat is empty)
+    # 1. Zero State
     if not st.session_state.chat_history:
         st.markdown("""
         <div class="greeting-container">
@@ -185,7 +195,7 @@ with companion_tab:
         
         c1, c2 = st.columns(2)
         if c1.button("📄 Share Reports & Get Analysis"):
-            st.session_state.chat_history.append({"role": "assistant", "content": "Sure! Please upload your medical report using the ➕ menu below."})
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload your report using the ➕ button!"})
             st.rerun()
         if c2.button("🥦 Prepare a Diet Plan"):
             st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
@@ -196,80 +206,67 @@ with companion_tab:
             st.session_state.chat_history.append({"role": "user", "content": "Suggest some good movies."})
             st.rerun()
         if c4.button("🩺 Check Symptoms"):
-            st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well, can I describe symptoms?"})
+            st.session_state.chat_history.append({"role": "user", "content": "I'm not feeling well."})
             st.rerun()
 
-    # 2. Display Chat History
+    # 2. Chat History
     for msg in st.session_state.chat_history:
         st.chat_message(msg["role"]).write(msg["content"])
 
-    # 3. Input Area (Popover for clean UI)
-    with st.popover("➕ Options (Upload / Voice)", use_container_width=True):
-        col_up, col_voice = st.columns(2)
-        uploaded_file = col_up.file_uploader("Upload File", type=["pdf", "jpg", "png"], label_visibility="collapsed")
-        audio_val = col_voice.audio_input("Record Voice", label_visibility="collapsed")
+    # 3. COMPACT INPUT TOOLBAR
+    # We use columns to create a tight row of icons right above the chat input
+    col_plus, col_voice = st.columns([0.1, 0.9])
+    
+    with col_plus:
+        # The "+" Icon is actually a small popover containing the file uploader
+        with st.popover("➕", use_container_width=True):
+            uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
+            
+    with col_voice:
+        # The Microphone is the native audio input widget
+        audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
     # --- LOGIC HANDLING ---
 
-    # A. File Upload Logic
+    # A. File Upload
     if uploaded_file:
-        # Check if file is new (basic check) to prevent re-run loops
-        # Streamlit re-uploads files on interaction, so we just process
         with st.spinner("Analyzing Document..."):
             txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
             st.session_state.medical_data = txt
-            
-            # Show user message
             st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded: {uploaded_file.name}"})
             
-            # Get AI Response
             res = client.chat.completions.create(
                 messages=[{"role": "user", "content": f"Analyze this medical data: {txt}. Give diet plan."}],
                 model="llama-3.3-70b-versatile"
             )
-            response_text = res.choices[0].message.content
-            st.session_state.chat_history.append({"role": "assistant", "content": response_text})
+            resp = res.choices[0].message.content
+            st.session_state.chat_history.append({"role": "assistant", "content": resp})
             st.rerun()
 
-    # B. Voice Logic (FIXED LOOP ISSUE)
+    # B. Voice Logic
     if audio_val and audio_val != st.session_state.last_audio:
-        
-        # 1. Update State immediately to prevent loop
         st.session_state.last_audio = audio_val
-
         with st.spinner("Listening..."):
             # Transcribe
-            transcription = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+            txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+            st.chat_message("user").write(f"🎙️ {txt}")
+            st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {txt}"})
             
-            # Add User Voice to Chat UI immediately
-            st.chat_message("user").write(f"🎙️ {transcription}")
-            st.session_state.chat_history.append({"role": "user", "content": f"🎙️ {transcription}"})
-            
-            # Detect Language & Reply
-            sys_msg = "Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN]. Keep it short."
+            # Detect Lang & Reply
             res = client.chat.completions.create(
-                messages=[{"role": "system", "content": sys_msg}, {"role": "user", "content": transcription}],
+                messages=[{"role": "system", "content": "Reply in same language. Start with [LANG:UR], [LANG:HI], or [LANG:EN]."}, {"role": "user", "content": txt}],
                 model="llama-3.3-70b-versatile"
             )
             raw = res.choices[0].message.content
-            
-            # Parse Lang Code
             lang = "EN"
             if "[LANG:UR]" in raw: lang = "UR"
             elif "[LANG:HI]" in raw: lang = "HI"
             clean_text = raw.replace(f"[LANG:{lang}]", "").strip()
             
-            # Generate Audio
-            audio_file = asyncio.run(tts(clean_text, lang))
-
-            # Add AI Reply to Chat UI
+            # Show & Speak
             st.chat_message("assistant").write(clean_text)
             st.session_state.chat_history.append({"role": "assistant", "content": clean_text})
-            
-            # Play Audio (Autoplay)
-            st.audio(audio_file, format="audio/mp3", autoplay=True)
-            
-            # NOTE: We do NOT use st.rerun() here. This allows the audio to play.
+            st.audio(asyncio.run(tts(clean_text, lang)), autoplay=True)
 
     # C. Text Logic
     if prompt := st.chat_input("Message..."):
@@ -278,10 +275,9 @@ with companion_tab:
         
         context = f"Medical Context: {st.session_state.medical_data[:1000]}" if st.session_state.medical_data else ""
         res = client.chat.completions.create(
-            messages=[{"role": "system", "content": "You are a helpful health assistant. " + context}, 
-                      {"role": "user", "content": prompt}],
+            messages=[{"role": "system", "content": "Helpful health assistant. " + context}, {"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile"
         )
-        response_text = res.choices[0].message.content
-        st.chat_message("assistant").write(response_text)
-        st.session_state.chat_history.append({"role": "assistant", "content": response_text})
+        resp = res.choices[0].message.content
+        st.chat_message("assistant").write(resp)
+        st.session_state.chat_history.append({"role": "assistant", "content": resp})
