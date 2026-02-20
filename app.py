@@ -35,7 +35,6 @@ def toggle_theme():
 # ============================================================
 def get_theme_css(theme):
     if theme == "light":
-        # Light theme variables (professional, clean)
         return """
         <style>
             :root {
@@ -68,7 +67,6 @@ def get_theme_css(theme):
         </style>
         """
     else:
-        # Dark theme variables (premium dark)
         return """
         <style>
             :root {
@@ -98,7 +96,6 @@ def get_theme_css(theme):
             }
             body { background-color: var(--bg-primary); color: var(--text-primary); font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif; }
             .stApp { background-color: var(--bg-primary); }
-            /* Adjust plotly background */
             .js-plotly-plot .plotly .main-svg { background: var(--bg-card) !important; }
         </style>
         """
@@ -108,10 +105,9 @@ def get_theme_css(theme):
 # ============================================================
 base_css = """
 <style>
-    /* Import professional fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* ===== General ===== */
+    /* General */
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', 'Segoe UI', sans-serif;
         color: var(--text-primary);
@@ -132,7 +128,7 @@ base_css = """
         text-decoration: underline;
     }
 
-    /* ===== Buttons (Gemini-style vertical suggestions) ===== */
+    /* Buttons (Gemini-style vertical suggestions) */
     .stButton>button {
         border-radius: 12px;
         background-color: var(--button-bg);
@@ -153,7 +149,7 @@ base_css = """
         box-shadow: var(--shadow-hover);
     }
 
-    /* ===== Greeting ===== */
+    /* Greeting */
     .greeting-header {
         font-size: 42px !important;
         font-weight: 800;
@@ -168,7 +164,7 @@ base_css = """
         margin-bottom: 30px;
     }
 
-    /* ===== Input Toolbar ===== */
+    /* Input Toolbar */
     div[data-testid="stPopover"] > button {
         border-radius: 50%;
         height: 48px;
@@ -181,7 +177,7 @@ base_css = """
         margin-top: 0px;
     }
 
-    /* ===== Floating Scroll Button ===== */
+    /* Floating Scroll Button */
     .scroll-btn {
         position: fixed;
         bottom: 110px;
@@ -205,7 +201,7 @@ base_css = """
         transform: scale(1.1);
     }
 
-    /* ===== Sidebar / Info Panel Header ===== */
+    /* Sidebar / Info Panel Header */
     .info-panel-header {
         font-size: 24px !important;
         font-weight: 800;
@@ -241,11 +237,9 @@ base_css = """
         box-shadow: var(--shadow-hover);
         border-color: var(--button-hover-border);
     }
-    /* Hide default radio circle */
     div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
-    /* Selected tab */
     div[role="radiogroup"] > label[aria-checked="true"] {
         background: var(--gradient-panel-selected);
         border: 1px solid var(--text-accent);
@@ -253,7 +247,7 @@ base_css = """
         border-left: 6px solid var(--text-accent);
     }
 
-    /* ===== Cards ===== */
+    /* Cards */
     .premium-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -287,7 +281,7 @@ base_css = """
         transform: scale(1.02);
     }
 
-    /* ===== Expanders ===== */
+    /* Expanders */
     .streamlit-expanderHeader {
         font-family: 'Inter', sans-serif;
         font-weight: 600;
@@ -297,7 +291,7 @@ base_css = """
         border: 1px solid var(--border-color);
     }
 
-    /* ===== Dataframes ===== */
+    /* Dataframes */
     .stDataFrame {
         background-color: var(--bg-card);
         color: var(--text-primary);
@@ -313,14 +307,14 @@ base_css = """
         color: var(--text-secondary);
     }
 
-    /* ===== Code blocks ===== */
+    /* Code blocks */
     .stCodeBlock {
         background-color: var(--code-bg);
         border: 1px solid var(--border-color);
         border-radius: 8px;
     }
 
-    /* ===== Metrics ===== */
+    /* Metrics */
     .stMetric {
         background-color: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -338,7 +332,7 @@ base_css = """
         font-size: 1.8rem;
     }
 
-    /* ===== Chat messages ===== */
+    /* Chat messages */
     .stChatMessage {
         background-color: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -351,7 +345,7 @@ base_css = """
         background-color: var(--bg-secondary);
     }
 
-    /* ===== Input fields ===== */
+    /* Input fields */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stSelectbox > div > div > select {
@@ -368,7 +362,7 @@ base_css = """
         box-shadow: 0 0 0 2px rgba(4, 120, 87, 0.2);
     }
 
-    /* ===== File uploader ===== */
+    /* File uploader */
     .stFileUploader {
         background-color: var(--bg-secondary);
         border: 1px dashed var(--border-color);
@@ -376,7 +370,7 @@ base_css = """
         padding: 10px;
     }
 
-    /* ===== Tabs ===== */
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
@@ -395,12 +389,12 @@ base_css = """
         border-bottom: 2px solid var(--text-accent);
     }
 
-    /* ===== Divider ===== */
+    /* Divider */
     hr {
         border-color: var(--border-color);
     }
 
-    /* ===== Theme toggle button (small, top right) ===== */
+    /* Theme toggle button (small, top right) */
     .theme-toggle-btn {
         background: var(--bg-card);
         color: var(--text-primary);
@@ -424,7 +418,7 @@ base_css = """
         font-size: 18px;
     }
 
-    /* ===== Gallery images ===== */
+    /* Gallery images */
     .gallery-img-container {
         overflow: hidden;
         border-radius: 15px;
@@ -456,7 +450,7 @@ base_css = """
 """
 
 # ============================================================
-# SECRETS MANAGEMENT & CONFIG (unchanged)
+# SECRETS MANAGEMENT & CONFIG
 # ============================================================
 try:
     GROQ_KEY = st.secrets["groq_api_key"]
@@ -490,7 +484,7 @@ Rules:
 """
 
 # ============================================================
-# INITIALIZE STATE (unchanged)
+# INITIALIZE STATE
 # ============================================================
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -519,7 +513,7 @@ def update_module():
     st.session_state.current_tourism_module = st.session_state.tourism_nav
 
 # ============================================================
-# HEALTH & PLANNER FUNCTIONS (unchanged)
+# HEALTH & PLANNER FUNCTIONS
 # ============================================================
 def get_current_weather(city, api_key):
     try:
@@ -577,7 +571,7 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# TOURISM FUNCTIONS (unchanged)
+# TOURISM FUNCTIONS
 # ============================================================
 def load_json(filename):
     filepath = os.path.join(DATA_DIR, filename)
@@ -616,10 +610,9 @@ def weather_code_to_text(code):
     return codes.get(code, f"Code {code}")
 
 # ============================================================
-# TOURISM PAGES VIEWS (unchanged except for plotly template)
+# TOURISM PAGES VIEWS (all color literals replaced with CSS variables)
 # ============================================================
 def page_home():
-    # ... (original content, but we'll ensure it uses the new CSS classes)
     st.markdown("""
 <div style='text-align:center; padding: 30px 0 10px 0;'>
     <h1 style='font-size: 3.2em; font-weight: 800; color: var(--text-primary); font-family: "Inter", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
@@ -666,7 +659,7 @@ Embark on an unparalleled expedition through a land of majestic topographies, pr
             """, unsafe_allow_html=True)
             
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h2 style='color: var(--text-primary); border-bottom-color: var(--border-color);'>🏛️ Premium Concierge Services</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🏛️ Premium Concierge Services</h2>", unsafe_allow_html=True)
     
     features = [
         ("🗺️", "Destination Intelligence", "Comprehensive insights into elite locales."),
@@ -705,13 +698,858 @@ Embark on an unparalleled expedition through a land of majestic topographies, pr
             """, unsafe_allow_html=True)
 
 def page_destinations():
-    # ... (similar modifications: replace color literals with var(--text-*) etc.)
-    # For brevity, we'll keep the original but with variable colors. In practice, all color literals must be replaced.
-    # Since the original code is huge, we'll only show the pattern. In the final answer, we'll provide the fully modified code.
-    pass
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🧭 Geospatial Destination Archive</h2>", unsafe_allow_html=True)
+    dests = load_json("destinations.json")
+    
+    if not dests:
+        dests = [
+            {
+                "name": "Hunza Valley",
+                "region": "Gilgit-Baltistan",
+                "access_level": "Moderate",
+                "altitude_m": 2438,
+                "best_season": "April - October",
+                "budget_per_day": {"budget": 5000},
+                "description": "The Hunza Valley stands as one of Pakistan's most resplendent topographical marvels, ensconced by formidable snow-capped summits including Rakaposhi and Ultar Sar. The domain is globally recognized for its superlative landscapes, ancient fortified structures, and the profound hospitality of the indigenous populace.",
+                "history": "Historically functioning as an autonomous princely state for nearly a millennium under the sovereign rule of the Mir of Hunza, the region served as a pivotal node along the ancient Silk Route. It was fully integrated into the Federation of Pakistan in 1974. The territory is predominantly inhabited by the Burushaski-speaking demographic, utilizing a language isolate bereft of known genealogical affiliations.",
+                "landmarks": [{"name": "Baltit Fort", "description": "A heptacentennial fortress strategically positioned above Karimabad, currently functioning as a UNESCO-endorsed heritage conservatory."}],
+                "activities": ["High-altitude trekking and alpine ascents", "Historical fortification reconnaissance", "Nautical navigation across Attabad Lake"],
+                "transport": {"Islamabad": {"road": "14-16 hours via the Karakoram Highway corridor"}},
+                "accommodation": {"budget": ["Economical lodging facilities in Karimabad"], "luxury": ["Serena Hotel - Premium accommodations"]},
+                "connectivity": {"mobile_networks": ["SCOM (Optimal Infrastructure)", "Telenor"], "internet": "Broadband accessible in primary establishments", "tips": "Procurement of an SCOM cellular subscription in Gilgit is highly advised."}
+            },
+            {
+                "name": "Skardu",
+                "region": "Gilgit-Baltistan",
+                "access_level": "Moderate",
+                "altitude_m": 2228,
+                "best_season": "May - September",
+                "budget_per_day": {"budget": 6000},
+                "description": "Serving as the principal gateway to the Karakoram's eight-thousanders, Skardu is a high-altitude sanctuary characterized by stark alpine deserts, cerulean lakes, and monumental geological formations.",
+                "history": "Capital of the historic Baltistan region, Skardu possesses a profoundly rich Tibetan-influenced heritage, often referred to as 'Little Tibet', manifesting in its architectural vernacular and local gastronomy.",
+                "landmarks": [{"name": "Kharpocho Fort", "description": "An ancient fortification offering panoramic surveillance of the Indus River."}],
+                "activities": ["High-altitude acclimatization", "Deosai National Park traversal", "Engagement with local Balti heritage"],
+                "transport": {"Islamabad": {"road": "20-22 hours via rigorous alpine routes", "air": "45-minute scenic aerial transit"}},
+                "accommodation": {"budget": ["Standard alpine guest houses"], "luxury": ["Shangrila Resort Skardu"]},
+                "connectivity": {"mobile_networks": ["SCOM", "Zong"], "internet": "Intermittent broadband within municipal limits", "tips": "Total telecommunication blackout expected in peripheral zones like Deosai."}
+            },
+            {
+                "name": "Swat Valley",
+                "region": "Khyber Pakhtunkhwa",
+                "access_level": "Easy",
+                "altitude_m": 980,
+                "best_season": "March - October",
+                "budget_per_day": {"budget": 4000},
+                "description": "Historically chronicled as the 'Switzerland of the East', the Swat Valley is an emerald expanse of dense coniferous forests, crystalline glacial rivers, and undulating meadows.",
+                "history": "A pivotal epicenter for early Buddhist civilization, the valley functions as a vast repository of ancient stupas and Gandharan archaeological artifacts.",
+                "landmarks": [{"name": "Malam Jabba", "description": "A premier high-altitude ski resort."}, {"name": "Butkara Stupa", "description": "A monumental relic of Gandharan antiquity."}],
+                "activities": ["Alpine skiing", "Trout fishing", "Archaeological expeditions"],
+                "transport": {"Islamabad": {"road": "4-5 hours via the Swat Motorway infrastructure"}},
+                "accommodation": {"budget": ["Mingora municipal lodgings"], "luxury": ["Serena Hotel Swat"]},
+                "connectivity": {"mobile_networks": ["Jazz", "Telenor", "Zong"], "internet": "Robust 4G LTE saturation in primary urban nodes", "tips": "Signal integrity diminishes in elevated extremities like Kalam."}
+            },
+            {
+                "name": "Lahore",
+                "region": "Punjab",
+                "access_level": "Easy",
+                "altitude_m": 217,
+                "best_season": "October - March",
+                "budget_per_day": {"budget": 3000},
+                "description": "The undisputed cultural epicenter of the Republic, Lahore is a vibrant metropolis that seamlessly amalgamates majestic Mughal architecture with contemporary urban dynamism.",
+                "history": "Serving as the imperial capital for multiple dynasties, Lahore's historical tapestry is woven with the legacies of Mughal emperors, Sikh monarchs, and British colonial administrators.",
+                "landmarks": [{"name": "Badshahi Mosque", "description": "A monolithic marvel of 17th-century Mughal engineering."}, {"name": "Lahore Fort", "description": "A formidable citadel recognized globally as a UNESCO World Heritage site."}],
+                "activities": ["Gastronomic exploration in the Walled City", "Heritage walking tours", "Attendance at the Wagah Border ceremonial protocol"],
+                "transport": {"Islamabad": {"road": "4 hours via the M-2 Motorway", "air": "45-minute commercial flight"}},
+                "accommodation": {"budget": ["Central municipal hostels"], "luxury": ["Pearl Continental Lahore"]},
+                "connectivity": {"mobile_networks": ["Universal coverage across all major carriers"], "internet": "High-velocity fiber-optic and 4G/5G infrastructure universally accessible", "tips": "Procure localized ride-hailing applications for optimal municipal transit."}
+            },
+            {
+                "name": "Islamabad",
+                "region": "Capital Territory",
+                "access_level": "Easy",
+                "altitude_m": 540,
+                "best_season": "October - April",
+                "budget_per_day": {"budget": 4500},
+                "description": "The meticulously master-planned federal capital, distinguished by its verdant expanses, systematic sectorial grid, and immediate proximity to the forested Margalla Hills.",
+                "history": "Conceptualized and actualized in the 1960s to replace Karachi as the national capital, integrating modern architectural paradigms with profound Islamic geometric influences.",
+                "landmarks": [{"name": "Faisal Mosque", "description": "An architectural masterpiece capable of accommodating 100,000 worshippers."}, {"name": "Pakistan Monument", "description": "A comprehensive homage to the nation's heritage."}],
+                "activities": ["Hiking the Margalla trail network", "Diplomatic enclave traversal", "Elite culinary dining"],
+                "transport": {"Lahore": {"road": "4 hours via M-2 Motorway", "air": "45-minute commercial transit"}},
+                "accommodation": {"budget": ["Sector G-9 standard accommodations"], "luxury": ["Serena Hotel Islamabad", "Marriott Hotel"]},
+                "connectivity": {"mobile_networks": ["Universal 4G/5G coverage"], "internet": "Optimal high-speed connectivity across all vectors", "tips": "Utilize dedicated municipal transit paths for rapid sector-to-sector movement."}
+            },
+            {
+                "name": "Fairy Meadows",
+                "region": "Gilgit-Baltistan",
+                "access_level": "Difficult",
+                "altitude_m": 3300,
+                "best_season": "June - September",
+                "budget_per_day": {"budget": 8000},
+                "description": "An elevated, isolated alpine pasture functioning as the primary observational platform for Nanga Parbat, the ninth highest terrestrial summit globally.",
+                "history": "Historically utilized as a base camp for global mountaineering expeditions attempting the perilous ascent of the 'Killer Mountain'.",
+                "landmarks": [{"name": "Nanga Parbat Base Camp", "description": "The ultimate destination for advanced trekkers."}, {"name": "Reflection Lake", "description": "A pristine alpine pool mirroring the Nanga Parbat massif."}],
+                "activities": ["Strenuous high-altitude trekking", "Nocturnal astrophotography", "Survivalist camping"],
+                "transport": {"Islamabad": {"road": "16 hours to Raikot Bridge, followed by extreme off-road jeep transit and a 3-hour vertical hike"}},
+                "accommodation": {"budget": ["Basic wooden alpine huts"], "luxury": ["Premium glamping pods with localized heating"]},
+                "connectivity": {"mobile_networks": ["Severely restricted"], "internet": "Functional telecommunication blackout", "tips": "Satellite communication recommended for critical emergencies."}
+            },
+            {
+                "name": "Mohenjo-Daro",
+                "region": "Sindh",
+                "access_level": "Easy",
+                "altitude_m": 47,
+                "best_season": "November - February",
+                "budget_per_day": {"budget": 3500},
+                "description": "An archaeological masterwork representing one of the earliest and most sophisticated urban settlements in human history, situated adjacent to the Indus River.",
+                "history": "Flourishing circa 2500 BCE, this Indus Valley Civilization metropolis featured advanced civil engineering, including complex drainage systems and standardized brick architecture.",
+                "landmarks": [{"name": "The Great Bath", "description": "A monumental public aquatic structure."}, {"name": "The Buddhist Stupa", "description": "A subsequent addition overlaying the ancient ruins."}],
+                "activities": ["Archaeological site immersion", "Historical museum analysis"],
+                "transport": {"Karachi": {"road": "7-8 hours via the Indus Highway", "air": "Domestic flight to Sukkur followed by vehicular transit"}},
+                "accommodation": {"budget": ["Larkana municipal guest houses"], "luxury": ["PTDC Motel Larkana"]},
+                "connectivity": {"mobile_networks": ["Jazz", "Zong", "Telenor"], "internet": "Standard 3G/4G within the vicinity", "tips": "Deploy rigorous ultraviolet mitigation protocols during daylight hours."}
+            },
+            {
+                "name": "Neelum Valley",
+                "region": "Azad Kashmir",
+                "access_level": "Moderate",
+                "altitude_m": 1500,
+                "best_season": "May - October",
+                "budget_per_day": {"budget": 4500},
+                "description": "A bow-shaped, densely forested gorge spanning 144 kilometers, celebrated for its sapphire-hued river, cascading waterfalls, and profound tranquility.",
+                "history": "Serving as a critical historical artery in the Kashmir region, the valley is steeped in complex geopolitical history and regional folklore.",
+                "landmarks": [{"name": "Arang Kel", "description": "An idyllic, highly elevated settlement accessible via cable car."}, {"name": "Sharda", "description": "A breathtaking panoramic viewpoint containing ancient university ruins."}],
+                "activities": ["Riverine navigation", "Botanical exploration", "Alpine lodging"],
+                "transport": {"Islamabad": {"road": "8-10 hours via Muzaffarabad"}},
+                "accommodation": {"budget": ["Keran riverside huts"], "luxury": ["State-operated luxury cabins in Sharda"]},
+                "connectivity": {"mobile_networks": ["SCOM exclusive"], "internet": "Highly intermittent; substantial localized blackouts", "tips": "Verification of border proximity restrictions is mandatory prior to transit."}
+            }
+        ]
 
-# ... (all other page functions with same color replacement pattern)
-# For the final answer, we'll include the full modified code.
+    regions = sorted(set(d.get("region", "Unspecified Territory") for d in dests))
+    col1, col2 = st.columns(2)
+    with col1:
+        sel_region = st.selectbox("Isolate by Provincial Territory", ["Comprehensive Archival View"] + regions)
+    with col2:
+        sel_access = st.selectbox("Isolate by Accessibility Threshold", ["Unrestricted", "Easy", "Moderate", "Difficult"])
+
+    filtered = dests
+    if sel_region != "Comprehensive Archival View":
+        filtered = [d for d in filtered if d.get("region") == sel_region]
+    if sel_access != "Unrestricted":
+        filtered = [d for d in filtered if d.get("access_level") == sel_access]
+
+    if not filtered:
+        st.info("No topographical records match the designated parameters.")
+        return
+
+    selected = st.selectbox("Designate a Specific Geographic Locale", [d["name"] for d in filtered])
+    dest = next(d for d in filtered if d["name"] == selected)
+
+    st.markdown(f"<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>📍 {dest['name']} — <span style='color: var(--text-muted); font-weight: 400;'>{dest.get('region', 'Unspecified')}</span></h3>", unsafe_allow_html=True)
+    
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Accessibility Threshold", dest.get("access_level", "N/A"))
+    c2.metric("Topographical Elevation", f"{dest.get('altitude_m', 'N/A')}m")
+    c3.metric("Optimal Transit Window", dest.get("best_season", "N/A"))
+    
+    budget = dest.get('budget_per_day', {}).get('budget', 'N/A')
+    c4.metric("Estimated Daily Expenditure", f"PKR {budget:,}+" if isinstance(budget, int) else f"PKR {budget}+")
+
+    st.markdown(f"<p style='font-size: 1.05em; color: var(--text-secondary); line-height: 1.7; font-family: \"Inter\", serif;'><b>📄 Topographical Synopsis:</b> {dest.get('description', '')}</p>", unsafe_allow_html=True)
+
+    with st.expander("🏛️ Historical & Heritage Context", expanded=False):
+        st.markdown(f"<p style='color: var(--text-secondary); font-family: \"Inter\", serif; line-height: 1.6;'>{dest.get('history', 'Historical records currently unavailable.')}</p>", unsafe_allow_html=True)
+
+    if "landmarks" in dest and dest["landmarks"]:
+        with st.expander("🏛️ Key Architectural & Natural Landmarks", expanded=False):
+            for lm in dest["landmarks"]:
+                st.markdown(f"<b style='color:var(--text-primary);'>{lm['name']}</b> — <span style='color:var(--text-secondary);'>{lm['description']}</span>", unsafe_allow_html=True)
+
+    if "activities" in dest and dest["activities"]:
+        with st.expander("⛷️ Recommended Expeditionary Excursions", expanded=False):
+            for act in dest["activities"]:
+                st.markdown(f"<li style='color:var(--text-secondary);'>{act}</li>", unsafe_allow_html=True)
+
+    if "transport" in dest and dest["transport"]:
+        with st.expander("🚆 Logistical & Transit Framework", expanded=False):
+            for origin, modes in dest["transport"].items():
+                st.markdown(f"<b style='color:var(--text-primary);'>Originating from {origin.replace('_',' ').title()}:</b>", unsafe_allow_html=True)
+                for mode, info in modes.items():
+                    st.markdown(f"<li style='color:var(--text-secondary);'><i>{mode.title()}:</i> {info}</li>", unsafe_allow_html=True)
+
+    if "accommodation" in dest and dest["accommodation"]:
+        with st.expander("🏨 Premium Lodging & Accommodations", expanded=False):
+            for tier, hotels in dest["accommodation"].items():
+                st.markdown(f"<b style='color:var(--text-primary);'>{tier.title()} Classification:</b>", unsafe_allow_html=True)
+                for h in hotels:
+                    st.markdown(f"<li style='color:var(--text-secondary);'>{h}</li>", unsafe_allow_html=True)
+
+    if "connectivity" in dest and dest["connectivity"]:
+        with st.expander("📡 Telecommunication Infrastructure", expanded=False):
+            conn = dest["connectivity"]
+            st.markdown(f"<p style='color:var(--text-secondary);'><b>Cellular Networks:</b> {', '.join(conn.get('mobile_networks', []))}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:var(--text-secondary);'><b>Broadband Access:</b> {conn.get('internet', 'N/A')}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:var(--text-accent);'><b>💡 Strategic Advisory:</b> {conn.get('tips', 'N/A')}</p>", unsafe_allow_html=True)
+
+def page_weather():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🌤️ Meteorological Forecast & Conditions</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; font-family: \"Inter\", serif;'>Access real-time atmospheric data and extended meteorological projections to meticulously plan your expeditionary window.</p>", unsafe_allow_html=True)
+    
+    dests = load_json("destinations.json")
+    
+    if not dests:
+        dests = [
+            {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "latitude": 36.3167, "longitude": 74.6500},
+            {"name": "Skardu", "region": "Gilgit-Baltistan", "latitude": 35.2971, "longitude": 75.6333},
+            {"name": "Swat Valley", "region": "Khyber Pakhtunkhwa", "latitude": 35.2227, "longitude": 72.4258},
+            {"name": "Lahore", "region": "Punjab", "latitude": 31.5204, "longitude": 74.3587},
+            {"name": "Islamabad", "region": "Capital Territory", "latitude": 33.6844, "longitude": 73.0479},
+            {"name": "Fairy Meadows", "region": "Gilgit-Baltistan", "latitude": 35.3850, "longitude": 74.5786}
+        ]
+
+    selected = st.selectbox("Designate Geographic Locale for Atmospheric Analysis", [d["name"] for d in dests], key="w_dest")
+    dest = next(d for d in dests if d["name"] == selected)
+    
+    lat = dest.get("latitude", 30.3753)
+    lon = dest.get("longitude", 69.3451)
+    
+    with st.spinner("Acquiring real-time meteorological telemetry..."):
+        weather = fetch_weather_tourism(lat, lon)
+        
+    if weather and "current" in weather:
+        st.markdown(f"<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; margin-top: 20px;'>📍 Current Atmospheric Telemetry: {dest['name']}</h3>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Thermal Reading", f"{weather['current']['temperature_2m']} °C")
+        c2.metric("Relative Humidity", f"{weather['current']['relative_humidity_2m']} %")
+        c3.metric("Prevailing Conditions", weather_code_to_text(weather['current']['weather_code']))
+        
+        if "daily" in weather:
+            st.markdown("<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; margin-top: 30px;'>📈 7-Day Extended Meteorological Projection</h3>", unsafe_allow_html=True)
+            daily = weather["daily"]
+            df = pd.DataFrame({
+                "Date": daily["time"],
+                "Maximum Thermal (°C)": daily["temperature_2m_max"],
+                "Minimum Thermal (°C)": daily["temperature_2m_min"],
+                "Precipitation Volume (mm)": daily["precipitation_sum"]
+            })
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df["Date"], y=df["Maximum Thermal (°C)"], name="Max Thermal", line=dict(color="#e11d48", width=3)))
+            fig.add_trace(go.Scatter(x=df["Date"], y=df["Minimum Thermal (°C)"], name="Min Thermal", line=dict(color="#0284c7", width=3)))
+            fig.add_trace(go.Bar(x=df["Date"], y=df["Precipitation Volume (mm)"], name="Precipitation", marker_color="#059669", opacity=0.3, yaxis="y2"))
+            
+            template = "plotly_dark" if st.session_state.theme == "dark" else "plotly"
+            fig.update_layout(
+                yaxis2=dict(title="Precipitation (mm)", overlaying="y", side="right"),
+                yaxis=dict(title="Thermal Reading (°C)"),
+                legend=dict(orientation="h", y=1.12),
+                height=450,
+                margin=dict(l=20, r=20, t=40, b=20),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                template=template
+            )
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='var(--border-color)')
+            fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='var(--border-color)')
+            
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.error("Meteorological telemetry currently inaccessible. Please initiate a retry sequence.")
+
+def page_smart_assistant():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🧠 Artificial Intelligence Concierge</h2>", unsafe_allow_html=True)
+    if prompt := st.chat_input("Inquire regarding Pakistani topography, heritage, or logistics..."):
+        st.session_state.tourism_chat_history.append({"role": "user", "content": prompt})
+    for msg in st.session_state.tourism_chat_history:
+        st.chat_message(msg["role"]).write(msg["content"])
+    if prompt:
+        client = Groq(api_key=GROQ_KEY)
+        messages = [{"role": "system", "content": TOURISM_SYSTEM_PROMPT}] + st.session_state.tourism_chat_history
+        res = client.chat.completions.create(messages=sanitize_messages(messages), model="llama-3.3-70b-versatile")
+        reply = res.choices[0].message.content
+        st.chat_message("assistant").write(reply)
+        st.session_state.tourism_chat_history.append({"role": "assistant", "content": reply})
+
+def page_maps():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🗺️ Interactive Geospatial Mapping</h2>", unsafe_allow_html=True)
+    destinations = load_json("destinations.json")
+    
+    if not destinations:
+        destinations = [
+            {"name": "Hunza Valley", "region": "Gilgit-Baltistan", "access_level": "Moderate", "latitude": 36.3167, "longitude": 74.6500, "altitude_m": 2438, "best_season": "April - October", "budget_per_day": {"budget": 5000}},
+            {"name": "Skardu", "region": "Gilgit-Baltistan", "access_level": "Moderate", "latitude": 35.2971, "longitude": 75.6333, "altitude_m": 2228, "best_season": "May - September", "budget_per_day": {"budget": 6000}},
+            {"name": "Swat Valley", "region": "Khyber Pakhtunkhwa", "access_level": "Easy", "latitude": 35.2227, "longitude": 72.4258, "altitude_m": 980, "best_season": "March - October", "budget_per_day": {"budget": 4000}},
+            {"name": "Lahore", "region": "Punjab", "access_level": "Easy", "latitude": 31.5204, "longitude": 74.3587, "altitude_m": 217, "best_season": "October - March", "budget_per_day": {"budget": 3000}},
+            {"name": "Fairy Meadows", "region": "Gilgit-Baltistan", "access_level": "Difficult", "latitude": 35.3850, "longitude": 74.5786, "altitude_m": 3300, "best_season": "June - September", "budget_per_day": {"budget": 8000}},
+            {"name": "Mohenjo-Daro", "region": "Sindh", "access_level": "Easy", "latitude": 27.3292, "longitude": 68.1389, "altitude_m": 47, "best_season": "November - February", "budget_per_day": {"budget": 3500}}
+        ]
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        show_dest = st.checkbox("📍 Display Topographical Markers", value=True)
+    with col2:
+        show_routes = st.checkbox("🛣️ Illuminate Primary Transit Arteries", value=True)
+    with col3:
+        map_lang = st.radio("🌐 Linguistic Preference", ["English", "اردو (Urdu)"], horizontal=True, key="map_lang")
+        
+    st.markdown("<p style='font-family: \"Inter\", sans-serif; color:var(--text-muted);'>🟢 <b>High Accessibility</b> | 🟠 <b>Intermediate Accessibility</b> | 🔴 <b>Restricted / Expeditionary</b></p>", unsafe_allow_html=True)
+    
+    marker_colors = {"Easy": "#4CAF50", "Moderate": "#FF9800", "Difficult": "#F44336"}
+    markers_data = []
+    if show_dest and destinations:
+        for d in destinations:
+            color = marker_colors.get(d.get("access_level", ""), "#2196F3")
+            budget_val = d.get('budget_per_day', {}).get('budget', 'N/A')
+            budget_str = f"PKR {budget_val:,}+/day" if isinstance(budget_val, int) else f"PKR {budget_val}+/day"
+            markers_data.append({
+                "lat": d.get("latitude", 30.0),
+                "lng": d.get("longitude", 70.0),
+                "name": d.get("name", "Unknown"),
+                "region": d.get("region", "Unknown"),
+                "access": d.get("access_level", "N/A"),
+                "budget": budget_str,
+                "altitude": f"{d.get('altitude_m', 0):,}m",
+                "season": d.get("best_season", "N/A"),
+                "color": color
+            })
+    markers_json = json.dumps(markers_data, ensure_ascii=False)
+
+    routes_data = []
+    if show_routes:
+        routes_data = [
+            {"name": "N-35 Karakoram Highway (KKH)", "color": "#1B5E20", "coords": [[35.92,74.31],[36.05,74.50],[36.32,74.65],[36.46,74.88],[36.30,75.10],[35.88,74.48],[35.55,75.20],[35.30,75.63]]},
+            {"name": "M-2 Motorway (Islamabad → Lahore)", "color": "#0D47A1", "coords": [[33.68,73.05],[33.50,73.10],[33.10,72.80],[32.70,72.60],[32.16,72.68],[31.85,73.50],[31.55,74.34]]},
+            {"name": "N-15 Swat Expressway", "color": "#6A1B9A", "coords": [[33.95,72.35],[34.20,72.10],[34.50,72.05],[34.77,72.36],[35.22,72.35]]},
+            {"name": "N-5 GT Road (Lahore → Karachi)", "color": "#E65100", "coords": [[31.55,74.34],[31.40,74.20],[30.20,71.47],[28.42,68.77],[27.60,68.35],[25.39,68.37],[24.86,67.08]]},
+            {"name": "N-25 RCD Highway (Karachi → Quetta)", "color": "#B71C1C", "coords": [[24.86,67.08],[25.50,66.60],[26.20,66.00],[27.00,66.50],[28.50,66.80],[29.50,66.90],[30.18,66.97]]}
+        ]
+    routes_json = json.dumps(routes_data, ensure_ascii=False)
+
+    map_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            body {{ margin: 0; padding: 0; background: var(--bg-primary); }}
+            #map {{ width: 100%; height: 580px; border-radius: 12px; border: 1px solid var(--border-color); }}
+            .dest-popup h4 {{ margin: 0 0 5px; color: var(--text-accent); font-family: 'Inter', sans-serif; font-weight: bold; }}
+            .dest-popup p {{ margin: 2px 0; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text-secondary); }}
+            .dest-popup hr {{ margin: 5px 0; border-color: var(--border-color); }}
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            var map = L.map('map').setView([30.3753, 69.3451], 5);
+            var lang = '{"en" if map_lang == "English" else "ur"}';
+            
+            if (lang === 'en') {{
+                L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    maxZoom: 19
+                }}).addTo(map);
+            }} else {{
+                L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+                    attribution: '&copy; OpenStreetMap',
+                    maxZoom: 18
+                }}).addTo(map);
+            }}
+
+            var markers = {markers_json};
+            markers.forEach(function(m) {{
+                var popupContent = '<div class="dest-popup">' +
+                    '<h4>' + m.name + '</h4>' +
+                    '<p style="color:var(--text-muted);">' + m.region + '</p>' +
+                    '<hr>' +
+                    '<p>⛰️ Elevation: ' + m.altitude + '</p>' +
+                    '<p>📍 Index: <b style="color:'+m.color+';">' + m.access + '</b></p>' +
+                    '<p>📅 Optimal: ' + m.season + '</p>' +
+                    '<p>💳 ' + m.budget + '</p>' +
+                    '</div>';
+                
+                L.circleMarker([m.lat, m.lng], {{
+                    radius: 10, fillColor: m.color, color: '#fff', weight: 2,
+                    opacity: 1, fillOpacity: 0.85
+                }}).addTo(map).bindPopup(popupContent).bindTooltip(m.name);
+            }});
+
+            var routes = {routes_json};
+            routes.forEach(function(r) {{
+                L.polyline(r.coords, {{
+                    color: r.color, weight: 3, dashArray: '8,6', opacity: 0.8
+                }}).addTo(map).bindTooltip(r.name, {{sticky: true}});
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    components.html(map_html, height=600)
+
+def page_budget():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>📊 Financial Architecture & Resource Allocation</h2>", unsafe_allow_html=True)
+    
+    budget_data = load_json("budget_templates.json")
+    destinations = load_json("destinations.json")
+    
+    if not destinations:
+        destinations = [{"name": "Hunza Valley"}, {"name": "Skardu"}, {"name": "Swat Valley"}, {"name": "Lahore"}]
+        
+    if not budget_data or "categories" not in budget_data:
+        budget_data = {
+            "travel_styles": ["Budget", "Standard", "Luxury"],
+            "categories": [
+                {"name": "Premium Accommodations", "icon": "🏨", "budget": 2000, "standard": 5000, "luxury": 15000},
+                {"name": "Culinary Sustenance", "icon": "🍽️", "budget": 1200, "standard": 3000, "luxury": 8000},
+                {"name": "Logistical Transit", "icon": "🚙", "budget": 800, "standard": 2500, "luxury": 8000},
+                {"name": "Excursions & Admissions", "icon": "🎟️", "budget": 300, "standard": 1000, "luxury": 3000},
+                {"name": "Telecommunications", "icon": "📡", "budget": 150, "standard": 300, "luxury": 500},
+                {"name": "Contingency Capital", "icon": "💼", "budget": 500, "standard": 1500, "luxury": 5000}
+            ],
+            "currency_rates": {
+                "USD": 0.0036, "EUR": 0.0033, "GBP": 0.0028, "AED": 0.013, "CNY": 0.026
+            },
+            "tips": [
+                "Utilize verified ride-hailing networks (Careem/InDrive) in lieu of traditional municipal taxis to ensure pricing transparency.",
+                "Engage with localized gastronomic establishments for an authentic and economically optimized culinary experience.",
+                "Execute lodging reservations pre-emptively during peak meteorological windows (June–August) to avert demand-surge pricing."
+            ]
+        }
+
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>Parametrize Your Expedition</h4>", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        sel_dest = st.selectbox("Designate Primary Hub", [d["name"] for d in destinations], key="bp_dest")
+        num_days = st.slider("Expedition Duration (Days)", 1, 30, 5)
+    with c2:
+        style = st.selectbox("Designate Expenditure Tier", budget_data.get("travel_styles", ["Budget", "Standard", "Luxury"]))
+        num_people = st.slider("Total Personnel Count", 1, 10, 2)
+        
+    style_key = style.lower()
+    categories = budget_data.get("categories", [])
+    
+    items = []
+    total = 0
+    pie_data = []
+    pie_labels = []
+    
+    for cat in categories:
+        daily = cat.get(style_key, 0)
+        cost = daily * num_days * num_people
+        total += cost
+        items.append({
+            "Financial Category": f"{cat.get('icon','')} {cat['name']}", 
+            "Per Capita Daily Allocation (PKR)": f"{daily:,}", 
+            "Cumulative Valuation (PKR)": f"{cost:,}"
+        })
+        pie_data.append(cost)
+        pie_labels.append(cat['name'])
+        
+    st.divider()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("💵 Total Capital Required", f"PKR {total:,}")
+    c2.metric("👤 Per Capita Liability", f"PKR {total // max(num_people,1):,}")
+    c3.metric("📅 Daily Burn Rate", f"PKR {total // max(num_days,1):,}")
+    
+    st.dataframe(pd.DataFrame(items), use_container_width=True, hide_index=True)
+    
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; margin-top:20px;'>Proportional Expenditure Allocation</h4>", unsafe_allow_html=True)
+    template = "plotly_dark" if st.session_state.theme == "dark" else "plotly"
+    fig = px.pie(values=pie_data, names=pie_labels, color_discrete_sequence=px.colors.qualitative.Set3, template=template)
+    fig.update_traces(textposition="inside", textinfo="percent+label")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; margin-top:10px;'>Global Currency Conversion</h4>", unsafe_allow_html=True)
+    rates = budget_data.get("currency_rates", {})
+    sel_currency = st.selectbox("Designate Target Currency", [c for c in rates.keys()])
+    rate = rates.get(sel_currency, 1)
+    st.info(f"**Calculated Exchange:** PKR {total:,} ≈ **{sel_currency} {total * rate:,.2f}**")
+    
+    st.divider()
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>💡 Strategic Fiscal Optimization Directives</h4>", unsafe_allow_html=True)
+    for tip in budget_data.get("tips", []):
+        st.markdown(f"<li style='color:var(--text-secondary); font-family: \"Inter\", serif;'>{tip}</li>", unsafe_allow_html=True)
+
+def page_emergency():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🛡️ Critical Response & Emergency Protocols</h2>", unsafe_allow_html=True)
+    st.error("**In the event of an exigency, initiate contact immediately:** Law Enforcement **15** | Rapid Rescue **1122** | Medical Evacuation **115** | Fire Services **16**")
+    
+    data = load_json("emergency_contacts.json")
+    
+    if not data:
+        data = {
+            "national": [
+                {"service": "Federal Police Emergency Command", "number": "15", "coverage": "Nationwide"},
+                {"service": "Rapid Deployment Rescue 1122", "number": "1122", "coverage": "Punjab, KPK, Islamabad, AJK, GB"},
+                {"service": "Edhi Foundation Medical Evacuation", "number": "115", "coverage": "Nationwide"},
+                {"service": "Municipal Fire Brigade Services", "number": "16", "coverage": "Nationwide"},
+                {"service": "National Tourism Assistance Protocol", "number": "1422", "coverage": "Nationwide"},
+                {"service": "Federal Motorway Security Forces", "number": "130", "coverage": "All Federal Transit Arteries"},
+                {"service": "Federal Investigation Agency (FIA)", "number": "9911", "coverage": "Nationwide"},
+                {"service": "National Disaster Management Authority", "number": "051-9205037", "coverage": "Nationwide"}
+            ],
+            "regional": {
+                "Punjab": {
+                    "rescue": "1122",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "Mayo Premier Medical Facility", "city": "Lahore", "phone": "042-99211111"},
+                        {"name": "Services Hospital Complex", "city": "Lahore", "phone": "042-99200601"},
+                        {"name": "Nishtar Hospital Pavilion", "city": "Multan", "phone": "061-9200432"},
+                        {"name": "Allied Regional Medical Center", "city": "Faisalabad", "phone": "041-9210079"}
+                    ]
+                },
+                "Sindh": {
+                    "rescue": "1122 / 115",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "Jinnah Postgraduate Medical Centre", "city": "Karachi", "phone": "021-99201300"},
+                        {"name": "Civil Hospital Central Infrastructure", "city": "Karachi", "phone": "021-99215740"}
+                    ]
+                },
+                "Gilgit-Baltistan": {
+                    "rescue": "1122",
+                    "police": "15",
+                    "hospitals": [
+                        {"name": "District Headquarters (DHQ) Gilgit", "city": "Gilgit", "phone": "05811-920253"},
+                        {"name": "District Headquarters (DHQ) Skardu", "city": "Skardu", "phone": "05815-920282"}
+                    ]
+                }
+            },
+            "embassies": [
+                {"country": "United States of America", "city": "Islamabad", "phone": "051-2014000", "address": "Diplomatic Enclave, Ramna 5"},
+                {"country": "United Kingdom", "city": "Islamabad", "phone": "051-2012000", "address": "Diplomatic Enclave, Ramna 5"},
+                {"country": "People's Republic of China", "city": "Islamabad", "phone": "051-2260113", "address": "No. 1, Zhou-Enlai Avenue, Diplomatic Enclave"}
+            ],
+            "tourist_police": {
+                "description": "Specialized constabulary units deployed specifically to facilitate, protect, and escort international and domestic travelers.",
+                "contacts": [
+                    {"service": "Islamabad Tourism Constabulary", "phone": "1015"}
+                ]
+            }
+        }
+
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>📞 Federal Emergency Infrastructures</h4>", unsafe_allow_html=True)
+    for contact in data.get("national", []):
+        c1, c2, c3 = st.columns([4, 2, 3])
+        c1.markdown(f"<b style='color:var(--text-primary);'>{contact['service']}</b>", unsafe_allow_html=True)
+        c2.code(contact["number"])
+        c3.markdown(f"<span style='color:var(--text-muted);'>{contact['coverage']}</span>", unsafe_allow_html=True)
+
+    st.divider()
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>🏥 Provincial Medical & Security Apparatus</h4>", unsafe_allow_html=True)
+    regions = list(data.get("regional", {}).keys())
+    sel_region = st.selectbox("Designate Provincial Jurisdiction", regions, key="emg_region")
+    region_data = data["regional"][sel_region]
+    
+    c1, c2 = st.columns(2)
+    c1.metric("Rapid Evacuation Protocols", region_data.get("rescue", "N/A"))
+    c2.metric("Law Enforcement Apparatus", region_data.get("police", "N/A"))
+    
+    if region_data.get("hospitals"):
+        st.markdown("<b style='color:var(--text-primary);'>Primary Medical Facilities:</b>", unsafe_allow_html=True)
+        for h in region_data["hospitals"]:
+            st.markdown(f"<li style='color:var(--text-secondary);'>⚕️ <b>{h['name']}</b> ({h['city']}) — <code style='color:var(--text-accent);'>{h['phone']}</code></li>", unsafe_allow_html=True)
+            
+    st.divider()
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>🏛️ Diplomatic Missions & Consulates</h4>", unsafe_allow_html=True)
+    for emb in data.get("embassies", []):
+        with st.expander(f"🛂 Sovereign Territory: {emb['country']} — {emb['city']}"):
+            st.markdown(f"<p style='color:var(--text-secondary);'><b>Encrypted Channel / Phone:</b> {emb['phone']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color:var(--text-secondary);'><b>Geospatial Coordinates:</b> {emb['address']}</p>", unsafe_allow_html=True)
+            
+    tp = data.get("tourist_police", {})
+    if tp:
+        st.divider()
+        st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>👮 Specialized Tourism Constabulary</h4>", unsafe_allow_html=True)
+        st.info(tp.get("description", ""))
+        for c in tp.get("contacts", []):
+            st.markdown(f"<li style='color:var(--text-secondary);'><b>{c['service']}</b>: <code>{c['phone']}</code></li>", unsafe_allow_html=True)
+
+def page_gallery():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🖼️ Curated Visual Archives</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; font-family: \"Inter\", serif;'>Engage with a high-fidelity visual compendium showcasing the profound topographical and architectural heritage of Pakistan.</p>", unsafe_allow_html=True)
+    
+    dests = load_json("destinations.json")
+    
+    if not dests or not any(d.get("gallery_images") for d in dests):
+        dests = [
+            {
+                "name": "Hunza Valley",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1589553416260-f586c8f1514f?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1627896157734-4bc0a2b027b4?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1600100397608-f010f423b971?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1542358814-c18d1840801a?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Skardu",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1621217036665-27a3c75eb2a7?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1595166373721-653557e4e164?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1633511116666-9eebc3f25b2d?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1434394354979-a235cd36269d?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Lahore",
+                "region": "Punjab",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1584288079521-4f1816bb6e4b?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1610408552174-8b65e90dcb0a?auto=format&fit=crop&w=800&q=80", 
+                    "https://images.unsplash.com/photo-1620358823101-b6a482b8a0df?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Swat Valley",
+                "region": "Khyber Pakhtunkhwa",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1624389964522-42171850119b?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1650367310574-12eb60f09a15?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1601931535038-1647a7b8e5c6?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Islamabad",
+                "region": "Capital Territory",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1601004838634-11883c8c7eb2?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1622396481328-9b1b78cdd9fd?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1579208035657-320d3f2fcb9f?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=800&q=80"
+                ]
+            },
+            {
+                "name": "Fairy Meadows",
+                "region": "Gilgit-Baltistan",
+                "gallery_images": [
+                    "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1483728642387-6c3ba6c6af5f?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1506744626753-1492d2426c11?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=80",
+                    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=800&q=80"
+                ]
+            }
+        ]
+
+    dest_names = ["Isolate Comprehensive Archive"] + [d["name"] for d in dests]
+    sel = st.selectbox("Designate Archival Target", dest_names, key="gal_dest")
+    
+    st.divider()
+    
+    show_dests = dests if sel == "Isolate Comprehensive Archive" else [d for d in dests if d["name"] == sel]
+    
+    for dest in show_dests:
+        images = dest.get("gallery_images", [])
+        if images:
+            st.markdown(f"<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>📍 {dest['name']} — <span style='color:var(--text-muted); font-size: 0.7em;'>{dest.get('region', 'Pakistan')}</span></h3>", unsafe_allow_html=True)
+            cols = st.columns(3)
+            for i, img_url in enumerate(images):
+                with cols[i % 3]:
+                    st.markdown(f"""
+                    <div class="gallery-img-container">
+                        <img src="{img_url}" alt="{dest['name']}">
+                        <p class="gallery-img-caption">Topographical Capture of {dest['name']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            st.write("\n")
+            st.divider()
+
+def page_travel_tips():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>📖 Comprehensive Expeditionary Directives</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; font-family: \"Inter\", serif;'>Assimilate these strategic protocols encompassing cultural integration, personal security, and logistical preparedness to ensure an optimal and deferential traversal of the region.</p>", unsafe_allow_html=True)
+    
+    tips_data = [
+        {
+            "title": "💼 Essential Provisioning & Requisites",
+            "items": [
+                "Deploy versatile, multi-layered garments to counteract severe thermal fluctuations (particularly imperative in northern alpine zones).",
+                "Equip oneself with high-traction, structurally reinforced footwear for uneven topographies.",
+                "Implement rigorous ultraviolet mitigation protocols: SPF barrier, ocular protection, and cranial coverage.",
+                "Procure portable energetic reservoirs (power banks) and universal electrical adaptors (Type C/D form factors dominate the region).",
+                "Maintain a sustainable hydration vessel integrated with microbiological filtration apparatus.",
+                "Retain a comprehensive pharmaceutical kit comprising requisite personal medications and primary first-aid implements.",
+                "Pack conservative aquatic attire exclusively designated for isolated hotel facilities or coastal environments."
+            ]
+        },
+        {
+            "title": "🤝 Societal Norms & Behavioral Etiquette",
+            "items": [
+                "Adhere strictly to conservative sartorial standards. Female constituents are strongly advised to utilize a 'dupatta' (fabric drape) whilst traversing religious sanctuaries. Male constituents should eschew abbreviated garments in public domain.",
+                "It is a mandatory societal imperative to divest oneself of footwear prior to entering ecclesiastical structures and private domiciles.",
+                "Exclusively utilize the right appendage for the transfer of objects and gastronomic consumption, aligned with regional purity paradigms.",
+                "Overt manifestations of romantic affection (PDA) are culturally verboten and socially censured.",
+                "Exhibit profound deference to local inhabitants; explicit verbal authorization must be acquired prior to capturing photographic documentation of individuals, particularly women."
+            ]
+        },
+        {
+            "title": "🛡️ Security Protocols & Risk Mitigation",
+            "items": [
+                "Continuously monitor and evaluate diplomatic travel advisories regarding specific geopolitical jurisdictions.",
+                "Strategically partition certified duplications of critical identification (visas, passports) from their original counterparts.",
+                "Exclusively employ authenticated and corporately monitored transit networks (e.g., Careem, InDrive).",
+                "Circumvent solitary pedestrian traversal through unfamiliar or insufficiently illuminated municipal sectors post-crepuscule.",
+                "Exercise extreme vigilance regarding uncertified street cuisine; mandate the exclusive consumption of factory-sealed hydration products.",
+                "Memorize and maintain immediate access to federal response networks (Law Enforcement: 15, Rapid Rescue: 1122)."
+            ]
+        },
+        {
+            "title": "💳 Fiscal Operations & Currency Dynamics",
+            "items": [
+                "The sovereign monetary unit is the Pakistani Rupee (PKR).",
+                "Physical capital (cash) remains the paramount transactional medium in rural peripheries and traditional bazaars. Ensure an adequate supply of lower-denomination currency.",
+                "Automated Teller Machines (ATMs) are ubiquitous within metropolitan hubs but become increasingly sporadic in remote northern altitudes.",
+                "Pre-emptively notify domestic financial institutions of intended geographic displacement to neutralize automated fraud-prevention card blocks.",
+                "Execute currency conversion exclusively via federally sanctioned financial institutions or certified exchange brokerages."
+            ]
+        },
+        {
+            "title": "🗣️ Linguistic Nuances & Interpersonal Discourse",
+            "items": [
+                "Urdu operates as the lingua franca, while English is a co-official medium deployed extensively across administrative, commercial, and metropolitan sectors.",
+                "The deployment of rudimentary Urdu salutations—such as 'Assalam-o-Alaikum' (Greetings) and 'Shukriya' (Gratitude)—precipitates significant reciprocal goodwill from the indigenous population.",
+                "Procure a localized telecommunications subscription (SIM card) immediately upon arrival to secure uninterrupted navigational and communicative capabilities."
+            ]
+        }
+    ]
+    
+    for category in tips_data:
+        with st.expander(category["title"]):
+            for item in category["items"]:
+                st.markdown(f"<li style='color:var(--text-secondary); font-family: \"Inter\", serif;'>{item}</li>", unsafe_allow_html=True)
+                
+    st.divider()
+    
+    st.markdown("<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>✅ Imperatives and ❌ Prohibitions</h3>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<h4 style='color: var(--text-accent); font-family: \"Inter\", sans-serif;'>✅ Operational Imperatives</h4>", unsafe_allow_html=True)
+        dos = [
+            "Do adhere to conservative sartorial standards, particularly for women, specifically when navigating religious sanctuaries.",
+            "Do secure explicit authorization prior to initiating photographic capture of the local populace.",
+            "Do execute fundamental Urdu salutations: 'Assalam-o-Alaikum' (Hello), 'Shukriya' (Thank you), 'Kya Haal Hai' (How are you?).",
+            "Do graciously accept offerings of steeped tea (chai)—a paramount manifestation of regional hospitality.",
+            "Do divest footwear prior to crossing the threshold of mosques, private residences, and specific commercial establishments.",
+            "Do accommodate the diurnal prayer schedule; commercial operations may temporarily suspend activities during these intervals.",
+            "Do engage with indigenous gastronomy—the regional culinary profile is internationally acclaimed.",
+            "Do execute gratuity distributions to service personnel, guides, and porters (a 10-15% margin is standard).",
+            "Do retain insulated thermal layers even during the summer solstice when operating in high-altitude zones.",
+            "Do engage in strategic fiscal negotiation (haggling) within traditional market environments; it is a culturally anticipated interaction."
+        ]
+        for d in dos:
+            st.markdown(f"<li style='color:var(--text-secondary); font-size:0.95em;'>{d}</li>", unsafe_allow_html=True)
+            
+    with c2:
+        st.markdown("<h4 style='color: #b91c1c; font-family: \"Inter\", sans-serif;'>❌ Strict Prohibitions</h4>", unsafe_allow_html=True)
+        donts = [
+            "Do not consume sustenance or hydration in public domains during the diurnal fasting parameters of Ramadan, irrespective of personal theological affiliations.",
+            "Do not deploy abbreviated or revealing garments within the public sphere.",
+            "Do not execute photographic captures of military infrastructure, defensive perimeters, or uniformed security personnel.",
+            "Do not initiate discourse regarding volatile geopolitical or theological paradigms with unverified individuals.",
+            "Do not deploy the left appendage for the transfer of items or nutritional consumption, as it contravenes established purity doctrines.",
+            "Do not orient the plantar aspect of your feet toward individuals or theological manuscripts.",
+            "Do not consume ethanol-based intoxicating beverages in the public domain (subject to stringent federal prohibition).",
+            "Do not penetrate restricted sovereign or border territories bereft of a federally issued No Objection Certificate (NOC).",
+            "Do not disperse non-biodegradable refuse, particularly within ecologically protected alpine and aquatic zones.",
+            "Do not articulate disparaging assessments regarding regional theological convictions or established cultural methodologies."
+        ]
+        for d in donts:
+            st.markdown(f"<li style='color:var(--text-secondary); font-size:0.95em;'>{d}</li>", unsafe_allow_html=True)
+            
+    st.divider()
+    
+    st.markdown("<h3 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>📚 Advanced Societal Context</h3>", unsafe_allow_html=True)
+    cultural_notes = [
+        {"topic": "Paradigms of Hospitality", "desc": "Pakistani hospitality represents a foundational societal pillar. The indigenous population will frequently deploy extraordinary measures to assist foreign entities. Invitations to partake in culinary or tea-based engagements are profound reflections of genuine cultural tradition, absent of ulterior commercial motives."},
+        {"topic": "Theological Dominance", "desc": "Islam operates as the paramount state religion, dictating the rhythm of daily societal functions. Explorers are explicitly required to defer to these Islamic traditions. Notably, during the holy month of Ramadan, the public ingestion of food, liquids, or combustible inhalants during daylight hours is both legally constrained and perceived as culturally antagonistic."},
+        {"topic": "Linguistic Distribution", "desc": "While Urdu commands the status of the national medium, English functions comprehensively as the co-official language of jurisprudence, corporate commerce, and higher academia. Consequently, anglophone communication is seamlessly executed in metropolitan parameters, though the deployment of fundamental Urdu syntax generates significant cultural rapport."},
+        {"topic": "Fiscal Infrastructure", "desc": "The domestic economic system is anchored by the Pakistani Rupee (PKR). Electronic transaction processing (credit infrastructure) is exclusively operational within elite metropolitan commercial zones and hospitality sectors. It is an absolute requisite to secure physical fiat currency prior to navigating into rural or high-altitude sectors."},
+        {"topic": "Sartorial Parameters", "desc": "Modesty in attire is non-negotiable. Male entities are advised to utilize full-length trousers and shirts. Female entities must deploy voluminous garments obscuring the extremities; a scarf (dupatta) is requisite for access to religious perimeters. The traditional 'Shalwar Kameez' offers optimal climatic comfort and maximum cultural alignment."},
+        {"topic": "Bureaucratic Access Requirements", "desc": "Specific geographic classifications—notably border adjacent sectors in Gilgit-Baltistan, Azad Jammu & Kashmir, and Balochistan—mandate the procurement of a federal 'No Objection Certificate' (NOC) for foreign nationals. Verification with authoritative operators prior to mobilization is essential."}
+    ]
+    
+    for note in cultural_notes:
+        with st.expander(f"📖 {note['topic']}"):
+            st.markdown(f"<p style='color:var(--text-secondary); font-family: \"Inter\", serif; line-height:1.6;'>{note['desc']}</p>", unsafe_allow_html=True)
+
+def page_communication():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>📡 Telecommunication & Digital Connectivity</h2>", unsafe_allow_html=True)
+    
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>📶 Cellular Infrastructure Providers</h4>", unsafe_allow_html=True)
+    operators = [
+        {"Provider Identity": "Jazz (Mobilink)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Superior macro-coverage; optimal performance in metropolitan hubs and resilient signal in northern alpine regions.", "Tourist Pre-paid Availability": "Affirmed — 'Jazz Super SIM' provisioned at primary aeronautical hubs."},
+        {"Provider Identity": "Zong (CMPak)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Secondary macro-coverage; exceptional penetration in Gilgit-Baltistan and extreme northern vectors.", "Tourist Pre-paid Availability": "Affirmed — Attainable at terminal kiosks and franchised corporate centers."},
+        {"Provider Identity": "Telenor Pakistan", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Competent urban penetration; progressively degrades in remote expeditionary sectors.", "Tourist Pre-paid Availability": "Affirmed — 'Telenor Easy Card' architecture."},
+        {"Provider Identity": "Ufone (PTCL)", "Spectrum Tech": "4G/LTE", "Topographical Coverage": "Reliable within the Punjab province and urban sectors; highly restrictive functionality in Gilgit-Baltistan.", "Tourist Pre-paid Availability": "Affirmed — Restricted to designated corporate outlets."},
+        {"Provider Identity": "SCOM", "Spectrum Tech": "3G/4G", "Topographical Coverage": "Exclusive monopolistic provider for Azad Jammu & Kashmir and deeply remote Gilgit-Baltistan parameters.", "Tourist Pre-paid Availability": "Highly Conditional — Acquired via regional military/administrative depots."},
+    ]
+    df_ops = pd.DataFrame(operators)
+    st.dataframe(df_ops, use_container_width=True, hide_index=True)
+    
+    st.divider()
+    
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>🪪 Protocols for Acquiring Foreigner Telecommunication Subscriptions</h4>", unsafe_allow_html=True)
+    steps = [
+        "1. **Required Documentation:** A legally valid international passport embedded with a certified entry visa, coupled with one physical passport-dimensional photograph.",
+        "2. **Authorized Procurement Vectors:** Aeronautical terminal counters (highly advised for immediate integration), or certified corporate franchise nodes within major municipalities.",
+        "3. **Biometric Authentication:** Mandatory federal processing requiring fingerprint scanning and facial capture (a non-negotiable security protocol for all telecommunication modules within the Republic).",
+        "4. **Fiscal Outlay:** Hardware acquisition ranges between PKR 200–500. Ancillary data provisions (10-30GB) span an additional PKR 300–1,000.",
+        "5. **Strategic Recommendation:** Jazz or Zong infrastructure is strongly endorsed for maximal up-time during traversal of northern tourist corridors.",
+        "6. **Activation Latency:** Module initialization generally occurs instantaneously, or within a maximum latency window of 120 minutes post-biometric verification."
+    ]
+    for step in steps:
+        st.markdown(f"<p style='color:var(--text-secondary);'>{step}</p>", unsafe_allow_html=True)
+        
+    st.divider()
+    
+    st.markdown("<h4 style='color: var(--text-primary); font-family: \"Inter\", sans-serif;'>⚠️ Topographical Network Distribution</h4>", unsafe_allow_html=True)
+    conn_data = [
+        {"Provincial / Topographical Sector": "Islamabad / Lahore / Karachi", "Signal Integrity Parameter": "Uninterrupted 4G/LTE + Broad WiFi Saturation", "Operational Status": "🟢 Optimal"},
+        {"Provincial / Topographical Sector": "Swat / Naran / Kaghan Valleys", "Signal Integrity Parameter": "Competent 3G/4G penetration confined to principal municipal zones", "Operational Status": "🟢 Optimal"},
+        {"Provincial / Topographical Sector": "Hunza / Gilgit Epicenters", "Signal Integrity Parameter": "3G/4G functional in townships; rapid degradation upon entering peripheral limits", "Operational Status": "🟡 Intermittent"},
+        {"Provincial / Topographical Sector": "Skardu Proper", "Signal Integrity Parameter": "3G/4G functional within city perimeters; absolute blackout at Deosai Plains", "Operational Status": "🟡 Intermittent"},
+        {"Provincial / Topographical Sector": "Fairy Meadows Base Camp", "Signal Integrity Parameter": "Absolute telecommunication blackout", "Operational Status": "🔴 Null / Void"},
+        {"Provincial / Topographical Sector": "Kalash Valley Territories", "Signal Integrity Parameter": "Severely restricted; localized strictly to legacy 2G spectrums", "Operational Status": "🔴 Null / Void"},
+        {"Provincial / Topographical Sector": "Deep Neelum Valley Operations", "Signal Integrity Parameter": "Highly constrained to non-existent connectivity", "Operational Status": "🔴 Null / Void"},
+    ]
+    df_conn = pd.DataFrame(conn_data)
+    st.dataframe(df_conn, use_container_width=True, hide_index=True)
+
+def page_admin():
+    st.markdown("<h2 style='color: var(--text-primary); font-family: \"Inter\", sans-serif; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>⚙️ Administrative Command Console</h2>", unsafe_allow_html=True)
+    if not st.session_state.admin_logged_in:
+        pw = st.text_input("Deploy Cryptographic Access Key:", type="password")
+        if st.button("Initiate Authentication Handshake"):
+            if hashlib.sha256(pw.encode()).hexdigest() == get_admin_hash():
+                st.session_state.admin_logged_in = True
+                st.rerun()
+            else: st.error("Authentication Failure: Cryptographic mismatch.")
+    else:
+        st.success("Authentication Validated: Level 1 Clearance Achieved.")
+        if st.button("Terminate Session"): 
+            st.session_state.admin_logged_in = False
+            st.rerun()
+        st.info("System Configuration Active: Modulate the internal JSON architecture within the 'data' directory to execute extensive systemic alterations.")
 
 # ============================================================
 # MAIN APP LAYOUT with Theme Toggle
@@ -784,7 +1622,6 @@ But life isn't just about managing time; it's about safeguarding your physical w
             
         elif plan_nav == "⚙️ Activity Planner":
             if submitted:
-                # ... (original logic, but ensure weather chart uses theme)
                 routine = ", ".join([f"{k}: {v}" for k, v in routine_dict.items()])
                 
                 client = Groq(api_key=GROQ_KEY)
@@ -927,8 +1764,3 @@ with tourism_tab:
         current_selection = st.session_state.current_tourism_module
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
-
-# Note: For the sake of brevity, not all page functions have been rewritten with CSS variables here,
-# but the pattern is clear: replace every hardcoded color with the corresponding var(--...).
-# In the final deployed code, all page functions must be similarly updated.
-# The complete code with all modifications is provided in the answer.
