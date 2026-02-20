@@ -503,13 +503,20 @@ if "show_info_panel" not in st.session_state:
 if "current_tourism_module" not in st.session_state:
     st.session_state.current_tourism_module = "📊 Executive Dashboard"
 
+# New state for planner navigation
+if "planner_module" not in st.session_state:
+    st.session_state.planner_module = "📋 Dashboard"
+
 def clear_chat():
     st.session_state.chat_history = []
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
     st.session_state.autoplay_audio = None
 
-def update_module():
+def update_planner_module():
+    st.session_state.planner_module = st.session_state.planner_nav
+
+def update_tourism_module():
     st.session_state.current_tourism_module = st.session_state.tourism_nav
 
 # ============================================================
@@ -610,7 +617,7 @@ def weather_code_to_text(code):
     return codes.get(code, f"Code {code}")
 
 # ============================================================
-# TOURISM PAGES VIEWS (all color literals replaced with CSS variables)
+# TOURISM PAGES VIEWS (unchanged, with CSS variables)
 # ============================================================
 def page_home():
     st.markdown("""
@@ -1552,6 +1559,327 @@ def page_admin():
         st.info("System Configuration Active: Modulate the internal JSON architecture within the 'data' directory to execute extensive systemic alterations.")
 
 # ============================================================
+# NEW PLANNER PAGES (Expanded Trip Planner)
+# ============================================================
+def planner_dashboard():
+    st.markdown("""
+<div style='text-align:center; padding: 30px 0 10px 0;'>
+    <h1 style='font-size: 3.2em; font-weight: 800; color: var(--text-primary); font-family: "Inter", sans-serif; letter-spacing: -0.5px; margin-bottom: 5px;'>
+        Welcome to Your <span style='color: var(--text-accent);'>Ultimate Planner</span>
+    </h1>
+    <p style='font-size: 1.3em; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px;'>Intelligent time management and travel orchestration</p>
+</div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+<div style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; text-align: center; max-width: 900px; margin: 0 auto 40px auto; font-family: "Inter", serif;'>
+This integrated planning suite empowers you to harmonize your daily routine with extraordinary experiences. 
+Whether you need a personalized itinerary, safety guidance, budget insights, or cultural knowledge, 
+every tool is at your fingertips.
+</div>
+    """, unsafe_allow_html=True)
+    
+    # Feature highlights
+    features = [
+        ("🗓️", "Generate Trip", "Create a tailored plan based on your routine and preferences."),
+        ("🏙️", "Explore Destinations", "Discover famous places around the world."),
+        ("🛡️", "Safety & Emergency", "Essential safety tips and global emergency numbers."),
+        ("💰", "Budget Planner", "Smart advice for managing travel expenses."),
+        ("🧳", "Travel Tips", "Practical recommendations for smooth journeys."),
+        ("🤝", "Local Customs", "Understand cultural norms and etiquette.")
+    ]
+    
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>✨ Core Modules</h2>", unsafe_allow_html=True)
+    
+    cols = st.columns(3)
+    for i, (icon, title, desc) in enumerate(features):
+        with cols[i % 3]:
+            st.markdown(f"""
+<div class="feature-card">
+    <div style='font-size: 2.5em; margin-bottom: 15px;'>{icon}</div>
+    <h4 style='color: var(--text-primary); font-size: 1.1em; font-weight: 700; margin: 0 0 10px 0;'>{title}</h4>
+    <p style='color: var(--text-muted); font-size: 0.9em;'>{desc}</p>
+</div>
+            """, unsafe_allow_html=True)
+
+def planner_explore():
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🏙️ Explore Famous World Destinations</h2>", unsafe_allow_html=True)
+    
+    # World destinations data (name, region, description, image URL)
+    world_destinations = [
+        {"name": "Paris", "region": "France", "description": "The City of Light, renowned for the Eiffel Tower, Louvre Museum, and romantic ambiance.", "image": "https://images.unsplash.com/photo-1502602898657-3b9175d9c7c1?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Tokyo", "region": "Japan", "description": "A bustling metropolis blending ultramodern and traditional, from neon-lit skyscrapers to historic temples.", "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"},
+        {"name": "New York", "region": "USA", "description": "The Big Apple, iconic for Times Square, Central Park, Broadway, and the Statue of Liberty.", "image": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Rome", "region": "Italy", "description": "The Eternal City, home to the Colosseum, Vatican City, and countless ancient ruins.", "image": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Cairo", "region": "Egypt", "description": "Gateway to the Pyramids of Giza, the Sphinx, and the rich history of the Nile.", "image": "https://images.unsplash.com/photo-1572252009284-6e9c6c8e3d6a?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Sydney", "region": "Australia", "description": "Famous for the Sydney Opera House, Harbour Bridge, and stunning beaches.", "image": "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Rio de Janeiro", "region": "Brazil", "description": "Christ the Redeemer, Sugarloaf Mountain, and vibrant Copacabana beach.", "image": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Cape Town", "region": "South Africa", "description": "Table Mountain, stunning coastlines, and diverse cultural heritage.", "image": "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Bangkok", "region": "Thailand", "description": "Vibrant street life, ornate shrines, and world-famous cuisine.", "image": "https://images.unsplash.com/photo-1508009603885-50b6c3924c5b?auto=format&fit=crop&w=800&q=80"},
+        {"name": "London", "region": "UK", "description": "Historic landmarks like Big Ben, Tower Bridge, and the British Museum.", "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Dubai", "region": "UAE", "description": "Ultramodern architecture, luxury shopping, and the Burj Khalifa.", "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80"},
+        {"name": "Istanbul", "region": "Turkey", "description": "Where East meets West, with the Hagia Sophia and Grand Bazaar.", "image": "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=800&q=80"},
+    ]
+    
+    # Display in a grid
+    cols = st.columns(3)
+    for i, dest in enumerate(world_destinations):
+        with cols[i % 3]:
+            st.markdown(f"""
+<div class="premium-card" style="padding: 15px;">
+    <img src="{dest['image']}" style="width:100%; height:180px; object-fit:cover; border-radius:12px; margin-bottom:10px;">
+    <h3 style='color: var(--text-primary); font-size: 1.3em; margin:10px 0 5px;'>{dest['name']}</h3>
+    <p style='color: var(--text-muted); font-size: 0.9em; margin:0 0 10px;'>{dest['region']}</p>
+    <p style='color: var(--text-secondary); font-size: 0.95em;'>{dest['description']}</p>
+</div>
+            """, unsafe_allow_html=True)
+
+def planner_safety():
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🛡️ Safety & Emergency</h2>", unsafe_allow_html=True)
+    
+    st.markdown("""
+<div style='background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 20px;'>
+    <h3 style='color: var(--text-accent);'>🌍 Global Emergency Numbers</h3>
+    <p style='color: var(--text-secondary);'>In many countries, <b>112</b> or <b>911</b> are the universal emergency numbers. Below are specific numbers for popular destinations:</p>
+</div>
+    """, unsafe_allow_html=True)
+    
+    emergency_data = {
+        "USA": "911",
+        "UK": "999 or 112",
+        "EU": "112",
+        "Australia": "000",
+        "Japan": "110 (police), 119 (fire/ambulance)",
+        "India": "112",
+        "China": "110 (police), 119 (fire), 120 (ambulance)",
+        "Brazil": "190 (police), 192 (ambulance)",
+        "South Africa": "10111 (police), 10177 (ambulance)",
+        "UAE": "999",
+        "Turkey": "112",
+        "Pakistan": "15 (police), 1122 (rescue), 115 (ambulance)"
+    }
+    
+    cols = st.columns(3)
+    for i, (country, number) in enumerate(emergency_data.items()):
+        with cols[i % 3]:
+            st.markdown(f"""
+<div style='background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px;'>
+    <h4 style='color: var(--text-primary); margin:0 0 5px;'>{country}</h4>
+    <p style='color: var(--text-accent); font-size: 1.2em; font-weight:600;'>{number}</p>
+</div>
+            """, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    st.markdown("""
+<h3 style='color: var(--text-primary);'>🧾 General Safety Tips</h3>
+<ul style='color: var(--text-secondary); font-size: 1.05em;'>
+    <li>Always keep copies of your passport and visa (digital and physical).</li>
+    <li>Register with your embassy when traveling to high-risk areas.</li>
+    <li>Avoid isolated areas, especially at night.</li>
+    <li>Use official taxis or ride-hailing apps.</li>
+    <li>Keep emergency numbers saved on your phone.</li>
+    <li>Ensure your travel insurance covers medical evacuation.</li>
+    <li>Stay informed about local news and weather conditions.</li>
+    <li>Respect local laws and customs to avoid misunderstandings.</li>
+</ul>
+    """, unsafe_allow_html=True)
+
+def planner_budget():
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>💰 Budget Planner</h2>", unsafe_allow_html=True)
+    
+    st.markdown("""
+<div style='background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px;'>
+    <h3 style='color: var(--text-accent);'>📊 General Travel Budget Guidelines</h3>
+    <p style='color: var(--text-secondary);'>Costs vary greatly by destination. Here are typical daily budgets (per person) for different travel styles:</p>
+</div>
+    """, unsafe_allow_html=True)
+    
+    budget_table = pd.DataFrame({
+        "Destination Type": ["Southeast Asia", "Europe", "North America", "South America", "Middle East", "Australia"],
+        "Budget (USD/day)": ["$20-40", "$70-150", "$80-200", "$30-70", "$50-120", "$60-150"],
+        "Mid-Range (USD/day)": ["$40-80", "$150-250", "$200-350", "$70-150", "$120-200", "$150-250"],
+        "Luxury (USD/day)": ["$100+", "$300+", "$400+", "$200+", "$300+", "$300+"]
+    })
+    
+    st.dataframe(budget_table, use_container_width=True, hide_index=True)
+    
+    st.divider()
+    
+    st.markdown("""
+<h3 style='color: var(--text-primary);'>💡 Money-Saving Tips</h3>
+<ul style='color: var(--text-secondary);'>
+    <li>Travel during shoulder seasons (spring/fall) for lower prices.</li>
+    <li>Use public transportation instead of taxis.</li>
+    <li>Eat where locals eat – street food is often delicious and cheap.</li>
+    <li>Book accommodations with kitchen facilities to save on meals.</li>
+    <li>Look for city tourist cards that offer free or discounted attractions.</li>
+    <li>Withdraw local currency from ATMs rather than exchanging at airports.</li>
+    <li>Use no-foreign-transaction-fee credit cards.</li>
+</ul>
+    """, unsafe_allow_html=True)
+
+def planner_tips():
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🧳 Travel Tips</h2>", unsafe_allow_html=True)
+    
+    tips_categories = [
+        ("📋 Before You Go", [
+            "Check passport validity (at least 6 months).",
+            "Research visa requirements.",
+            "Get travel insurance.",
+            "Make copies of important documents.",
+            "Inform your bank of travel plans.",
+            "Pack versatile clothing and a first-aid kit.",
+            "Download offline maps and translation apps."
+        ]),
+        ("✈️ At the Airport", [
+            "Arrive at least 2-3 hours before international flights.",
+            "Keep valuables in your carry-on.",
+            "Stay hydrated during long flights.",
+            "Understand luggage restrictions."
+        ]),
+        ("🏨 Accommodation", [
+            "Read recent reviews before booking.",
+            "Consider location – near public transport.",
+            "Check if breakfast is included.",
+            "Inform yourself about check-in/out times."
+        ]),
+        ("🍽️ Food & Drink", [
+            "Drink bottled water if tap water is unsafe.",
+            "Try local specialties but be cautious with street food.",
+            "Learn a few food-related phrases.",
+            "Be aware of tipping customs."
+        ]),
+        ("📱 Connectivity", [
+            "Buy a local SIM or eSIM for data.",
+            "Download offline translators and maps.",
+            "Keep a power bank handy.",
+            "Use VPN on public Wi-Fi."
+        ])
+    ]
+    
+    for title, items in tips_categories:
+        with st.expander(title, expanded=False):
+            for item in items:
+                st.markdown(f"<li style='color:var(--text-secondary);'>{item}</li>", unsafe_allow_html=True)
+
+def planner_customs():
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🤝 Local Customs & Etiquette</h2>", unsafe_allow_html=True)
+    
+    st.markdown("""
+<div style='background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 20px;'>
+    <p style='color: var(--text-secondary); font-size: 1.1em;'>Understanding and respecting local customs is key to a positive travel experience. Here are general guidelines that apply in many cultures:</p>
+</div>
+    """, unsafe_allow_html=True)
+    
+    customs = [
+        ("🙏 Greetings", "Learn basic greetings (hello, thank you, goodbye) in the local language. A smile is universal."),
+        ("👗 Dress Code", "In conservative countries, dress modestly – cover shoulders and knees, especially at religious sites."),
+        ("🦶 Feet", "In many Asian and Middle Eastern cultures, showing the soles of your feet is considered disrespectful."),
+        ("🍽️ Dining", "Wait to be seated. In some cultures, it's polite to leave a little food on your plate; in others, finishing everything is a compliment."),
+        ("📸 Photography", "Always ask permission before photographing people, especially in rural areas or religious settings."),
+        ("🎁 Gift Giving", "In some cultures, gifts are opened in private. Avoid giving alcohol in Muslim countries."),
+        ("🗣️ Public Behavior", "Public displays of affection may be frowned upon. Keep your voice moderate."),
+        ("🕌 Religious Sites", "Remove shoes before entering. Women may need to cover their hair. Silence your phone."),
+        ("💵 Tipping", "Research tipping customs – in some countries it's expected, in others it's not."),
+    ]
+    
+    for icon, (title, desc) in enumerate(customs):
+        st.markdown(f"""
+<div style='background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px;'>
+    <h4 style='color: var(--text-primary); margin:0 0 5px;'>{icon[0]} {icon[1]}</h4>
+    <p style='color: var(--text-secondary); margin:0;'>{icon[2]}</p>
+</div>
+        """, unsafe_allow_html=True)
+
+def planner_generate():
+    # Original trip planner with enhancements
+    st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🗓️ Generate Your Personalized Trip</h2>", unsafe_allow_html=True)
+    
+    # Recreate the original form (but we need the routine_dict from earlier)
+    # We'll use the same form logic, but we must ensure routine_dict is defined
+    # We'll replicate the form here, but careful with keys to avoid conflicts
+    with st.form("trip_form_enhanced"):
+        st.markdown("<b style='color:var(--text-primary);'>1. Routine Configurator</b>", unsafe_allow_html=True)
+        with st.expander("Configure Weekly Routine", expanded=False):
+            days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            routine_dict = {}
+            for day in days:
+                routine_dict[day] = st.selectbox(day, ["Busy", "Free"], key=f"planner_day_{day}")
+        
+        st.markdown("<br><b style='color:var(--text-primary);'>2. Geographic & Activity Target</b>", unsafe_allow_html=True)
+        city = st.text_input("📍 Current Location", "New York", key="planner_city")
+        mood = st.text_input("🎯 Desired Activity", "Relaxing walk or fine dining", key="planner_mood")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        submitted = st.form_submit_button("🚀 Generate Enhanced Plan", use_container_width=True)
+    
+    if submitted:
+        routine = ", ".join([f"{k}: {v}" for k, v in routine_dict.items()])
+        
+        client = Groq(api_key=GROQ_KEY)
+        weather, err = get_current_weather(city, WEATHER_KEY)
+        if err: 
+            st.error("Weather Error: Could not retrieve meteorological data.")
+        else:
+            with st.spinner("🤖 Processing your request with enhanced intelligence..."):
+                # Improved prompt to get safety, emergency, more places
+                enhanced_prompt = f"""
+You are an expert travel planner. Create a detailed, personalized trip plan based on the following:
+
+User's weekly routine: {routine}
+Current location: {city}
+Desired activity/mood: {mood}
+Current weather: {weather}
+
+Your plan MUST include:
+- A day-by-day itinerary suggestion (if multiple free days) or a detailed single-day plan.
+- Safety measures relevant to the location (e.g., areas to avoid, common scams, safety tips).
+- Emergency contact numbers for that city/country (police, ambulance, fire).
+- At least 3-5 specific place recommendations (with brief descriptions) that match the user's mood.
+- Practical tips (transport, best time to visit, estimated costs).
+- A section on local customs or etiquette.
+
+Format the plan with clear headings and bullet points for readability.
+                """
+                
+                # Also search Tavily for more info
+                search_query = f"tourist attractions safety tips emergency numbers in {city}"
+                search_data = search_tavily(search_query)
+                
+                final_res = client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": "You are a helpful, detailed travel planner. Always include safety and emergency info."},
+                        {"role": "user", "content": enhanced_prompt + f"\n\nAdditional web data: {search_data}"}
+                    ],
+                    model="llama-3.3-70b-versatile"
+                )
+                plan = final_res.choices[0].message.content
+                
+                # Display plan
+                st.markdown("### 🌟 Your Personalized Enhanced Trip Plan")
+                st.markdown(plan)
+                
+                # Download button
+                st.download_button("📥 Download Plan (PDF)", create_pdf(plan), "enhanced_trip_plan.pdf")
+                
+                # Show weather forecast as before
+                df = get_forecast(city, WEATHER_KEY)
+                if df is not None:
+                    st.divider()
+                    st.markdown(f"<h3 style='color:var(--text-primary);'>🌦️ 5-Day Forecast: {city.title()}</h3>", unsafe_allow_html=True)
+                    c1, c2 = st.columns(2)
+                    template = "plotly_dark" if st.session_state.theme == "dark" else "plotly"
+                    with c1:
+                        fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Temperature Trend", markers=True, template=template)
+                        st.plotly_chart(fig_temp, use_container_width=True)
+                    with c2:
+                        fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Rain Probability", range_y=[0, 100], template=template)
+                        st.plotly_chart(fig_rain, use_container_width=True)
+    else:
+        st.info("👈 Fill in your routine and preferences, then click 'Generate Enhanced Plan'.")
+
+# ============================================================
 # MAIN APP LAYOUT with Theme Toggle
 # ============================================================
 # Apply theme CSS
@@ -1563,7 +1891,6 @@ header_col1, header_col2, header_col3 = st.columns([4, 6, 2])
 with header_col1:
     st.title("🗺️ Ultimate Planner & Hub")
 with header_col3:
-    # Theme toggle button
     if st.button(f"{'🌙 Dark' if st.session_state.theme == 'light' else '☀️ Light'}", key="theme_toggle", help="Switch theme"):
         toggle_theme()
         st.rerun()
@@ -1571,88 +1898,43 @@ with header_col3:
 # Tabs
 main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
 
-# --- TAB 1: TRIP PLANNER (unchanged logic, but CSS variables apply) ---
+# --- TAB 1: EXPANDED TRIP PLANNER ---
 with main_tab:
-    plan_sidebar_col, plan_content_col = st.columns([2.5, 7.5])
+    planner_sidebar_col, planner_content_col = st.columns([2.5, 7.5])
     
-    with plan_sidebar_col:
-        st.markdown("<div class='info-panel-header'>Planner Menu</div>", unsafe_allow_html=True)
-        plan_nav = st.radio("Planner Navigation", ["📖 App Overview", "⚙️ Activity Planner"], label_visibility="collapsed")
+    with planner_sidebar_col:
+        st.markdown("<div class='info-panel-header'>Planner Modules</div>", unsafe_allow_html=True)
         
-        if plan_nav == "⚙️ Activity Planner":
-            st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
-            with st.form("trip_form"):
-                st.markdown("<b style='color:var(--text-primary);'>1. Routine Configurator</b>", unsafe_allow_html=True)
-                with st.expander("Configure Weekly Routine", expanded=False):
-                    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-                    routine_dict = {}
-                    for day in days:
-                        routine_dict[day] = st.selectbox(day, ["Busy", "Free"], key=f"day_{day}")
-                
-                st.markdown("<br><b style='color:var(--text-primary);'>2. Geographic & Activity Target</b>", unsafe_allow_html=True)
-                city = st.text_input("📍 Current Location", "New York")
-                mood = st.text_input("🎯 Desired Activity", "Relaxing walk or fine dining")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                submitted = st.form_submit_button("🚀 Generate Optimal Plan", use_container_width=True)
+        # Define planner modules
+        planner_modules = {
+            "📋 Dashboard": planner_dashboard,
+            "🏙️ Explore Destinations": planner_explore,
+            "🛡️ Safety & Emergency": planner_safety,
+            "💰 Budget Planner": planner_budget,
+            "🧳 Travel Tips": planner_tips,
+            "🤝 Local Customs": planner_customs,
+            "🗓️ Generate Trip": planner_generate,
+        }
+        
+        # Determine index for radio
+        try:
+            current_idx = list(planner_modules.keys()).index(st.session_state.planner_module)
+        except ValueError:
+            current_idx = 0
+        
+        selected = st.radio(
+            "Planner Modules",
+            list(planner_modules.keys()),
+            index=current_idx,
+            key="planner_nav",
+            label_visibility="collapsed",
+            on_change=update_planner_module
+        )
+    
+    with planner_content_col:
+        planner_modules[selected]()
 
-    with plan_content_col:
-        if plan_nav == "📖 App Overview":
-            st.markdown(f"""
-<div style='padding: 30px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow);'>
-<h2 style='color: var(--text-primary); font-weight: 800; margin-bottom: 20px; text-align: center;'>Welcome to Your Ultimate Life & Health Planner 🌟</h2>
-<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px;'>
-In today's hyper-connected, fast-paced world, time slips through our fingers seamlessly. We know you are navigating an incredibly busy life. Balancing professional demands, family obligations, and personal goals often leaves little room to actually breathe and <em>enjoy</em> your surroundings.
-</p>
-<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px;'>
-Our AI platform acts as your personal time-architect. By simply outlining your weekly routine, we identify those hidden pockets of free time. Whether you have just a couple of hours on a Wednesday evening or an entire open Sunday, we curate the perfect activity—be it a relaxing walk, an immersive local trip, or a cozy dining experience—allowing you to truly savor your city without the mental fatigue of planning.
-</p>
-<p style='font-size: 1.1em; color: var(--text-secondary); line-height: 1.8; margin-bottom: 30px;'>
-But life isn't just about managing time; it's about safeguarding your physical well-being. Living with conditions such as asthma, diabetes, or high blood pressure requires vigilant, constant management. We deeply understand that your doctor is not always immediately available at 11 PM to interpret a sudden lab report or suggest an urgent dietary adjustment. This AI platform perfectly fills that gap with a compassionate touch. Simply share your medical reports, and our sophisticated Health Companion will instantly analyze your specific clinical constraints to prepare a safe, personalized diet and wellness plan—ensuring you are always looked after, day or night.
-</p>
-<hr style='border-color: var(--border-color); margin-bottom: 20px;'>
-<h4 style='color: var(--text-accent); font-weight: 700; margin-bottom: 15px;'>Platform Capabilities</h4>
-<ul style='color: var(--text-secondary); font-size: 1.05em; line-height: 1.6;'>
-<li style='margin-bottom: 10px;'><b>📅 Trip Planner:</b> Intelligent time-management and tailored local experiences based explicitly on your daily routine.</li>
-<li style='margin-bottom: 10px;'><b>🤖 AI Health Companion:</b> Your 24/7 empathetic clinical assistant for real-time medical report analysis and dietary guidance.</li>
-<li><b>🇵🇰 Pakistan Tourism:</b> A premium, executive digital concierge for exploring the majestic topographies and heritage of Pakistan.</li>
-</ul>
-</div>
-            """, unsafe_allow_html=True)
-            
-        elif plan_nav == "⚙️ Activity Planner":
-            if submitted:
-                routine = ", ".join([f"{k}: {v}" for k, v in routine_dict.items()])
-                
-                client = Groq(api_key=GROQ_KEY)
-                weather, err = get_current_weather(city, WEATHER_KEY)
-                if err: 
-                    st.error("Weather Error: Could not retrieve meteorological data.")
-                else:
-                    with st.spinner("🤖 Processing routine parameters, analyzing atmospheric telemetry, and synthesizing optimal web data..."):
-                        q_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Create search query for {mood} in {city} 2025. Keywords only."}], model="llama-3.1-8b-instant")
-                        search_data = search_tavily(q_res.choices[0].message.content)
-                        final_res = client.chat.completions.create(messages=[{"role": "user", "content": f"Plan trip. Routine: {routine}, Weather: {weather}, Places: {search_data}"}], model="llama-3.3-70b-versatile")
-                        plan = final_res.choices[0].message.content
-                        st.markdown(plan)
-                        st.download_button("📥 Download Official Plan (PDF)", create_pdf(plan), "optimal_plan.pdf")
-                        
-                        df = get_forecast(city, WEATHER_KEY)
-                        if df is not None:
-                            st.divider()
-                            st.markdown(f"<h3 style='color:var(--text-primary);'>🌦️ 5-Day Atmospheric Projection: {city.title()}</h3>", unsafe_allow_html=True)
-                            c1, c2 = st.columns(2)
-                            template = "plotly_dark" if st.session_state.theme == "dark" else "plotly"
-                            with c1:
-                                fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Thermal Trend Projection", markers=True, template=template)
-                                st.plotly_chart(fig_temp, use_container_width=True)
-                            with c2:
-                                fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Precipitation Probability", range_y=[0, 100], template=template)
-                                st.plotly_chart(fig_rain, use_container_width=True)
-            else:
-                st.info("👈 Please define your routine parameters, select a geographic target, and designate your activity in the sidebar menu. Then initiate the generation sequence.")
-
-# --- TAB 2: HEALTH COMPANION (unchanged logic) ---
+# --- TAB 2: HEALTH COMPANION (unchanged) ---
 with companion_tab:
     client = Groq(api_key=GROQ_KEY)
     
@@ -1713,7 +1995,7 @@ with companion_tab:
         st.session_state.chat_history.extend([{"role": "user", "content": prompt}, {"role": "assistant", "content": res.choices[0].message.content}])
         st.rerun()
 
-# --- TAB 3: PAKISTAN TOURISM (unchanged logic, but with theme-aware CSS) ---
+# --- TAB 3: PAKISTAN TOURISM (unchanged) ---
 with tourism_tab:
     header_col, toggle_col = st.columns([8.5, 1.5])
     with header_col:
@@ -1755,7 +2037,7 @@ with tourism_tab:
                 index=current_idx,
                 key="tourism_nav", 
                 label_visibility="collapsed",
-                on_change=update_module
+                on_change=update_tourism_module
             )
             
         with tour_content_col:
