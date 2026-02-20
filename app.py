@@ -18,11 +18,308 @@ import hashlib
 from datetime import datetime
 
 # ============================================================
+# INTRO ANIMATION FUNCTION (NEW)
+# ============================================================
+def intro_animation_advanced():
+    """
+    Returns an HTML string for a detailed intro:
+    - Blue gradient background
+    - Suited man walks to center, places briefcase
+    - Briefcase opens, login form appears
+    - Pointing hand animates
+    - Skip button to bypass
+    """
+    return """
+    <style>
+        /* Full-screen overlay with blue gradient */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a2f6c, #1e4b8f);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Scene container */
+        .scene {
+            position: relative;
+            width: 500px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Man with suit (emoji + suit style) */
+        .man {
+            font-size: 6rem;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
+            position: relative;
+            left: -200px; /* start off-screen left */
+            animation: walkIn 2s ease-out forwards;
+            z-index: 10;
+        }
+        @keyframes walkIn {
+            0% { left: -200px; transform: scale(1); }
+            60% { left: 0; transform: scale(1.05); }
+            100% { left: 0; transform: scale(1); }
+        }
+
+        /* Briefcase (initially hidden, appears after man stops) */
+        .briefcase {
+            width: 120px;
+            height: 90px;
+            background: #8B4513;
+            border-radius: 15px 15px 20px 20px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+            margin-top: -30px;
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 5;
+        }
+        .briefcase.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .briefcase:before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 25px;
+            background: #A0522D;
+            border-radius: 8px 8px 0 0;
+        }
+        .briefcase:after {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background: #D2B48C;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        /* Lid for opening animation */
+        .lid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #A0522D;
+            border-radius: 15px 15px 20px 20px;
+            transform-origin: top;
+            transition: transform 0.6s;
+            pointer-events: none;
+            z-index: 6;
+        }
+        .briefcase.open .lid {
+            transform: rotateX(110deg) translateY(-20px);
+        }
+
+        /* Login form */
+        .login-form {
+            margin-top: 30px;
+            width: 280px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
+            pointer-events: none;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .login-form.visible {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 40px;
+            color: #333;
+            font-size: 1rem;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .input-group input:focus {
+            outline: 2px solid #ffd966;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ffd966;
+            color: #0a2f6c;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .submit-btn:hover {
+            background: #ffe08a;
+            transform: scale(1.02);
+        }
+
+        /* Pointing hand animation */
+        .pointer {
+            position: absolute;
+            top: 65%;
+            left: 55%;
+            font-size: 4rem;
+            opacity: 0;
+            animation: pointFinger 2s infinite 2s;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+            pointer-events: none;
+            z-index: 20;
+        }
+        @keyframes pointFinger {
+            0% { opacity: 0; transform: translateX(0); }
+            20% { opacity: 1; transform: translateX(-10px); }
+            40% { opacity: 1; transform: translateX(0); }
+            60% { opacity: 1; transform: translateX(-5px); }
+            80% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(0); }
+        }
+
+        /* Skip button */
+        .skip-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 40px;
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+            z-index: 100;
+        }
+        .skip-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+    </style>
+
+    <div class="intro-overlay" id="introOverlay">
+        <div class="skip-btn" id="skipBtn">⏩ Skip Intro</div>
+
+        <div class="scene">
+            <div class="man" id="man">🧑‍💼👔</div>
+            <div class="briefcase" id="briefcase">
+                <div class="lid"></div>
+            </div>
+
+            <div class="login-form" id="loginForm">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Enter username" value="demo">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••" value="123456">
+                </div>
+                <button class="submit-btn" id="submitBtn">Enter the App</button>
+            </div>
+
+            <div class="pointer" id="pointer">👉</div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const man = document.getElementById('man');
+            const briefcase = document.getElementById('briefcase');
+            const lid = document.querySelector('.lid');
+            const loginForm = document.getElementById('loginForm');
+            const pointer = document.getElementById('pointer');
+            const skipBtn = document.getElementById('skipBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Sequence: after man walks in, show briefcase
+            setTimeout(() => {
+                briefcase.classList.add('visible');
+            }, 2000); // matches walkIn duration approx
+
+            // After briefcase appears, allow click to open
+            briefcase.addEventListener('click', function() {
+                // Open briefcase
+                briefcase.classList.add('open');
+                // Show login form
+                loginForm.classList.add('visible');
+                // Pointer becomes visible via CSS animation
+            });
+
+            // Handle skip
+            skipBtn.addEventListener('click', function() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('intro', 'done');
+                window.location.href = url.toString();
+            });
+
+            // Handle submit (redirect to main app)
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = new URL(window.location.href);
+                url.searchParams.set('intro', 'done');
+                window.location.href = url.toString();
+            });
+
+            // Optional: also allow Enter key on password field
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+        })();
+    </script>
+    """
+
+# ============================================================
 # PAGE CONFIG & INITIAL SETUP
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
-# ---------- INTRO ANIMATION (NEW) ----------
+# ---------- INTRO ANIMATION LOGIC ----------
 if "intro_completed" not in st.session_state:
     st.session_state.intro_completed = False
 
@@ -35,261 +332,12 @@ if query_params.get("intro") == "done":
 
 # If intro not completed, show the animation and stop further rendering
 if not st.session_state.intro_completed:
-    def intro_animation_component():
-        return """
-        <style>
-            /* Full-screen overlay, sits above everything */
-            .intro-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: radial-gradient(circle at 30% 30%, var(--bg-secondary), var(--bg-primary));
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                font-family: 'Inter', sans-serif;
-                transition: opacity 0.5s ease;
-            }
+    components.html(intro_animation_advanced(), height=800)
+    st.stop()
 
-            /* Container for the animated scene */
-            .scene {
-                position: relative;
-                width: 300px;
-                height: 400px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            /* Man figure (using emoji + simple animation) */
-            .man {
-                font-size: 5rem;
-                animation: slideIn 1s ease-out forwards;
-                transform: translateX(-200%);
-                margin-bottom: 20px;
-            }
-            @keyframes slideIn {
-                0% { transform: translateX(-200%); }
-                100% { transform: translateX(0); }
-            }
-
-            /* Briefcase */
-            .briefcase {
-                width: 150px;
-                height: 120px;
-                background: #8B4513;  /* brown */
-                border-radius: 20px 20px 30px 30px;
-                position: relative;
-                cursor: pointer;
-                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-                transition: transform 0.3s ease;
-                margin-top: 10px;
-            }
-            .briefcase:hover {
-                transform: scale(1.02);
-            }
-            .briefcase:before {
-                content: '';
-                position: absolute;
-                top: -20px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 60px;
-                height: 30px;
-                background: #A0522D;
-                border-radius: 10px 10px 0 0;
-            }
-            .briefcase:after {
-                content: '';
-                position: absolute;
-                top: -30px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 20px;
-                height: 20px;
-                background: #D2B48C;
-                border-radius: 50%;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            }
-
-            /* Briefcase open state */
-            .briefcase.open {
-                transform: rotateX(10deg);
-            }
-            .briefcase.open .lid {
-                transform: rotateX(90deg) translateY(-20px);
-            }
-
-            /* The lid is a separate element inside briefcase (created via JS) */
-            .lid {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: #A0522D;
-                border-radius: 20px 20px 30px 30px;
-                transform-origin: top;
-                transition: transform 0.5s;
-                pointer-events: none;
-                z-index: 2;
-            }
-
-            /* Login form (initially hidden) */
-            .login-form {
-                margin-top: 30px;
-                width: 280px;
-                opacity: 0;
-                transform: translateY(20px);
-                transition: opacity 0.5s ease, transform 0.5s ease;
-                pointer-events: none;
-            }
-            .login-form.visible {
-                opacity: 1;
-                transform: translateY(0);
-                pointer-events: all;
-            }
-
-            .input-group {
-                margin-bottom: 15px;
-            }
-            .input-group label {
-                display: block;
-                color: var(--text-secondary);
-                font-size: 0.9rem;
-                margin-bottom: 5px;
-            }
-            .input-group input {
-                width: 100%;
-                padding: 12px 15px;
-                background: var(--input-bg);
-                border: 1px solid var(--input-border);
-                border-radius: 30px;
-                color: var(--text-primary);
-                font-size: 1rem;
-                box-sizing: border-box;
-                transition: all 0.3s;
-            }
-            .input-group input:focus {
-                outline: none;
-                border-color: var(--text-accent);
-                box-shadow: 0 0 0 3px rgba(4,120,87,0.2);
-            }
-
-            .submit-btn {
-                width: 100%;
-                padding: 14px;
-                background: var(--text-accent);
-                color: white;
-                border: none;
-                border-radius: 40px;
-                font-size: 1.1rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s;
-                margin-top: 10px;
-            }
-            .submit-btn:hover {
-                background: #059669;
-                transform: scale(1.02);
-            }
-
-            /* Hint text */
-            .hint {
-                color: var(--text-muted);
-                margin-top: 20px;
-                font-size: 0.9rem;
-                text-align: center;
-            }
-        </style>
-
-        <div class="intro-overlay" id="introOverlay">
-            <div class="scene">
-                <div class="man" id="man">🧑‍💼</div>
-                <div class="briefcase" id="briefcase">
-                    <div class="lid"></div>
-                </div>
-
-                <div class="login-form" id="loginForm">
-                    <div class="input-group">
-                        <label>Username</label>
-                        <input type="text" id="username" placeholder="Enter username" value="demo">
-                    </div>
-                    <div class="input-group">
-                        <label>Password</label>
-                        <input type="password" id="password" placeholder="••••••" value="123456">
-                    </div>
-                    <button class="submit-btn" id="submitBtn">Enter the App</button>
-                </div>
-                <div class="hint" id="hint">✨ Click the briefcase to open it</div>
-            </div>
-        </div>
-
-        <script>
-            (function() {
-                const briefcase = document.getElementById('briefcase');
-                const lid = document.querySelector('.lid');
-                const loginForm = document.getElementById('loginForm');
-                const hint = document.getElementById('hint');
-                const submitBtn = document.getElementById('submitBtn');
-                const man = document.getElementById('man');
-
-                // Animate man sliding in (already handled by CSS, but we can add a small extra effect)
-                // After man arrives, pulse the briefcase to hint interaction
-                setTimeout(() => {
-                    briefcase.style.animation = 'pulse 1s infinite';
-                }, 1000);
-
-                // Add pulse animation dynamically
-                const style = document.createElement('style');
-                style.innerHTML = `
-                    @keyframes pulse {
-                        0% { transform: scale(1); }
-                        50% { transform: scale(1.05); }
-                        100% { transform: scale(1); }
-                    }
-                `;
-                document.head.appendChild(style);
-
-                // Open briefcase on click
-                briefcase.addEventListener('click', function() {
-                    // Stop pulsing
-                    briefcase.style.animation = 'none';
-                    // Add open class to briefcase and rotate lid
-                    briefcase.classList.add('open');
-                    // Show form
-                    loginForm.classList.add('visible');
-                    // Update hint
-                    hint.textContent = '✨ Now enter your credentials and click "Enter the App"';
-                });
-
-                // Handle submit
-                submitBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    // You can add validation here if needed
-                    // Redirect to same page with ?intro=done
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('intro', 'done');
-                    window.location.href = url.toString();
-                });
-
-                // Optional: also allow Enter key on password field
-                document.getElementById('password').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        submitBtn.click();
-                    }
-                });
-            })();
-        </script>
-        """
-    components.html(intro_animation_component(), height=800)
-    st.stop()  # Prevents the rest of the app from loading
-# ---------- END INTRO ANIMATION ----------
-
+# ============================================================
+# (Rest of your original code follows exactly as before)
+# ============================================================
 # Initialize theme in session state
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
