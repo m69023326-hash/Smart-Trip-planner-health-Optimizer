@@ -1773,32 +1773,28 @@ def planner_customs():
     """, unsafe_allow_html=True)
     
     customs = [
-        ("🙏 Greetings", "Learn basic greetings (hello, thank you, goodbye) in the local language. A smile is universal."),
-        ("👗 Dress Code", "In conservative countries, dress modestly – cover shoulders and knees, especially at religious sites."),
-        ("🦶 Feet", "In many Asian and Middle Eastern cultures, showing the soles of your feet is considered disrespectful."),
-        ("🍽️ Dining", "Wait to be seated. In some cultures, it's polite to leave a little food on your plate; in others, finishing everything is a compliment."),
-        ("📸 Photography", "Always ask permission before photographing people, especially in rural areas or religious settings."),
-        ("🎁 Gift Giving", "In some cultures, gifts are opened in private. Avoid giving alcohol in Muslim countries."),
-        ("🗣️ Public Behavior", "Public displays of affection may be frowned upon. Keep your voice moderate."),
-        ("🕌 Religious Sites", "Remove shoes before entering. Women may need to cover their hair. Silence your phone."),
-        ("💵 Tipping", "Research tipping customs – in some countries it's expected, in others it's not."),
+        ("🙏", "Greetings", "Learn basic greetings (hello, thank you, goodbye) in the local language. A smile is universal."),
+        ("👗", "Dress Code", "In conservative countries, dress modestly – cover shoulders and knees, especially at religious sites."),
+        ("🦶", "Feet", "In many Asian and Middle Eastern cultures, showing the soles of your feet is considered disrespectful."),
+        ("🍽️", "Dining", "Wait to be seated. In some cultures, it's polite to leave a little food on your plate; in others, finishing everything is a compliment."),
+        ("📸", "Photography", "Always ask permission before photographing people, especially in rural areas or religious settings."),
+        ("🎁", "Gift Giving", "In some cultures, gifts are opened in private. Avoid giving alcohol in Muslim countries."),
+        ("🗣️", "Public Behavior", "Public displays of affection may be frowned upon. Keep your voice moderate."),
+        ("🕌", "Religious Sites", "Remove shoes before entering. Women may need to cover their hair. Silence your phone."),
+        ("💵", "Tipping", "Research tipping customs – in some countries it's expected, in others it's not."),
     ]
     
-    for icon, (title, desc) in enumerate(customs):
+    for icon, title, desc in customs:
         st.markdown(f"""
 <div style='background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px;'>
-    <h4 style='color: var(--text-primary); margin:0 0 5px;'>{icon[0]} {icon[1]}</h4>
-    <p style='color: var(--text-secondary); margin:0;'>{icon[2]}</p>
+    <h4 style='color: var(--text-primary); margin:0 0 5px;'>{icon} {title}</h4>
+    <p style='color: var(--text-secondary); margin:0;'>{desc}</p>
 </div>
         """, unsafe_allow_html=True)
 
 def planner_generate():
-    # Original trip planner with enhancements
     st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🗓️ Generate Your Personalized Trip</h2>", unsafe_allow_html=True)
     
-    # Recreate the original form (but we need the routine_dict from earlier)
-    # We'll use the same form logic, but we must ensure routine_dict is defined
-    # We'll replicate the form here, but careful with keys to avoid conflicts
     with st.form("trip_form_enhanced"):
         st.markdown("<b style='color:var(--text-primary);'>1. Routine Configurator</b>", unsafe_allow_html=True)
         with st.expander("Configure Weekly Routine", expanded=False):
@@ -1807,9 +1803,15 @@ def planner_generate():
             for day in days:
                 routine_dict[day] = st.selectbox(day, ["Busy", "Free"], key=f"planner_day_{day}")
         
-        st.markdown("<br><b style='color:var(--text-primary);'>2. Geographic & Activity Target</b>", unsafe_allow_html=True)
-        city = st.text_input("📍 Current Location", "New York", key="planner_city")
-        mood = st.text_input("🎯 Desired Activity", "Relaxing walk or fine dining", key="planner_mood")
+        st.markdown("<br><b style='color:var(--text-primary);'>2. Trip Details</b>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            city = st.text_input("📍 Current Location / City", "New York", key="planner_city")
+            num_days = st.slider("📅 Trip Duration (Days)", 1, 14, 3, key="planner_days")
+        with col2:
+            mood = st.text_input("🎯 Desired Activity / Theme", "Relaxing walk or fine dining", key="planner_mood")
+            travel_style = st.selectbox("🧳 Travel Style", ["Budget", "Standard", "Luxury"], key="planner_style")
+            budget = st.selectbox("💰 Budget Level", ["Low", "Medium", "High"], key="planner_budget")
         
         st.markdown("<br>", unsafe_allow_html=True)
         submitted = st.form_submit_button("🚀 Generate Enhanced Plan", use_container_width=True)
@@ -1823,24 +1825,27 @@ def planner_generate():
             st.error("Weather Error: Could not retrieve meteorological data.")
         else:
             with st.spinner("🤖 Processing your request with enhanced intelligence..."):
-                # Improved prompt to get safety, emergency, more places
+                # Enhanced prompt with all user inputs
                 enhanced_prompt = f"""
 You are an expert travel planner. Create a detailed, personalized trip plan based on the following:
 
 User's weekly routine: {routine}
 Current location: {city}
 Desired activity/mood: {mood}
+Trip duration: {num_days} days
+Travel style: {travel_style}
+Budget level: {budget}
 Current weather: {weather}
 
-Your plan MUST include:
-- A day-by-day itinerary suggestion (if multiple free days) or a detailed single-day plan.
-- Safety measures relevant to the location (e.g., areas to avoid, common scams, safety tips).
-- Emergency contact numbers for that city/country (police, ambulance, fire).
-- At least 3-5 specific place recommendations (with brief descriptions) that match the user's mood.
-- Practical tips (transport, best time to visit, estimated costs).
-- A section on local customs or etiquette.
+Your plan MUST include the following sections with clear headings:
+1. **Day-by-Day Itinerary** – Suggest activities for each day, considering the user's routine and preferences.
+2. **Safety Measures** – Specific safety tips for {city}, including areas to avoid, common scams, and local emergency numbers (police, ambulance, fire).
+3. **Emergency Contacts** – Provide a table with key emergency numbers for {city} (police, ambulance, fire, tourist police, embassy if applicable).
+4. **Recommended Places** – At least 5 specific attractions, restaurants, or experiences that match the user's mood, with brief descriptions and approximate costs.
+5. **Practical Tips** – Transportation options, best time to visit, estimated daily budget, and packing suggestions.
+6. **Local Customs & Etiquette** – Cultural norms to be aware of in {city} (dress code, greetings, tipping, etc.).
 
-Format the plan with clear headings and bullet points for readability.
+Format the plan with bullet points and tables where appropriate. Make it comprehensive and easy to follow.
                 """
                 
                 # Also search Tavily for more info
@@ -1849,7 +1854,7 @@ Format the plan with clear headings and bullet points for readability.
                 
                 final_res = client.chat.completions.create(
                     messages=[
-                        {"role": "system", "content": "You are a helpful, detailed travel planner. Always include safety and emergency info."},
+                        {"role": "system", "content": "You are a helpful, detailed travel planner. Always include safety, emergency info, and local customs."},
                         {"role": "user", "content": enhanced_prompt + f"\n\nAdditional web data: {search_data}"}
                     ],
                     model="llama-3.3-70b-versatile"
