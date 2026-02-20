@@ -58,12 +58,20 @@ if not st.session_state.logged_in:
 # Initialize theme in session state
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
-# ============================================================
-# LOGIN STATE
-# ============================================================
+
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-    
+# SHOW LOGIN FIRST
+if not st.session_state.logged_in:
+    render_3d_login()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if st.button("Enter Platform", use_container_width=True):
+        st.session_state.logged_in = True
+        st.rerun()
+
+    st.stop()    
 # Function to toggle theme
 def toggle_theme():
     st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
