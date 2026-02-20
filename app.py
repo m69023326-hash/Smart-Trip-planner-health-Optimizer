@@ -16,62 +16,16 @@ import json
 import os
 import hashlib
 from datetime import datetime
-# ============================================================
-# 3D ANIMATED LOGIN (VISME EMBED)
-# ============================================================
-def render_3d_login():
-    visme_html = """
-    <div class="visme_d" 
-         data-title="Webinar Registration Form" 
-         data-url="g7ddqxx0-untitled-project" 
-         data-domain="forms" 
-         data-full-page="true" 
-         data-min-height="100vh" 
-         data-form-id="133190">
-    </div>
 
-    <script src="https://static-bundle.visme.co/forms/vismeforms-embed.js"></script>
-
-    <style>
-        iframe { border: none !important; width: 100% !important; height: 100vh !important; }
-        body { margin: 0; }
-    </style>
-    """
-    components.html(visme_html, height=800)
 # ============================================================
 # PAGE CONFIG & INITIAL SETUP
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
-# ============================================================
-# SHOW LOGIN FIRST
-# ============================================================
-if not st.session_state.logged_in:
-    render_3d_login()
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("Enter Platform", use_container_width=True):
-        st.session_state.logged_in = True
-        st.rerun()
-
-    st.stop()
 # Initialize theme in session state
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-# SHOW LOGIN FIRST
-if not st.session_state.logged_in:
-    render_3d_login()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if st.button("Enter Platform", use_container_width=True):
-        st.session_state.logged_in = True
-        st.rerun()
-
-    st.stop()    
+    
 # Function to toggle theme
 def toggle_theme():
     st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
