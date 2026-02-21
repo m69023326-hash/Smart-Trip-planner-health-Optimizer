@@ -36,7 +36,7 @@ if query_params.get("registered") == "done":
 
 # If not registered, show the Visme form and stop further rendering
 if not st.session_state.registered:
-    def registration_form_component():
+  def registration_form_component():
     return """
     <style>
         /* Lock the entire page – no scrolling */
@@ -57,16 +57,15 @@ if not st.session_state.registered:
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;  /* content starts at top */
+            justify-content: flex-start;
             align-items: center;
             font-family: 'Inter', sans-serif;
             box-sizing: border-box;
-            overflow: hidden;  /* prevent overlay scrolling */
+            overflow: hidden;
         }
-        /* Scrollable form container */
         .form-scrollable {
             width: 100%;
-            height: calc(100% - 80px);  /* leave space for the button */
+            height: calc(100% - 80px);
             overflow-y: auto;
             display: flex;
             justify-content: center;
@@ -75,13 +74,12 @@ if not st.session_state.registered:
         }
         .visme_d {
             width: 100% !important;
-            max-width: 800px;  /* optional, for better readability */
+            max-width: 800px;
             height: auto !important;
             min-height: 600px;
             border: none;
             margin: 0 auto;
         }
-        /* Animated button */
         .app-button {
             display: inline-block;
             margin: 20px auto;
