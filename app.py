@@ -23,17 +23,14 @@ from datetime import datetime
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
 # ============================================================
-# REGISTRATION FORM (Visme) – SHOW ON FIRST VISIT
+# REGISTRATION FORM (Visme) – FULL SCREEN, NO SCROLL
 # ============================================================
 if "registered" not in st.session_state:
     st.session_state.registered = False
 
-# Check query parameters for registration completion or skip
+# Check query parameters for registration completion
 query_params = st.query_params
 if query_params.get("registered") == "done":
-    st.session_state.registered = True
-    st.query_params.clear()
-elif query_params.get("skip") == "true":
     st.session_state.registered = True
     st.query_params.clear()
 
@@ -42,6 +39,14 @@ if not st.session_state.registered:
     def registration_form_component():
         return """
         <style>
+            /* Lock background and prevent scrolling */
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden !important;
+                height: 100%;
+                width: 100%;
+            }
             .registration-overlay {
                 position: fixed;
                 top: 0;
@@ -55,8 +60,6 @@ if not st.session_state.registered:
                 justify-content: center;
                 align-items: center;
                 font-family: 'Inter', sans-serif;
-                padding: 0;
-                margin: 0;
                 box-sizing: border-box;
             }
             .visme_d {
@@ -66,6 +69,8 @@ if not st.session_state.registered:
                 margin: 0;
                 padding: 0;
             }
+            /* Skip button is removed for a cleaner look – you can uncomment if desired */
+            /* 
             .skip-btn {
                 position: absolute;
                 top: 20px;
@@ -87,15 +92,9 @@ if not st.session_state.registered:
                 background: rgba(255,255,255,0.2);
                 transform: scale(1.05);
             }
-            /* Ensure no extra spacing */
-            body, html {
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-            }
+            */
         </style>
         <div class="registration-overlay">
-            <a href="?skip=true" class="skip-btn">⏩ Skip Registration</a>
             <div class="visme_d" 
                  data-title="Club Membership Sign Up Form" 
                  data-url="rzn0drgz-untitled-project?fullPage=true" 
