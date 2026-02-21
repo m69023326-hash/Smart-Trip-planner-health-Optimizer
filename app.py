@@ -2111,7 +2111,7 @@ with header_col3:
         st.rerun()
 
 # Tabs
-main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
+main_tab, companion_tab, tourism_tab = st.tabs(["🗓️ Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
 
 # --- TAB 1: EXPANDED TRIP PLANNER ---
 with main_tab:
@@ -2128,7 +2128,7 @@ with main_tab:
             "💰 Budget Planner": planner_budget,
             "🧳 Travel Tips": planner_tips,
             "🤝 Local Customs": planner_customs,
-            "🗓️ Generate Trip": planner_generate,  # This now has the animated button
+            "🗓️ GENERATE TRIP": planner_generate,  # This now has the animated button
         }
         
         # Determine index for radio
