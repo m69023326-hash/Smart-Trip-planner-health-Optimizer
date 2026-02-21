@@ -16,13 +16,108 @@ import json
 import os
 import hashlib
 from datetime import datetime
-import time
 
 # ============================================================
 # PAGE CONFIG & INITIAL SETUP
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
+# ============================================================
+# REGISTRATION FORM (Visme) – SHOW ON FIRST VISIT
+# ============================================================
+if "registered" not in st.session_state:
+    st.session_state.registered = False
+
+# Check query parameters for registration completion or skip
+query_params = st.query_params
+if query_params.get("registered") == "done":
+    st.session_state.registered = True
+    st.query_params.clear()
+elif query_params.get("skip") == "true":
+    st.session_state.registered = True
+    st.query_params.clear()
+
+# If not registered, show the Visme form and stop further rendering
+if not st.session_state.registered:
+    def registration_form_component():
+        return """
+        <style>
+            .registration-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #0f172a, #1e293b);
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                font-family: 'Inter', sans-serif;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .form-container {
+                width: 100%;
+                max-width: 800px;
+                background: rgba(255,255,255,0.05);
+                backdrop-filter: blur(10px);
+                border-radius: 24px;
+                padding: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .skip-btn {
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 40px;
+                padding: 10px 25px;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                backdrop-filter: blur(5px);
+                transition: all 0.2s;
+                z-index: 10000;
+                text-decoration: none;
+            }
+            .skip-btn:hover {
+                background: rgba(255,255,255,0.2);
+                transform: scale(1.05);
+            }
+            h2 {
+                color: white;
+                text-align: center;
+                margin-bottom: 20px;
+                font-weight: 600;
+            }
+        </style>
+        <div class="registration-overlay">
+            <a href="?skip=true" class="skip-btn">⏩ Skip Registration</a>
+            <div class="form-container">
+                <h2>📝 Join the Club</h2>
+                <div class="visme_d" 
+                     data-title="Club Membership Sign Up Form" 
+                     data-url="rzn0drgz-untitled-project?fullPage=true" 
+                     data-domain="forms" 
+                     data-full-page="true" 
+                     data-min-height="100vh" 
+                     data-form-id="167417">
+                </div>
+                <script src="https://static-bundles.visme.co/forms/vismeforms-embed.js"></script>
+            </div>
+        </div>
+        """
+    components.html(registration_form_component(), height=900)
+    st.stop()
+
+# ============================================================
+# (Rest of your original code follows exactly as before)
+# ============================================================
 # Initialize theme in session state
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
@@ -2111,7 +2206,7 @@ with header_col3:
         st.rerun()
 
 # Tabs
-main_tab, companion_tab, tourism_tab = st.tabs(["🗓️ Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
+main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
 
 # --- TAB 1: EXPANDED TRIP PLANNER ---
 with main_tab:
@@ -2128,7 +2223,7 @@ with main_tab:
             "💰 Budget Planner": planner_budget,
             "🧳 Travel Tips": planner_tips,
             "🤝 Local Customs": planner_customs,
-            "🗓️ GENERATE TRIP": planner_generate,  # This now has the animated button
+            "🗓️ Generate Trip": planner_generate,  # This now has the animated button
         }
         
         # Determine index for radio
