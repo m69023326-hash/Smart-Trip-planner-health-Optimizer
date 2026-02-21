@@ -16,6 +16,7 @@ import json
 import os
 import hashlib
 from datetime import datetime
+import time
 
 # ============================================================
 # PAGE CONFIG & INITIAL SETUP
@@ -446,6 +447,94 @@ base_css = """
         color: var(--text-primary);
         border-top: 1px solid var(--border-color);
     }
+
+    /* ===== NEW ANIMATIONS FOR GENERATE BUTTON ===== */
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(4, 120, 87, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(4, 120, 87, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(4, 120, 87, 0); }
+    }
+    
+    div[data-testid="stFormSubmitButton"] > button {
+        background: linear-gradient(45deg, #047857, #10b981, #047857);
+        background-size: 200% 200%;
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.2rem !important;
+        border: none !important;
+        animation: pulse-glow 2s infinite, gradient-shift 5s ease infinite !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    div[data-testid="stFormSubmitButton"] > button:hover {
+        transform: scale(1.02) !important;
+        animation: pulse-glow 1s infinite, gradient-shift 3s ease infinite !important;
+    }
+    
+    @keyframes gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Colored section headings for trip plan */
+    .plan-heading-emergency {
+        color: #dc2626;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #dc2626;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    .plan-heading-clothing {
+        color: #2563eb;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #2563eb;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    .plan-heading-schedule {
+        color: #7c3aed;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #7c3aed;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    .plan-heading-behavior {
+        color: #b45309;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #b45309;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    .plan-heading-scams {
+        color: #be185d;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #be185d;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    .plan-heading-tips {
+        color: #059669;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-left: 6px solid #059669;
+        padding-left: 15px;
+        margin: 25px 0 15px 0;
+    }
+    
+    /* Card fade-in animation */
+    .fade-in-card {
+        animation: fadeIn 0.8s ease-in;
+    }
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
 </style>
 """
 
@@ -456,11 +545,12 @@ try:
     GROQ_KEY = st.secrets["groq_api_key"]
     WEATHER_KEY = st.secrets["weather_api_key"]
     TAVILY_KEY = st.secrets["tavily_api_key"]
+    DEEPSEEK_KEY = st.secrets["deepseek_api_key"]  # NEW: DeepSeek API key
 except FileNotFoundError:
     st.error("Secrets file not found.")
     st.stop()
 except KeyError:
-    st.error("Missing keys in secrets.")
+    st.error("Missing keys in secrets. Please ensure groq_api_key, weather_api_key, tavily_api_key, and deepseek_api_key are set.")
     st.stop()
 
 # Tourism Config
@@ -576,6 +666,51 @@ def create_pdf(text):
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
+
+# ============================================================
+# DUAL AI FUNCTION FOR HEALTH COMPANION
+# ============================================================
+def get_ai_response(messages, model="llama-3.3-70b-versatile"):
+    """
+    Attempts to get response from Groq first.
+    If Groq fails, falls back to DeepSeek.
+    If both fail, returns an error message.
+    """
+    # Try Groq first
+    try:
+        groq_client = Groq(api_key=GROQ_KEY)
+        response = groq_client.chat.completions.create(
+            messages=messages,
+            model=model
+        )
+        return response.choices[0].message.content, "groq"
+    except Exception as e:
+        st.warning(f"Groq API failed: {str(e)[:100]}. Falling back to DeepSeek...")
+        
+        # Fallback to DeepSeek
+        try:
+            # DeepSeek API call (assuming OpenAI-compatible endpoint)
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "deepseek-chat",
+                "messages": messages,
+                "temperature": 0.7
+            }
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"], "deepseek"
+        except Exception as e2:
+            st.error(f"Both AI services failed. Groq: {str(e)[:100]}, DeepSeek: {str(e2)[:100]}")
+            return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
 
 # ============================================================
 # TOURISM FUNCTIONS
@@ -1792,8 +1927,20 @@ def planner_customs():
 </div>
         """, unsafe_allow_html=True)
 
+# ============================================================
+# ENHANCED GENERATE TRIP MODULE (with colored button & detailed plan)
+# ============================================================
 def planner_generate():
     st.markdown("<h2 style='color: var(--text-primary); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;'>🗓️ Generate Your Personalized Trip</h2>", unsafe_allow_html=True)
+    
+    # Add a subtle animation hint
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 20px; animation: fadeIn 1s ease-in;'>
+        <span style='background: linear-gradient(45deg, #047857, #10b981); padding: 8px 20px; border-radius: 40px; color: white; font-weight: 600;'>
+            ✨ Click the glowing button below for your ultra‑detailed plan
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
     
     with st.form("trip_form_enhanced"):
         st.markdown("<b style='color:var(--text-primary);'>1. Routine Configurator</b>", unsafe_allow_html=True)
@@ -1806,7 +1953,7 @@ def planner_generate():
         st.markdown("<br><b style='color:var(--text-primary);'>2. Trip Details</b>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            city = st.text_input("📍 Current Location / City", "New York", key="planner_city")
+            city = st.text_input("📍 Destination City", "New York", key="planner_city")
             num_days = st.slider("📅 Trip Duration (Days)", 1, 14, 3, key="planner_days")
         with col2:
             mood = st.text_input("🎯 Desired Activity / Theme", "Relaxing walk or fine dining", key="planner_mood")
@@ -1814,7 +1961,8 @@ def planner_generate():
             budget = st.selectbox("💰 Budget Level", ["Low", "Medium", "High"], key="planner_budget")
         
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🚀 Generate Enhanced Plan", use_container_width=True)
+        # The button is automatically styled by CSS (pulse-glow + gradient)
+        submitted = st.form_submit_button("🚀 GENERATE MY ULTIMATE TRIP PLAN", use_container_width=True)
     
     if submitted:
         routine = ", ".join([f"{k}: {v}" for k, v in routine_dict.items()])
@@ -1824,65 +1972,127 @@ def planner_generate():
         if err: 
             st.error("Weather Error: Could not retrieve meteorological data.")
         else:
-            with st.spinner("🤖 Processing your request with enhanced intelligence..."):
-                # Enhanced prompt with all user inputs
+            with st.spinner("🤖 Crafting your ultra‑detailed travel blueprint..."):
+                # Ultra‑detailed prompt covering all required aspects
                 enhanced_prompt = f"""
-You are an expert travel planner. Create a detailed, personalized trip plan based on the following:
+You are the world's most meticulous travel planner. Create an extraordinarily detailed, day-by-day trip plan for {city} based on:
 
 User's weekly routine: {routine}
-Current location: {city}
+Destination: {city}
 Desired activity/mood: {mood}
 Trip duration: {num_days} days
 Travel style: {travel_style}
 Budget level: {budget}
-Current weather: {weather}
+Current weather in {city}: {weather}
 
-Your plan MUST include the following sections with clear headings:
-1. **Day-by-Day Itinerary** – Suggest activities for each day, considering the user's routine and preferences.
-2. **Safety Measures** – Specific safety tips for {city}, including areas to avoid, common scams, and local emergency numbers (police, ambulance, fire).
-3. **Emergency Contacts** – Provide a table with key emergency numbers for {city} (police, ambulance, fire, tourist police, embassy if applicable).
-4. **Recommended Places** – At least 5 specific attractions, restaurants, or experiences that match the user's mood, with brief descriptions and approximate costs.
-5. **Practical Tips** – Transportation options, best time to visit, estimated daily budget, and packing suggestions.
-6. **Local Customs & Etiquette** – Cultural norms to be aware of in {city} (dress code, greetings, tipping, etc.).
+Your plan MUST include the following sections, each with a clear, colored heading (use emojis):
 
-Format the plan with bullet points and tables where appropriate. Make it comprehensive and easy to follow.
+🆘 **EMERGENCY PREPAREDNESS**
+- List exact emergency numbers for {city} (police, ambulance, fire, tourist police, nearest embassy).
+- Describe common local scams and exactly how to avoid them.
+- Provide safety tips for day and night, including neighborhoods to avoid.
+- Health precautions (vaccinations, water safety, local health risks).
+
+👔 **CLOTHING & PACKING GUIDE**
+- Suggest specific clothing based on the current weather ({weather}) and local traditions.
+- Include items for cultural sites (e.g., head coverings, modest dress).
+- Packing list for activities mentioned in the itinerary.
+
+⏰ **DAILY ITINERARY (Hour by Hour)**
+- For each day, provide a detailed schedule from morning to evening.
+- Include at least 3 specific attractions/restaurants/experiences per day.
+- Mention approximate costs, travel times, and booking tips.
+
+🧘 **LOCAL CULTURE & BEHAVIOR**
+- Describe typical local behavior, communication styles, and social norms.
+- Explain how locals greet, dine, queue, and interact with tourists.
+- Include important "dos and don'ts" specific to {city}.
+
+⚠️ **COMMON SCAMS & HOW TO AVOID THEM**
+- Detail at least 5 common scams targeting tourists in {city}.
+- Give clear, actionable advice to avoid each one.
+
+💡 **PRACTICAL TIPS**
+- Transportation options (public, taxis, ride‑sharing).
+- Best SIM card / internet options.
+- Tipping customs.
+- Daily budget estimate.
+- Useful local phrases.
+
+Format everything with bullet points, tables, and clear section breaks. Make it feel like a luxury travel consultant prepared it just for them.
                 """
                 
-                # Also search Tavily for more info
-                search_query = f"tourist attractions safety tips emergency numbers in {city}"
+                # Search Tavily for additional real‑time info
+                search_query = f"tourist attractions safety tips emergency numbers scams in {city}"
                 search_data = search_tavily(search_query)
                 
                 final_res = client.chat.completions.create(
                     messages=[
-                        {"role": "system", "content": "You are a helpful, detailed travel planner. Always include safety, emergency info, and local customs."},
-                        {"role": "user", "content": enhanced_prompt + f"\n\nAdditional web data: {search_data}"}
+                        {"role": "system", "content": "You are a premium travel planner. Always respond in beautifully formatted markdown with colored headings."},
+                        {"role": "user", "content": enhanced_prompt + f"\n\nAdditional real‑time web data:\n{search_data}"}
                     ],
                     model="llama-3.3-70b-versatile"
                 )
                 plan = final_res.choices[0].message.content
                 
-                # Display plan
-                st.markdown("### 🌟 Your Personalized Enhanced Trip Plan")
-                st.markdown(plan)
+                # Post‑process to add our custom CSS classes for colored headings
+                # (The AI already includes emoji headings, but we'll ensure they match our CSS)
+                plan = plan.replace("🆘 **EMERGENCY PREPAREDNESS**", "<div class='plan-heading-emergency'>🆘 EMERGENCY PREPAREDNESS</div>")
+                plan = plan.replace("👔 **CLOTHING & PACKING GUIDE**", "<div class='plan-heading-clothing'>👔 CLOTHING & PACKING GUIDE</div>")
+                plan = plan.replace("⏰ **DAILY ITINERARY (Hour by Hour)**", "<div class='plan-heading-schedule'>⏰ DAILY ITINERARY (Hour by Hour)</div>")
+                plan = plan.replace("🧘 **LOCAL CULTURE & BEHAVIOR**", "<div class='plan-heading-behavior'>🧘 LOCAL CULTURE & BEHAVIOR</div>")
+                plan = plan.replace("⚠️ **COMMON SCAMS & HOW TO AVOID THEM**", "<div class='plan-heading-scams'>⚠️ COMMON SCAMS & HOW TO AVOID THEM</div>")
+                plan = plan.replace("💡 **PRACTICAL TIPS**", "<div class='plan-heading-tips'>💡 PRACTICAL TIPS</div>")
+                
+                # Display plan with fade‑in animation
+                st.markdown(f"<div class='fade-in-card'>{plan}</div>", unsafe_allow_html=True)
                 
                 # Download button
-                st.download_button("📥 Download Plan (PDF)", create_pdf(plan), "enhanced_trip_plan.pdf")
+                st.download_button("📥 Download This Ultimate Plan (PDF)", create_pdf(plan), "ultimate_trip_plan.pdf")
                 
-                # Show weather forecast as before
+                # Enhanced weather forecast with dual charts
                 df = get_forecast(city, WEATHER_KEY)
                 if df is not None:
                     st.divider()
-                    st.markdown(f"<h3 style='color:var(--text-primary);'>🌦️ 5-Day Forecast: {city.title()}</h3>", unsafe_allow_html=True)
-                    c1, c2 = st.columns(2)
+                    st.markdown(f"<h3 style='color:var(--text-primary);'>🌦️ 5‑Day Detailed Forecast for {city.title()}</h3>", unsafe_allow_html=True)
+                    
+                    col1, col2 = st.columns(2)
                     template = "plotly_dark" if st.session_state.theme == "dark" else "plotly"
-                    with c1:
-                        fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", title="🌡️ Temperature Trend", markers=True, template=template)
+                    
+                    with col1:
+                        # Temperature line with markers
+                        fig_temp = px.line(df, x="Datetime", y="Temperature (°C)", 
+                                          title="<b>Temperature Trend</b>", 
+                                          markers=True, 
+                                          template=template,
+                                          color_discrete_sequence=["#e11d48"])
+                        fig_temp.update_layout(hovermode="x unified")
                         st.plotly_chart(fig_temp, use_container_width=True)
-                    with c2:
-                        fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", title="☔ Rain Probability", range_y=[0, 100], template=template)
+                    
+                    with col2:
+                        # Rain chance bar chart
+                        fig_rain = px.bar(df, x="Datetime", y="Rain Chance (%)", 
+                                         title="<b>Rain Probability</b>", 
+                                         range_y=[0, 100],
+                                         template=template,
+                                         color_discrete_sequence=["#2563eb"])
+                        fig_rain.update_layout(hovermode="x unified")
                         st.plotly_chart(fig_rain, use_container_width=True)
+                    
+                    # Additional humidity/wind if available
+                    if "humidity" in df.columns or "wind_speed" in df.columns:
+                        st.markdown("#### Additional Metrics")
+                        cols = st.columns(2)
+                        if "humidity" in df.columns:
+                            with cols[0]:
+                                fig_hum = px.line(df, x="Datetime", y="humidity", title="Humidity (%)", template=template)
+                                st.plotly_chart(fig_hum, use_container_width=True)
+                        if "wind_speed" in df.columns:
+                            with cols[1]:
+                                fig_wind = px.line(df, x="Datetime", y="wind_speed", title="Wind Speed (m/s)", template=template)
+                                st.plotly_chart(fig_wind, use_container_width=True)
     else:
-        st.info("👈 Fill in your routine and preferences, then click 'Generate Enhanced Plan'.")
+        st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
 # MAIN APP LAYOUT with Theme Toggle
@@ -1918,7 +2128,7 @@ with main_tab:
             "💰 Budget Planner": planner_budget,
             "🧳 Travel Tips": planner_tips,
             "🤝 Local Customs": planner_customs,
-            "🗓️ Generate Trip": planner_generate,
+            "🗓️ Generate Trip": planner_generate,  # This now has the animated button
         }
         
         # Determine index for radio
@@ -1939,22 +2149,26 @@ with main_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-# --- TAB 2: HEALTH COMPANION (unchanged) ---
+# --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
 with companion_tab:
-    client = Groq(api_key=GROQ_KEY)
-    
+    # Use the dual‑AI function instead of direct Groq client
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
         col_buttons, col_space = st.columns([1, 2]) 
         with col_buttons:
-            if st.button("📄 Share Reports & Get Analysis"): st.session_state.chat_history.append({"role": "assistant", "content": "Upload your report using the ➕ button below!"}); st.rerun()
-            if st.button("🥦 Prepare a Diet Plan"): st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."}); st.rerun()
+            if st.button("📄 Share Reports & Get Analysis"): 
+                st.session_state.chat_history.append({"role": "assistant", "content": "Upload your report using the ➕ button below!"})
+                st.rerun()
+            if st.button("🥦 Prepare a Diet Plan"): 
+                st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
+                st.rerun()
 
     for i, msg in enumerate(st.session_state.chat_history):
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
-            with st.expander("📋 Copy Text"): st.code(msg["content"], language="markdown")
+            with st.expander("📋 Copy Text"): 
+                st.code(msg["content"], language="markdown")
             if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
                 st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
                 
@@ -1970,34 +2184,61 @@ with companion_tab:
     with col_plus:
         with st.popover("➕", use_container_width=True):
             uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
-    with col_clear: st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
-    with col_voice: audio_val = st.audio_input("Voice", label_visibility="collapsed")
+    with col_clear: 
+        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+    with col_voice: 
+        audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
     if uploaded_file:
-        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, client)
+        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, Groq(api_key=GROQ_KEY))
         st.session_state.medical_data = txt
-        res = client.chat.completions.create(messages=[{"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."}, {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}], model="llama-3.3-70b-versatile")
-        st.session_state.chat_history.extend([{"role": "user", "content": f"📎 {uploaded_file.name}"}, {"role": "assistant", "content": res.choices[0].message.content}])
+        # Use dual AI
+        messages = [
+            {"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."},
+            {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}
+        ]
+        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": f"📎 {uploaded_file.name}"},
+            {"role": "assistant", "content": response}
+        ])
         st.rerun()
 
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        txt = client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+        # Transcribe with Groq (still using Groq for audio)
+        groq_client = Groq(api_key=GROQ_KEY)
+        txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
         
         sys_prompt = "You are a friendly AI companion. Reply in the exact same language as the user. YOU MUST start your response with exactly [LANG:UR] for Urdu, [LANG:HI] for Hindi, or [LANG:EN] for English. Always use emojis."
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": txt}
+        ]
+        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
         
-        res = client.chat.completions.create(messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": txt}], model="llama-3.3-70b-versatile")
-        raw = res.choices[0].message.content
-        lang = "UR" if "[LANG:UR]" in raw else "HI" if "[LANG:HI]" in raw else "EN"
-        clean = raw.replace("[LANG:UR]", "").replace("[LANG:HI]", "").replace("[LANG:EN]", "").strip()
-        st.session_state.chat_history.extend([{"role": "user", "content": f"🎙️ {txt}"}, {"role": "assistant", "content": clean}])
+        # Parse language tag
+        lang = "UR" if "[LANG:UR]" in response else "HI" if "[LANG:HI]" in response else "EN"
+        clean = response.replace("[LANG:UR]", "").replace("[LANG:HI]", "").replace("[LANG:EN]", "").strip()
+        
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": f"🎙️ {txt}"},
+            {"role": "assistant", "content": clean}
+        ])
         st.session_state.autoplay_audio = asyncio.run(tts(clean, lang))
         st.rerun()
 
     if prompt := st.chat_input("Message..."):
         ctx = f"Medical Context: {st.session_state.medical_data}" if st.session_state.medical_data else ""
-        res = client.chat.completions.create(messages=[{"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"}, {"role": "user", "content": prompt}], model="llama-3.3-70b-versatile")
-        st.session_state.chat_history.extend([{"role": "user", "content": prompt}, {"role": "assistant", "content": res.choices[0].message.content}])
+        messages = [
+            {"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"},
+            {"role": "user", "content": prompt}
+        ]
+        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": response}
+        ])
         st.rerun()
 
 # --- TAB 3: PAKISTAN TOURISM (unchanged) ---
@@ -2050,4 +2291,4 @@ with tourism_tab:
     else:
         current_selection = st.session_state.current_tourism_module
         if current_selection in tourism_pages:
-            tourism_pages[current_selection]() 
+            tourism_pages[current_selection]()
