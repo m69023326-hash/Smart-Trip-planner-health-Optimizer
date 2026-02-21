@@ -23,7 +23,7 @@ from datetime import datetime
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
 # ============================================================
-# REGISTRATION FORM (Visme) – FULL SCREEN, NO SCROLL
+# REGISTRATION FORM (Visme) – FULL SCREEN, NO PAGE SCROLL
 # ============================================================
 if "registered" not in st.session_state:
     st.session_state.registered = False
@@ -36,98 +36,100 @@ if query_params.get("registered") == "done":
 
 # If not registered, show the Visme form and stop further rendering
 if not st.session_state.registered:
-  def registration_form_component():
-    return """
-    <style>
-        /* Lock the entire page – no scrolling */
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden !important;
-            height: 100%;
-            width: 100%;
-        }
-        .registration-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-        .form-scrollable {
-            width: 100%;
-            height: calc(100% - 80px);
-            overflow-y: auto;
-            display: flex;
-            justify-content: center;
-            padding: 20px 0;
-            box-sizing: border-box;
-        }
-        .visme_d {
-            width: 100% !important;
-            max-width: 800px;
-            height: auto !important;
-            min-height: 600px;
-            border: none;
-            margin: 0 auto;
-        }
-        .app-button {
-            display: inline-block;
-            margin: 20px auto;
-            padding: 14px 40px;
-            background: linear-gradient(45deg, #4f46e5, #06b6d4, #4f46e5);
-            background-size: 200% 200%;
-            color: white;
-            font-weight: 700;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 60px;
-            cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
-            animation: pulseGlow 2s infinite, gradientShift 5s ease infinite;
-            transition: transform 0.3s ease;
-            z-index: 10001;
-        }
-        .app-button:hover {
-            transform: scale(1.05);
-            animation: pulseGlow 1s infinite, gradientShift 3s ease infinite;
-        }
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(79, 70, 229, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-        }
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-    </style>
-    <div class="registration-overlay">
-        <div class="form-scrollable">
-            <div class="visme_d" 
-                 data-title="Club Membership Sign Up Form" 
-                 data-url="rzn0drgz-untitled-project?fullPage=true" 
-                 data-domain="forms" 
-                 data-full-page="true" 
-                 data-min-height="100vh" 
-                 data-form-id="167417">
+    def registration_form_component():
+        return """
+        <style>
+            /* Lock the entire page – no scrolling */
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden !important;
+                height: 100%;
+                width: 100%;
+            }
+            .registration-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #0f172a, #1e293b);
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                font-family: 'Inter', sans-serif;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            /* Scrollable form container */
+            .form-scrollable {
+                width: 100%;
+                height: calc(100% - 80px);
+                overflow-y: auto;
+                display: flex;
+                justify-content: center;
+                padding: 20px 0;
+                box-sizing: border-box;
+            }
+            .visme_d {
+                width: 100% !important;
+                max-width: 800px;
+                height: auto !important;
+                min-height: 600px;
+                border: none;
+                margin: 0 auto;
+            }
+            /* Animated button */
+            .app-button {
+                display: inline-block;
+                margin: 20px auto;
+                padding: 14px 40px;
+                background: linear-gradient(45deg, #4f46e5, #06b6d4, #4f46e5);
+                background-size: 200% 200%;
+                color: white;
+                font-weight: 700;
+                font-size: 1.2rem;
+                border: none;
+                border-radius: 60px;
+                cursor: pointer;
+                text-decoration: none;
+                box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+                animation: pulseGlow 2s infinite, gradientShift 5s ease infinite;
+                transition: transform 0.3s ease;
+                z-index: 10001;
+            }
+            .app-button:hover {
+                transform: scale(1.05);
+                animation: pulseGlow 1s infinite, gradientShift 3s ease infinite;
+            }
+            @keyframes pulseGlow {
+                0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
+                70% { box-shadow: 0 0 0 15px rgba(79, 70, 229, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+            }
+            @keyframes gradientShift {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+        </style>
+        <div class="registration-overlay">
+            <div class="form-scrollable">
+                <div class="visme_d" 
+                     data-title="Club Membership Sign Up Form" 
+                     data-url="rzn0drgz-untitled-project?fullPage=true" 
+                     data-domain="forms" 
+                     data-full-page="true" 
+                     data-min-height="100vh" 
+                     data-form-id="167417">
+                </div>
+                <script src="https://static-bundles.visme.co/forms/vismeforms-embed.js"></script>
             </div>
-            <script src="https://static-bundles.visme.co/forms/vismeforms-embed.js"></script>
+            <a href="?skip=true" class="app-button">🚀 Continue to App</a>
         </div>
-        <a href="?skip=true" class="app-button">🚀 Continue to App</a>
-    </div>
-    """
+        """
     components.html(registration_form_component(), height=900)
     st.stop()
 
