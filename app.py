@@ -2299,11 +2299,15 @@ with tourism_tab:
 import streamlit as st
 import streamlit.components.v1 as components
 
+import streamlit as st
+import streamlit.components.v1 as components
+
 def add_meshu_chatbot():
+    # 1. Get the key from the 'good' secret (now containing your Orbit key)
     try:
-        groq_key = st.secrets["good"]  
+        orbit_key = st.secrets["good"]  
     except KeyError:
-        st.error("Groq API key 'good' not found in secrets.")
+        st.error("API key 'good' not found in Streamlit Secrets.")
         return
 
     chatbot_html = f"""
@@ -2323,6 +2327,7 @@ def add_meshu_chatbot():
         container.style.right = '20px';
         container.style.zIndex = '999999';
 
+        // Toggle Button
         const toggle = doc.createElement('button');
         toggle.innerHTML = '💬';
         toggle.style.cssText = `
@@ -2334,6 +2339,7 @@ def add_meshu_chatbot():
             animation: meshuPulse 2s infinite;
         `;
 
+        // Chat Window
         const windowDiv = doc.createElement('div');
         windowDiv.style.cssText = `
             display:none;
@@ -2358,7 +2364,7 @@ def add_meshu_chatbot():
 
         const closeBtn = doc.createElement('span');
         closeBtn.innerHTML = '&times;';
-        closeBtn.style.cssText = 'cursor:pointer; font-size:24px;';
+        closeBtn.style.cssText = 'cursor:pointer; font-size:24px; color:#94a3b8;';
         header.appendChild(closeBtn);
 
         const messagesDiv = doc.createElement('div');
@@ -2368,7 +2374,7 @@ def add_meshu_chatbot():
         inputArea.style.cssText = `padding:12px; display:flex; gap:8px; background:#0f172a;`;
 
         const input = doc.createElement('input');
-        input.placeholder = "Ask me anything...";
+        input.placeholder = "Ask Orbit anything...";
         input.style.cssText = `flex:1; padding:10px 14px; border-radius:40px; border:none; background:#1e293b; color:white; outline:none;`;
 
         const send = doc.createElement('button');
@@ -2397,8 +2403,10 @@ def add_meshu_chatbot():
         `;
         doc.head.appendChild(style);
 
-        const API_KEY = "{groq_key}";
-        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+        // CONFIGURATION
+        const API_KEY = "{orbit_key}";
+        // Orbit often uses the same standard API endpoint structure
+        const API_URL = "https://api.groq.com/openai/v1/chat/completions"; 
 
         function addMessage(text, cls) {{
             const div = doc.createElement('div');
@@ -2425,7 +2433,7 @@ def add_meshu_chatbot():
                     body:JSON.stringify({{
                         model: "llama-3.3-70b-versatile",
                         messages: [
-                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
+                            {{role:"system",content:"You are MESHU, powered by Orbit API. Be helpful and concise."}},
                             {{role:"user",content:text}}
                         ]
                     }})
@@ -2434,15 +2442,15 @@ def add_meshu_chatbot():
                 const data = await response.json();
                 
                 if(data.choices && data.choices[0]) {{
-                    addMessage(data.choices[0].message.content,'meshu-ai');
+                    addMessage(data.choices[0].message.content, 'meshu-ai');
                 }} else if(data.error) {{
-                    addMessage("Error: " + data.error.message, 'meshu-ai');
+                    addMessage("Orbit Error: " + data.error.message, 'meshu-ai');
                 }} else {{
-                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
+                    addMessage("No response from Orbit.", 'meshu-ai');
                 }}
 
             }} catch(err) {{
-                addMessage("Error: "+err.message,'meshu-ai');
+                addMessage("Connection Error: " + err.message, 'meshu-ai');
             }}
         }}
 
@@ -2453,7 +2461,7 @@ def add_meshu_chatbot():
         send.onclick = sendMessage;
         input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
 
-        addMessage("Hi! I'm MESHU. How can I help you today?",'meshu-ai');
+        addMessage("Hi! MESHU is now online with Orbit. How can I help?",'meshu-ai');
 
     }})();
     </script>
@@ -2461,4 +2469,5 @@ def add_meshu_chatbot():
 
     components.html(chatbot_html, height=0)
 
+# Execute the function
 add_meshu_chatbot()
