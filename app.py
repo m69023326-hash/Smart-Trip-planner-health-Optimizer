@@ -2296,10 +2296,10 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑left)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑right)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject a floating Gemini‑powered chatbot directly into the main document."""
+    """Inject a floating Gemini‑powered chatbot directly into the main document (bottom‑right)."""
     try:
         gemini_key = st.secrets["gemini_key"]
     except KeyError:
@@ -2317,13 +2317,13 @@ def add_meshu_chatbot():
             // Avoid duplicate injections
             if (doc.getElementById(containerId)) return;
 
-            // Create container div
+            // Create container div – now positioned at bottom‑right
             const container = doc.createElement('div');
             container.id = containerId;
             container.style.cssText = `
                 position: fixed;
                 bottom: 20px;
-                left: 20px;
+                right: 20px;          /* changed from left */
                 z-index: 9999;
                 font-family: 'Inter', sans-serif;
             `;
@@ -2346,14 +2346,14 @@ def add_meshu_chatbot():
                 animation: meshu-pulse 2s infinite;
             `;
 
-            // Chat window (initially hidden)
+            // Chat window – now anchored to the right
             const windowDiv = doc.createElement('div');
             windowDiv.id = 'meshu-window';
             windowDiv.style.cssText = `
                 display: none;
                 position: absolute;
                 bottom: 80px;
-                left: 0;
+                right: 0;              /* changed from left */
                 width: 350px;
                 height: 500px;
                 background: rgba(30, 41, 59, 0.95);
@@ -2457,7 +2457,7 @@ def add_meshu_chatbot():
             // Add to body
             doc.body.appendChild(container);
 
-            // Add styles to head
+            // Add styles to head (including updated transform-origin)
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2506,10 +2506,15 @@ def add_meshu_chatbot():
                     0%, 60%, 100% {{ transform: translateY(0); opacity: 0.6; }}
                     30% {{ transform: translateY(-6px); opacity: 1; }}
                 }}
+                /* Updated transform origin for bottom‑right */
+                #meshu-window {{
+                    transition: opacity 0.2s ease, transform 0.2s ease;
+                    transform-origin: bottom right;
+                }}
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic -----
+            // ----- Chat Logic (unchanged) -----
             const API_KEY = '{gemini_key}';
             const MODEL = 'gemini-2.0-flash';
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${{MODEL}}:generateContent?key=${{API_KEY}}`;
@@ -2597,6 +2602,6 @@ def add_meshu_chatbot():
     </script>
     """
 
-    components.html(chatbot_html, height=0)  # height 0, but script injects into parent
+    components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
