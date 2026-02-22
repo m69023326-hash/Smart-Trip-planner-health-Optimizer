@@ -2296,18 +2296,15 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑center, with fallback)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek only)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject floating Gemini‑powered chatbot (bottom‑center) with fallback API key."""
+    """Inject floating DeepSeek‑powered chatbot (bottom‑center)."""
     try:
-        primary_key = st.secrets["gemini_key"]
+        deepseek_key = st.secrets["deepseek_api_key_2"]
     except KeyError:
-        st.error("Gemini API key not found in secrets. Please add 'gemini_key'.")
+        st.error("DeepSeek API key 'deepseek_api_key_2' not found in secrets.")
         return
-
-    # Optional fallback key – if missing, fallback is disabled
-    fallback_key = st.secrets.get("Orbit_api_key", None)
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
@@ -2317,15 +2314,8 @@ def add_meshu_chatbot():
             const containerId = 'meshu-chatbot-container';
             if (doc.getElementById(containerId)) return;
 
-            // Keys
-            const PRIMARY_KEY = '{primary_key}';
-            const FALLBACK_KEY = {f'"{fallback_key}"' if fallback_key else 'null'};
-            const MODEL = 'gemini-1.5-flash';  // stable model
-
-            // Helper to build API URL with a given key
-            function apiUrl(key) {{
-                return `https://generativelanguage.googleapis.com/v1beta/models/${{MODEL}}:generateContent?key=${{key}}`;
-            }}
+            const API_KEY = '{deepseek_key}';
+            const API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
             // Create container – centered at bottom
             const container = doc.createElement('div');
@@ -2465,7 +2455,7 @@ def add_meshu_chatbot():
             container.appendChild(windowDiv);
             doc.body.appendChild(container);
 
-            // Styles (including centering animations)
+            // Styles
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2521,7 +2511,7 @@ def add_meshu_chatbot():
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic with Fallback (identical to previous) -----
+            // ----- Chat Logic (DeepSeek only) -----
             function addMessage(text, sender) {{
                 const msgDiv = doc.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2544,49 +2534,33 @@ def add_meshu_chatbot():
                 if (typing) typing.remove();
             }}
 
-            // Core send function with retry logic
-            async function sendWithFallback(userMessage, retry = true) {{
-                const attemptWithKey = async (key) => {{
-                    const url = apiUrl(key);
-                    const response = await fetch(url, {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{
-                            contents: [{{
-                                parts: [{{
-                                    text: `You are MESHU, a friendly assistant for this app. Answer the user's question: ${{userMessage}}`
-                                }}]
-                            }}]
-                        }})
-                    }});
-                    if (!response.ok) {{
-                        const errText = await response.text();
-                        throw new Error(`HTTP ${{response.status}}: ${{errText}}`);
-                    }}
-                    const data = await response.json();
-                    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {{
-                        throw new Error('Invalid response format');
-                    }}
-                    return data.candidates[0].content.parts[0].text;
-                }};
+            async function sendToDeepSeek(userMessage) {{
+                const response = await fetch(API_URL, {{
+                    method: 'POST',
+                    headers: {{
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${{API_KEY}}`
+                    }},
+                    body: JSON.stringify({{
+                        model: 'deepseek-chat',
+                        messages: [
+                            {{ role: 'system', content: 'You are MESHU, a friendly assistant for this app. Answer the user\'s question concisely.' }},
+                            {{ role: 'user', content: userMessage }}
+                        ],
+                        temperature: 0.7
+                    }})
+                }});
 
-                try {{
-                    // First attempt with primary key
-                    return await attemptWithKey(PRIMARY_KEY);
-                }} catch (primaryError) {{
-                    console.warn('Primary key failed:', primaryError);
-                    if (retry && FALLBACK_KEY) {{
-                        try {{
-                            // Second attempt with fallback key
-                            return await attemptWithKey(FALLBACK_KEY);
-                        }} catch (fallbackError) {{
-                            console.error('Fallback key also failed:', fallbackError);
-                            throw new Error('Both API keys failed. Please try again later.');
-                        }}
-                    }} else {{
-                        throw primaryError;  // no fallback available
-                    }}
+                if (!response.ok) {{
+                    const errText = await response.text();
+                    throw new Error(`HTTP ${{response.status}}: ${{errText}}`);
                 }}
+
+                const data = await response.json();
+                if (!data.choices || !data.choices[0]?.message?.content) {{
+                    throw new Error('Invalid response format');
+                }}
+                return data.choices[0].message.content;
             }}
 
             async function handleSend() {{
@@ -2597,7 +2571,7 @@ def add_meshu_chatbot():
                 showTyping();
 
                 try {{
-                    const reply = await sendWithFallback(text, true);
+                    const reply = await sendToDeepSeek(text);
                     removeTyping();
                     addMessage(reply, 'assistant');
                 }} catch (error) {{
