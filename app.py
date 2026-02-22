@@ -2300,104 +2300,40 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
-# 🤖 MESHU PRO FLOATING WIDGET (SaaS Style)
+# 🤖 MESHU – Floating SaaS Chat Assistant (WORKING VERSION)
 # ============================================================
 
 import streamlit as st
-import streamlit.components.v1 as components
-import os
 import requests
-import json
+import os
+import time
 
 DEEPSEEK_API_KEY = os.environ.get("good")
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-components.html(f"""
+# -------------------------------
+# Session State
+# -------------------------------
+if "meshu_open" not in st.session_state:
+    st.session_state.meshu_open = False
+
+if "meshu_messages" not in st.session_state:
+    st.session_state.meshu_messages = [
+        {
+            "role": "system",
+            "content": "You are MESHU, a smart, friendly, professional AI assistant inside a travel planning web application. Be helpful and concise."
+        }
+    ]
+
+# -------------------------------
+# Floating Button CSS
+# -------------------------------
+st.markdown("""
 <style>
-#meshu-container {{
+.meshu-float-btn {
     position: fixed;
-    bottom: 90px;
-    right: 30px;
-    width: 340px;
-    height: 480px;
-    background: #0f172a;
-    border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 9999;
-    animation: slideUp 0.3s ease;
-}}
-
-@keyframes slideUp {{
-    from {{ transform: translateY(30px); opacity: 0; }}
-    to {{ transform: translateY(0px); opacity: 1; }}
-}}
-
-#meshu-header {{
-    background: #1e293b;
-    padding: 14px;
-    font-weight: bold;
-    color: #7dd3fc;
-    display: flex;
-    justify-content: space-between;
-}}
-
-#meshu-body {{
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    font-size: 14px;
-    color: white;
-}}
-
-.meshu-user {{
-    background: #2563eb;
-    padding: 8px 12px;
-    border-radius: 15px;
-    margin: 6px 0;
-    align-self: flex-end;
-    max-width: 80%;
-}}
-
-.meshu-bot {{
-    background: #334155;
-    padding: 8px 12px;
-    border-radius: 15px;
-    margin: 6px 0;
-    align-self: flex-start;
-    max-width: 80%;
-}}
-
-#meshu-input {{
-    display: flex;
-    padding: 10px;
-    background: #1e293b;
-}}
-
-#meshu-input input {{
-    flex: 1;
-    padding: 8px;
-    border-radius: 12px;
-    border: none;
-    outline: none;
-}}
-
-#meshu-input button {{
-    margin-left: 6px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    border: none;
-    background: #2563eb;
-    color: white;
-    cursor: pointer;
-}}
-
-#meshu-toggle {{
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 25px;
+    right: 25px;
     width: 65px;
     height: 65px;
     border-radius: 50%;
@@ -2408,54 +2344,134 @@ components.html(f"""
     font-size: 28px;
     color: white;
     cursor: pointer;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.35);
     z-index: 9999;
-}}
+    transition: 0.3s;
+}
+.meshu-float-btn:hover {
+    transform: scale(1.1);
+}
+
+.meshu-window {
+    position: fixed;
+    bottom: 100px;
+    right: 25px;
+    width: 360px;
+    height: 500px;
+    background: #0f172a;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    z-index: 9998;
+    overflow: hidden;
+}
+.meshu-header {
+    background: #1e293b;
+    padding: 14px;
+    font-weight: bold;
+    color: #7dd3fc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.meshu-close {
+    cursor: pointer;
+    font-size: 18px;
+}
+.meshu-body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+.meshu-input {
+    padding: 10px;
+    background: #1e293b;
+}
 </style>
+""", unsafe_allow_html=True)
 
-<div id="meshu-container">
-    <div id="meshu-header">
-        MESHU
-        <span style="cursor:pointer;" onclick="toggleMeshu()">✕</span>
-    </div>
-    <div id="meshu-body" id="chatArea">
-        <div class="meshu-bot">
-            Hi! I'm MESHU. How can I help you today?
-        </div>
-    </div>
-    <div id="meshu-input">
-        <input type="text" id="meshuText" placeholder="Ask me anything..."/>
-        <button onclick="sendMessage()">Send</button>
-    </div>
-</div>
+# -------------------------------
+# Floating Toggle Button
+# -------------------------------
+if st.button("🤖", key="meshu_toggle_btn"):
+    st.session_state.meshu_open = not st.session_state.meshu_open
 
-<div id="meshu-toggle" onclick="toggleMeshu()">🤖</div>
+# -------------------------------
+# Chat Window
+# -------------------------------
+if st.session_state.meshu_open:
 
-<script>
-function toggleMeshu() {{
-    const box = document.getElementById("meshu-container");
-    box.style.display = box.style.display === "flex" ? "none" : "flex";
-}}
+    st.markdown('<div class="meshu-window">', unsafe_allow_html=True)
 
-function sendMessage() {{
-    const input = document.getElementById("meshuText");
-    if(input.value.trim() === "") return;
+    # Header
+    col1, col2 = st.columns([8,1])
+    with col1:
+        st.markdown('<div class="meshu-header">MESHU Assistant</div>', unsafe_allow_html=True)
+    with col2:
+        if st.button("✕", key="meshu_close"):
+            st.session_state.meshu_open = False
+            st.rerun()
 
-    const chat = document.getElementById("meshu-body");
+    st.markdown('<div class="meshu-body">', unsafe_allow_html=True)
 
-    const userMsg = document.createElement("div");
-    userMsg.className = "meshu-user";
-    userMsg.innerText = input.value;
-    chat.appendChild(userMsg);
+    # Show chat history
+    for msg in st.session_state.meshu_messages[1:]:
+        if msg["role"] == "user":
+            with st.chat_message("user"):
+                st.markdown(msg["content"])
+        else:
+            with st.chat_message("assistant"):
+                st.markdown(msg["content"])
 
-    const botMsg = document.createElement("div");
-    botMsg.className = "meshu-bot";
-    botMsg.innerText = "Thinking...";
-    chat.appendChild(botMsg);
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    chat.scrollTop = chat.scrollHeight;
+    # Input
+    user_input = st.chat_input("Ask MESHU...")
 
-    input.value = "";
-}}
-</script>
-""", height=0)
+    if user_input:
+
+        st.session_state.meshu_messages.append(
+            {"role": "user", "content": user_input}
+        )
+
+        with st.chat_message("assistant"):
+            with st.spinner("MESHU is thinking..."):
+                try:
+                    response = requests.post(
+                        DEEPSEEK_URL,
+                        headers={
+                            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": "deepseek-chat",
+                            "messages": st.session_state.meshu_messages,
+                            "temperature": 0.7
+                        },
+                        timeout=60
+                    )
+
+                    result = response.json()
+
+                    if "choices" in result:
+                        reply = result["choices"][0]["message"]["content"]
+
+                        placeholder = st.empty()
+                        full = ""
+                        for word in reply.split():
+                            full += word + " "
+                            time.sleep(0.02)
+                            placeholder.markdown(full + "▌")
+                        placeholder.markdown(full)
+
+                        st.session_state.meshu_messages.append(
+                            {"role": "assistant", "content": reply}
+                        )
+                    else:
+                        st.error("Unexpected API response.")
+
+                except Exception as e:
+                    st.error(f"MESHU Error: {e}")
+
+    st.markdown('</div>', unsafe_allow_html=True)
