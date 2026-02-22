@@ -22,7 +22,6 @@ from datetime import datetime
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
-
     components.html(registration_form_component(), height=900)
     st.stop()
 
