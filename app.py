@@ -2297,337 +2297,93 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 def add_meshu_chatbot():
-    try:
-        deepseek_key = st.secrets["good"]
-        key_ok = True
-    except KeyError:
-        deepseek_key = None
-        key_ok = False
-        st.warning("⚠️ MESHU: API key 'good' not found. Chatbot will show a demo message.")
-
-    html = f"""
-    <div id="meshu-injector"></div>
+    st.markdown("""
+    <div id="meshu-persist-dot" style="position: fixed; bottom: 5px; right: 5px; width: 12px; height: 12px; background: lime; border-radius: 50%; z-index: 10000;"></div>
+    <div id="meshu-chatbot-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; font-family: 'Inter', sans-serif;">
+        <button id="meshu-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); border: none; color: white; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: meshu-pulse 2s infinite;">💬</button>
+        <div id="meshu-window" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 350px; height: 500px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden; flex-direction: column; color: #f1f5f9;">
+            <div style="padding: 16px 20px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 1.2rem; background: linear-gradient(135deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MESHU</span>
+                <button id="meshu-close" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+            <div id="meshu-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            <div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6);">
+                <input id="meshu-input" type="text" placeholder="Ask me anything..." style="flex: 1; padding: 10px 14px; border-radius: 40px; border: none; background: #1e293b; color: #f1f5f9; font-size: 14px; outline: none;">
+                <button id="meshu-send" style="background: #2563eb; border: none; border-radius: 40px; padding: 8px 16px; color: white; font-weight: 600; cursor: pointer;">Send</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes meshu-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        .meshu-message {
+            max-width: 80%;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .meshu-user {
+            align-self: flex-end;
+            background: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .meshu-assistant {
+            align-self: flex-start;
+            background: #334155;
+            color: #f1f5f9;
+            border-bottom-left-radius: 4px;
+        }
+        .meshu-typing {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            background: #334155;
+            border-radius: 20px;
+            width: fit-content;
+        }
+        .meshu-typing span {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: meshu-bounce 1.4s infinite;
+        }
+        .meshu-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .meshu-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes meshu-bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        #meshu-window {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: bottom center;
+        }
+    </style>
     <script>
-        (function() {{
-            // Target the main window (parent of the iframe)
-            const win = window.parent;
-            const doc = win.document;
-            const containerId = 'meshu-chatbot-container';
-
-            // Function to inject the chatbot
-            function injectChatbot() {{
-                if (doc.getElementById(containerId)) return; // already there
-
-                const API_KEY = {f'"{deepseek_key}"' if key_ok else 'null'};
-                const API_URL = 'https://api.deepseek.com/v1/chat/completions';
-                const keyValid = {str(key_ok).lower()};
-
-                // Create container
-                const container = doc.createElement('div');
-                container.id = containerId;
-                container.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    z-index: 9999;
-                    font-family: 'Inter', sans-serif;
-                `;
-
-                // Toggle button
-                const toggle = doc.createElement('button');
-                toggle.id = 'meshu-toggle';
-                toggle.innerHTML = '💬';
-                toggle.style.cssText = `
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #2563eb, #7c3aed);
-                    border: none;
-                    color: white;
-                    font-size: 26px;
-                    cursor: pointer;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                    animation: meshu-pulse 2s infinite;
-                `;
-
-                // Chat window
-                const windowDiv = doc.createElement('div');
-                windowDiv.id = 'meshu-window';
-                windowDiv.style.cssText = `
-                    display: none;
-                    position: absolute;
-                    bottom: 80px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 350px;
-                    height: 500px;
-                    background: rgba(30, 41, 59, 0.95);
-                    backdrop-filter: blur(10px);
-                    border-radius: 20px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    overflow: hidden;
-                    flex-direction: column;
-                    color: #f1f5f9;
-                `;
-
-                // Header
-                const header = doc.createElement('div');
-                header.style.cssText = `
-                    padding: 16px 20px;
-                    background: rgba(15, 23, 42, 0.8);
-                    border-bottom: 1px solid rgba(255,255,255,0.1);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                `;
-                const title = doc.createElement('span');
-                title.innerHTML = 'MESHU';
-                title.style.cssText = `
-                    font-weight: 700;
-                    font-size: 1.2rem;
-                    background: linear-gradient(135deg, #60a5fa, #c084fc);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                `;
-                const closeBtn = doc.createElement('button');
-                closeBtn.innerHTML = '&times;';
-                closeBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    color: #94a3b8;
-                    font-size: 22px;
-                    cursor: pointer;
-                `;
-                header.appendChild(title);
-                header.appendChild(closeBtn);
-
-                // Messages area
-                const messagesDiv = doc.createElement('div');
-                messagesDiv.id = 'meshu-messages';
-                messagesDiv.style.cssText = `
-                    flex: 1;
-                    padding: 16px;
-                    overflow-y: auto;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                `;
-
-                // Input area
-                const inputArea = doc.createElement('div');
-                inputArea.style.cssText = `
-                    padding: 12px;
-                    border-top: 1px solid rgba(255,255,255,0.1);
-                    display: flex;
-                    gap: 8px;
-                    background: rgba(15, 23, 42, 0.6);
-                `;
-                const inputField = doc.createElement('input');
-                inputField.id = 'meshu-input';
-                inputField.type = 'text';
-                inputField.placeholder = 'Ask me anything...';
-                inputField.style.cssText = `
-                    flex: 1;
-                    padding: 10px 14px;
-                    border-radius: 40px;
-                    border: none;
-                    background: #1e293b;
-                    color: #f1f5f9;
-                    font-size: 14px;
-                    outline: none;
-                `;
-                const sendBtn = doc.createElement('button');
-                sendBtn.id = 'meshu-send';
-                sendBtn.textContent = 'Send';
-                sendBtn.style.cssText = `
-                    background: #2563eb;
-                    border: none;
-                    border-radius: 40px;
-                    padding: 8px 16px;
-                    color: white;
-                    font-weight: 600;
-                    cursor: pointer;
-                `;
-                inputArea.appendChild(inputField);
-                inputArea.appendChild(sendBtn);
-
-                windowDiv.appendChild(header);
-                windowDiv.appendChild(messagesDiv);
-                windowDiv.appendChild(inputArea);
-                container.appendChild(toggle);
-                container.appendChild(windowDiv);
-                doc.body.appendChild(container);
-
-                // Add styles
-                const style = doc.createElement('style');
-                style.textContent = `
-                    @keyframes meshu-pulse {{
-                        0% {{ box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }}
-                        70% {{ box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }}
-                        100% {{ box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }}
-                    }}
-                    .meshu-message {{
-                        max-width: 80%;
-                        padding: 8px 14px;
-                        border-radius: 20px;
-                        font-size: 14px;
-                        line-height: 1.5;
-                        word-wrap: break-word;
-                    }}
-                    .meshu-user {{
-                        align-self: flex-end;
-                        background: #2563eb;
-                        color: white;
-                        border-bottom-right-radius: 4px;
-                    }}
-                    .meshu-assistant {{
-                        align-self: flex-start;
-                        background: #334155;
-                        color: #f1f5f9;
-                        border-bottom-left-radius: 4px;
-                    }}
-                    .meshu-typing {{
-                        display: flex;
-                        gap: 4px;
-                        padding: 8px 12px;
-                        background: #334155;
-                        border-radius: 20px;
-                        width: fit-content;
-                    }}
-                    .meshu-typing span {{
-                        width: 8px;
-                        height: 8px;
-                        background: #94a3b8;
-                        border-radius: 50%;
-                        animation: meshu-bounce 1.4s infinite;
-                    }}
-                    .meshu-typing span:nth-child(2) {{ animation-delay: 0.2s; }}
-                    .meshu-typing span:nth-child(3) {{ animation-delay: 0.4s; }}
-                    @keyframes meshu-bounce {{
-                        0%, 60%, 100% {{ transform: translateY(0); opacity: 0.6; }}
-                        30% {{ transform: translateY(-6px); opacity: 1; }}
-                    }}
-                    #meshu-window {{
-                        transition: opacity 0.2s ease, transform 0.2s ease;
-                        transform-origin: bottom center;
-                    }}
-                `;
-                doc.head.appendChild(style);
-
-                // ----- Chat Functions -----
-                function addMessage(text, sender) {{
-                    const msgDiv = doc.createElement('div');
-                    msgDiv.className = `meshu-message meshu-${{sender}}`;
-                    msgDiv.textContent = text;
-                    messagesDiv.appendChild(msgDiv);
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }}
-
-                function showTyping() {{
-                    const typingDiv = doc.createElement('div');
-                    typingDiv.className = 'meshu-typing';
-                    typingDiv.id = 'meshu-typing';
-                    typingDiv.innerHTML = '<span></span><span></span><span></span>';
-                    messagesDiv.appendChild(typingDiv);
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }}
-
-                function removeTyping() {{
-                    const typing = doc.getElementById('meshu-typing');
-                    if (typing) typing.remove();
-                }}
-
-                async function sendToDeepSeek(userMessage) {{
-                    const response = await fetch(API_URL, {{
-                        method: 'POST',
-                        headers: {{
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${{API_KEY}}`
-                        }},
-                        body: JSON.stringify({{
-                            model: 'deepseek-chat',
-                            messages: [
-                                {{ role: 'system', content: 'You are MESHU, a friendly assistant for this app. Answer the user\'s question concisely.' }},
-                                {{ role: 'user', content: userMessage }}
-                            ],
-                            temperature: 0.7
-                        }})
-                    }});
-
-                    if (!response.ok) {{
-                        const errText = await response.text();
-                        throw new Error(`HTTP ${{response.status}}: ${{errText}}`);
-                    }}
-
-                    const data = await response.json();
-                    if (!data.choices || !data.choices[0]?.message?.content) {{
-                        throw new Error('Invalid response format');
-                    }}
-                    return data.choices[0].message.content;
-                }}
-
-                async function handleSend() {{
-                    const text = inputField.value.trim();
-                    if (text === '') return;
-
-                    if (!keyValid) {{
-                        addMessage("❌ MESHU is disabled because the API key is missing. Please add 'good' to secrets.", 'assistant');
-                        return;
-                    }}
-
-                    addMessage(text, 'user');
-                    inputField.value = '';
-                    showTyping();
-
-                    try {{
-                        const reply = await sendToDeepSeek(text);
-                        removeTyping();
-                        addMessage(reply, 'assistant');
-                    }} catch (error) {{
-                        console.error('MESHU error:', error);
-                        removeTyping();
-                        addMessage('❌ ' + error.message, 'assistant');
-                    }}
-                }}
-
-                toggle.onclick = () => {{
-                    const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
-                    windowDiv.style.display = isHidden ? 'flex' : 'none';
-                    if (isHidden) inputField.focus();
-                }};
-
-                closeBtn.onclick = () => {{
+        (function() {
+            console.log("MESHU: script running");
+            // Toggle chat window
+            const toggle = document.getElementById('meshu-toggle');
+            const windowDiv = document.getElementById('meshu-window');
+            const closeBtn = document.getElementById('meshu-close');
+            if (toggle && windowDiv) {
+                toggle.onclick = () => {
+                    windowDiv.style.display = windowDiv.style.display === 'none' ? 'flex' : 'none';
+                };
+                closeBtn.onclick = () => {
                     windowDiv.style.display = 'none';
-                }};
-
-                sendBtn.onclick = handleSend;
-                inputField.addEventListener('keypress', (e) => {{
-                    if (e.key === 'Enter') handleSend();
-                }});
-
-                if (keyValid) {{
-                    addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
-                }} else {{
-                    addMessage("⚠️ MESHU is in demo mode – API key missing. Please add 'good' to secrets.", 'assistant');
-                }}
-            }}
-
-            // Inject on load
-            injectChatbot();
-
-            // Set up a mutation observer to re-inject if removed
-            const observer = new win.MutationObserver(function(mutations) {{
-                if (!doc.getElementById(containerId)) {{
-                    console.log("MESHU: chatbot was removed, re-injecting");
-                    injectChatbot();
-                }}
-            }});
-            observer.observe(doc.body, {{ childList: true, subtree: true }});
-        }})();
+                };
+            }
+            // Placeholder for future API integration
+            console.log("MESHU: UI ready");
+        })();
     </script>
-    """
-    st.components.v1.html(html, height=0)
+    """, unsafe_allow_html=True)
 
 add_meshu_chatbot()
