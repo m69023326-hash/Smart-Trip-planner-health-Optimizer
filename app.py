@@ -2364,33 +2364,64 @@ def add_meshu_chatbot():
             transition: opacity 0.2s ease, transform 0.2s ease;
             transform-origin: bottom center;
         }
+        .debug-click { background: red !important; }
     </style>
     <script>
         (function() {
             console.log("MESHU: script started");
-            const toggle = document.getElementById('meshu-toggle');
-            const windowDiv = document.getElementById('meshu-window');
-            const closeBtn = document.getElementById('meshu-close');
-            console.log("MESHU: toggle found?", !!toggle);
-            console.log("MESHU: window found?", !!windowDiv);
-            console.log("MESHU: close found?", !!closeBtn);
-            if (toggle && windowDiv) {
-                toggle.onclick = function() {
-                    console.log("MESHU: toggle clicked");
-                    const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
-                    windowDiv.style.display = isHidden ? 'flex' : 'none';
-                    console.log("MESHU: window display set to", windowDiv.style.display);
-                };
-            } else {
-                console.error("MESHU: toggle or windowDiv missing");
+
+            function initialize() {
+                const toggle = document.getElementById('meshu-toggle');
+                const windowDiv = document.getElementById('meshu-window');
+                const closeBtn = document.getElementById('meshu-close');
+                const messagesDiv = document.getElementById('meshu-messages');
+
+                console.log("MESHU: toggle found?", !!toggle);
+                console.log("MESHU: window found?", !!windowDiv);
+                console.log("MESHU: close found?", !!closeBtn);
+
+                // Add a test message to confirm we can modify DOM
+                if (messagesDiv) {
+                    const testMsg = document.createElement('div');
+                    testMsg.className = 'meshu-message meshu-assistant';
+                    testMsg.textContent = 'MESHU is ready! (Test message)';
+                    messagesDiv.appendChild(testMsg);
+                } else {
+                    console.error("MESHU: messagesDiv not found");
+                }
+
+                if (toggle && windowDiv) {
+                    // Remove any existing listeners (just in case)
+                    toggle.onclick = null;
+                    // Add click listener
+                    toggle.addEventListener('click', function(e) {
+                        console.log("MESHU: toggle clicked");
+                        // Toggle window
+                        const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
+                        windowDiv.style.display = isHidden ? 'flex' : 'none';
+                        console.log("MESHU: window display set to", windowDiv.style.display);
+                        // Visual feedback: briefly change button color
+                        toggle.classList.add('debug-click');
+                        setTimeout(() => toggle.classList.remove('debug-click'), 200);
+                    });
+                } else {
+                    console.error("MESHU: toggle or windowDiv missing");
+                }
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        console.log("MESHU: close clicked");
+                        if (windowDiv) windowDiv.style.display = 'none';
+                    });
+                } else {
+                    console.error("MESHU: closeBtn missing");
+                }
             }
-            if (closeBtn) {
-                closeBtn.onclick = function() {
-                    console.log("MESHU: close clicked");
-                    windowDiv.style.display = 'none';
-                };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initialize);
             } else {
-                console.error("MESHU: closeBtn missing");
+                initialize();
             }
         })();
     </script>
