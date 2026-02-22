@@ -2040,6 +2040,11 @@ Your plan MUST include the following sections, each with a clear, colored headin
 - Daily budget estimate.
 - Useful local phrases.
 
+✈️ **FLIGHT RECOMMENDATIONS**
+- Suggest good airlines and flight options to {city} from major hubs.
+- Provide approximate flight durations and best times to book.
+- Include tips on finding affordable flights and airport transfer options.
+
 Format everything with bullet points, tables, and clear section breaks. Make it feel like a luxury travel consultant prepared it just for them.
                 """
                 
@@ -2064,6 +2069,8 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
                 plan = plan.replace("🧘 **LOCAL CULTURE & BEHAVIOR**", "<div class='plan-heading-behavior'>🧘 LOCAL CULTURE & BEHAVIOR</div>")
                 plan = plan.replace("⚠️ **COMMON SCAMS & HOW TO AVOID THEM**", "<div class='plan-heading-scams'>⚠️ COMMON SCAMS & HOW TO AVOID THEM</div>")
                 plan = plan.replace("💡 **PRACTICAL TIPS**", "<div class='plan-heading-tips'>💡 PRACTICAL TIPS</div>")
+                # NEW: flight recommendations heading
+                plan = plan.replace("✈️ **FLIGHT RECOMMENDATIONS**", "<div class='plan-heading-tips' style='color: #f97316; border-left-color: #f97316;'>✈️ FLIGHT RECOMMENDATIONS</div>")
                 
                 # Display plan with fade‑in animation
                 st.markdown(f"<div class='fade-in-card'>{plan}</div>", unsafe_allow_html=True)
@@ -2119,6 +2126,28 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
 # NEW WELCOME TAB (added as the first tab)
 # ============================================================
 def tab_welcome():
+    # Background image based on theme
+    if st.session_state.theme == "light":
+        bg_url = "https://img.freepik.com/free-photo/top-view-travel-kit-wooden-table_23-2148315686.jpg?semt=ais_user_personalization&w=740&q=80"
+    else:
+        bg_url = "https://img.freepik.com/premium-photo/outfit-traveler-black-background-with-copy-space-travel-concept_146508-536.jpg?semt=ais_user_personalization&w=740&q=80"
+    
+    st.markdown(f"""
+    <style>
+        .welcome-tab-bg {{
+            background-image: url("{bg_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100%;
+            width: 100%;
+            padding: 20px;
+            border-radius: 16px;
+        }}
+    </style>
+    <div class='welcome-tab-bg'>
+    """, unsafe_allow_html=True)
+    
     st.markdown("""
     <div style='text-align:center; padding: 40px 0 20px 0;' class='welcome-title'>
         <h1 style='font-size: 3.5em; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>
@@ -2187,6 +2216,8 @@ def tab_welcome():
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================
 # MAIN APP LAYOUT with Theme Toggle
@@ -2218,6 +2249,9 @@ with main_tab:
 
 # --- TAB 1: TRIP PLANNER ---
 with planner_tab:
+    # Background image based on theme (these are not provided, so we use the same as welcome or leave default)
+    # Since no specific images were given for trip planner, we keep default background.
+    # (No changes to planner_tab)
     planner_sidebar_col, planner_content_col = st.columns([2.5, 7.5])
     
     with planner_sidebar_col:
@@ -2254,6 +2288,28 @@ with planner_tab:
 
 # --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
 with companion_tab:
+    # Background image based on theme
+    if st.session_state.theme == "light":
+        bg_url = "https://www.shutterstock.com/image-vector/hand-holding-medical-cross-icon-600nw-2604825705.jpg"
+    else:
+        bg_url = "https://www.gov.si/assets/ministrstva/MK/Projekti/e-Kultura/background-6297148_1280.jpg"
+    
+    st.markdown(f"""
+    <style>
+        .health-tab-bg {{
+            background-image: url("{bg_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100%;
+            width: 100%;
+            padding: 20px;
+            border-radius: 16px;
+        }}
+    </style>
+    <div class='health-tab-bg'>
+    """, unsafe_allow_html=True)
+    
     # Use the dual‑AI function instead of direct Groq client
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
@@ -2343,9 +2399,33 @@ with companion_tab:
             {"role": "assistant", "content": response}
         ])
         st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 3: PAKISTAN TOURISM (unchanged) ---
 with tourism_tab:
+    # Background image based on theme
+    if st.session_state.theme == "light":
+        bg_url = "https://nishathotels.com/wp-content/uploads/2023/11/blog-6-cover.webp"
+    else:
+        bg_url = "https://pakistantourntravel.com/wp-content/uploads/2019/07/Epic-Accessible-Landscapes-Pakistans-Best.jpg"
+    
+    st.markdown(f"""
+    <style>
+        .tourism-tab-bg {{
+            background-image: url("{bg_url}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100%;
+            width: 100%;
+            padding: 20px;
+            border-radius: 16px;
+        }}
+    </style>
+    <div class='tourism-tab-bg'>
+    """, unsafe_allow_html=True)
+    
     header_col, toggle_col = st.columns([8.5, 1.5])
     with header_col:
         st.markdown("<h3 style='color:var(--text-primary); font-weight:800;'>🇵🇰 Pakistan Tourism Hub</h3>", unsafe_allow_html=True)
@@ -2395,6 +2475,8 @@ with tourism_tab:
         current_selection = st.session_state.current_tourism_module
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================
 # MESHU CHATBOT (unchanged)
