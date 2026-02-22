@@ -2306,37 +2306,18 @@ def add_meshu_chatbot():
         st.warning("⚠️ MESHU: API key 'good' not found. Chatbot will show a demo message.")
 
     html = f"""
+    <div id="meshu-injector"></div>
     <script>
         (function() {{
-            try {{
-                console.log("MESHU: script started");
-                const doc = document;
-                const containerId = 'meshu-chatbot-container';
-                
-                // Add a persistent green dot at bottom-right to verify injection survives
-                if (!doc.getElementById('meshu-persist-dot')) {{
-                    const dot = doc.createElement('div');
-                    dot.id = 'meshu-persist-dot';
-                    dot.style.cssText = `
-                        position: fixed;
-                        bottom: 5px;
-                        right: 5px;
-                        width: 12px;
-                        height: 12px;
-                        background: lime;
-                        border-radius: 50%;
-                        z-index: 10000;
-                        box-shadow: 0 0 5px black;
-                    `;
-                    doc.body.appendChild(dot);
-                    console.log("MESHU: persistent dot added");
-                }}
+            // Target the main window (parent of the iframe)
+            const win = window.parent;
+            const doc = win.document;
+            const containerId = 'meshu-chatbot-container';
 
-                if (doc.getElementById(containerId)) {{
-                    console.log("MESHU: already exists, skipping");
-                    return;
-                }}
-                
+            // Function to inject the chatbot
+            function injectChatbot() {{
+                if (doc.getElementById(containerId)) return; // already there
+
                 const API_KEY = {f'"{deepseek_key}"' if key_ok else 'null'};
                 const API_URL = 'https://api.deepseek.com/v1/chat/completions';
                 const keyValid = {str(key_ok).lower()};
@@ -2535,7 +2516,7 @@ def add_meshu_chatbot():
                 `;
                 doc.head.appendChild(style);
 
-                // Chat functions
+                // ----- Chat Functions -----
                 function addMessage(text, sender) {{
                     const msgDiv = doc.createElement('div');
                     msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2631,14 +2612,22 @@ def add_meshu_chatbot():
                 }} else {{
                     addMessage("⚠️ MESHU is in demo mode – API key missing. Please add 'good' to secrets.", 'assistant');
                 }}
-
-                console.log("MESHU: chatbot injected successfully");
-            }} catch (error) {{
-                console.error("MESHU: critical error in injection script", error);
             }}
+
+            // Inject on load
+            injectChatbot();
+
+            // Set up a mutation observer to re-inject if removed
+            const observer = new win.MutationObserver(function(mutations) {{
+                if (!doc.getElementById(containerId)) {{
+                    console.log("MESHU: chatbot was removed, re-injecting");
+                    injectChatbot();
+                }}
+            }});
+            observer.observe(doc.body, {{ childList: true, subtree: true }});
         }})();
     </script>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.components.v1.html(html, height=0)
 
 add_meshu_chatbot()
