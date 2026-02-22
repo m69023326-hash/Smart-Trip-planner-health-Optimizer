@@ -2300,8 +2300,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom-right)
-# FIXED PREMIUM VERSION
+# MESHU CHATBOT – Floating AI Assistant (Groq Version)
 # ============================================================
 
 import streamlit as st
@@ -2309,12 +2308,11 @@ import streamlit.components.v1 as components
 
 
 def add_meshu_chatbot():
-    """Inject floating Gemini-powered chatbot (bottom-right, premium style)."""
 
     try:
-        gemini_key = st.secrets["gemini_key"]
+        groq_key = st.secrets["good"]   # ✅ your Groq key name
     except KeyError:
-        st.error("Gemini API key not found in secrets.")
+        st.error("Groq API key not found in secrets.")
         return
 
     chatbot_html = f"""
@@ -2330,7 +2328,7 @@ def add_meshu_chatbot():
         const container = doc.createElement('div');
         container.id = containerId;
         container.style.position = 'fixed';
-        container.style.bottom = '40px';
+        container.style.bottom = '90px';  // ✅ MOVED UP (was 20px)
         container.style.right = '20px';
         container.style.zIndex = '999999';
 
@@ -2365,7 +2363,6 @@ def add_meshu_chatbot():
             color:#f1f5f9;
         `;
 
-        // Header
         const header = doc.createElement('div');
         header.style.cssText = `
             padding:16px 20px;
@@ -2386,7 +2383,6 @@ def add_meshu_chatbot():
         closeBtn.style.cursor = 'pointer';
         header.appendChild(closeBtn);
 
-        // Messages
         const messagesDiv = doc.createElement('div');
         messagesDiv.style.cssText = `
             flex:1;
@@ -2397,7 +2393,6 @@ def add_meshu_chatbot():
             gap:10px;
         `;
 
-        // Input Area
         const inputArea = doc.createElement('div');
         inputArea.style.cssText = `
             padding:12px;
@@ -2441,7 +2436,6 @@ def add_meshu_chatbot():
         container.appendChild(windowDiv);
         doc.body.appendChild(container);
 
-        // Styles
         const style = doc.createElement('style');
         style.textContent = `
             @keyframes meshuPulse {{
@@ -2471,8 +2465,8 @@ def add_meshu_chatbot():
         `;
         doc.head.appendChild(style);
 
-        const API_KEY = "{gemini_key}";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{API_KEY}}`;
+        const API_KEY = "{groq_key}";
+        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
         function addMessage(text, cls) {{
             const div = doc.createElement('div');
@@ -2492,15 +2486,22 @@ def add_meshu_chatbot():
             try {{
                 const response = await fetch(API_URL, {{
                     method:'POST',
-                    headers:{{'Content-Type':'application/json'}},
+                    headers:{{
+                        'Content-Type':'application/json',
+                        'Authorization':'Bearer ' + API_KEY
+                    }},
                     body:JSON.stringify({{
-                        contents:[{{parts:[{{text:text}}]}}]
+                        model: "llama3-70b-8192",
+                        messages: [
+                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
+                            {{role:"user",content:text}}
+                        ]
                     }})
                 }});
 
                 const data = await response.json();
-                if(data.candidates) {{
-                    addMessage(data.candidates[0].content.parts[0].text,'meshu-ai');
+                if(data.choices) {{
+                    addMessage(data.choices[0].message.content,'meshu-ai');
                 }} else {{
                     addMessage("Sorry, I couldn't process that.",'meshu-ai');
                 }}
@@ -2524,7 +2525,6 @@ def add_meshu_chatbot():
     </script>
     """
 
-    # 🔥 IMPORTANT FIX — DO NOT USE height=0
     components.html(chatbot_html, height=100, scrolling=False)
 
 
