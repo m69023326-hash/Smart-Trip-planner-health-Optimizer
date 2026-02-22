@@ -2297,24 +2297,40 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, with debug marker)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject DeepSeek‑powered chatbot (always shows button, even if key missing)."""
-    # Try to get the key; if missing, store None and show Streamlit warning
+    """Inject DeepSeek‑powered chatbot – guaranteed to appear."""
+    # Try to get the key; if missing, still inject but show error in chat
     try:
         deepseek_key = st.secrets["good"]
         key_ok = True
     except KeyError:
-        st.warning("⚠️ MESHU: DeepSeek API key 'good' not found. Chatbot will show a demo mode.")
         deepseek_key = None
         key_ok = False
+        st.warning("⚠️ MESHU: API key 'good' not found. Chatbot will show a demo message.")
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
     <script>
         (function() {{
-            console.log("MESHU: Script started");
+            // ---------- DEBUG: Add a tiny red dot to prove the script runs ----------
+            const debugDot = window.parent.document.createElement('div');
+            debugDot.id = 'meshu-debug-dot';
+            debugDot.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                width: 10px;
+                height: 10px;
+                background: red;
+                border-radius: 50%;
+                z-index: 10000;
+            `;
+            window.parent.document.body.appendChild(debugDot);
+            console.log("MESHU: Debug dot added");
+
+            // ---------- Now create the actual chatbot ----------
             const doc = window.parent.document;
             const containerId = 'meshu-chatbot-container';
             if (doc.getElementById(containerId)) {{
@@ -2325,8 +2341,6 @@ def add_meshu_chatbot():
             const API_KEY = {f'"{deepseek_key}"' if key_ok else 'null'};
             const API_URL = 'https://api.deepseek.com/v1/chat/completions';
             const keyValid = {str(key_ok).lower()};
-
-            console.log("MESHU: API key present:", keyValid);
 
             // Create container – centered at bottom
             const container = doc.createElement('div');
