@@ -2297,26 +2297,36 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek only)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject floating DeepSeek‑powered chatbot (bottom‑center)."""
+    """Inject DeepSeek‑powered chatbot (always shows button, even if key missing)."""
+    # Try to get the key; if missing, store None and show Streamlit warning
     try:
         deepseek_key = st.secrets["good"]
+        key_ok = True
     except KeyError:
-        st.error("DeepSeek API key 'good' not found in secrets.")
-        return
+        st.warning("⚠️ MESHU: DeepSeek API key 'good' not found. Chatbot will show a demo mode.")
+        deepseek_key = None
+        key_ok = False
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
     <script>
         (function() {{
+            console.log("MESHU: Script started");
             const doc = window.parent.document;
             const containerId = 'meshu-chatbot-container';
-            if (doc.getElementById(containerId)) return;
+            if (doc.getElementById(containerId)) {{
+                console.log("MESHU: Already exists");
+                return;
+            }}
 
-            const API_KEY = '{deepseek_key}';
+            const API_KEY = {f'"{deepseek_key}"' if key_ok else 'null'};
             const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+            const keyValid = {str(key_ok).lower()};
+
+            console.log("MESHU: API key present:", keyValid);
 
             // Create container – centered at bottom
             const container = doc.createElement('div');
@@ -2456,7 +2466,7 @@ def add_meshu_chatbot():
             container.appendChild(windowDiv);
             doc.body.appendChild(container);
 
-            // Styles
+            // Add animation styles
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2512,7 +2522,7 @@ def add_meshu_chatbot():
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic (DeepSeek only) -----
+            // ----- Chat Logic (with key check) -----
             function addMessage(text, sender) {{
                 const msgDiv = doc.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2567,6 +2577,12 @@ def add_meshu_chatbot():
             async function handleSend() {{
                 const text = inputField.value.trim();
                 if (text === '') return;
+
+                if (!keyValid) {{
+                    addMessage("❌ MESHU is disabled because the API key is missing. Please add 'good' to secrets.", 'assistant');
+                    return;
+                }}
+
                 addMessage(text, 'user');
                 inputField.value = '';
                 showTyping();
@@ -2576,6 +2592,7 @@ def add_meshu_chatbot():
                     removeTyping();
                     addMessage(reply, 'assistant');
                 }} catch (error) {{
+                    console.error('MESHU error:', error);
                     removeTyping();
                     addMessage('❌ ' + error.message, 'assistant');
                 }}
@@ -2598,11 +2615,15 @@ def add_meshu_chatbot():
             }});
 
             // Welcome message
-            addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
+            if (keyValid) {{
+                addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
+            }} else {{
+                addMessage("⚠️ MESHU is in demo mode – API key missing. Please add 'good' to secrets.", 'assistant');
+            }}
         }})();
     </script>
     """
 
-    components.html(chatbot_html, height=0)
+    st.components.v1.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
