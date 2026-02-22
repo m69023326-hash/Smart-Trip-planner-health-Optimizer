@@ -2297,18 +2297,206 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 def add_meshu_chatbot():
-    html_code = """
-    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; background: red; color: white; padding: 20px; border-radius: 10px; font-size: 20px; font-weight: bold;">
-        🔴 TEST BOX – I AM VISIBLE
+    try:
+        deepseek_key = st.secrets["good"]
+        key_ok = True
+    except KeyError:
+        deepseek_key = None
+        key_ok = False
+        st.warning("⚠️ MESHU: API key 'good' not found. Chatbot will show a demo message.")
+
+    html = f"""
+    <div id="meshu-root" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; font-family: 'Inter', sans-serif;">
+        <!-- Toggle button -->
+        <button id="meshu-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); border: none; color: white; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: meshu-pulse 2s infinite;">💬</button>
+
+        <!-- Chat window (initially hidden) -->
+        <div id="meshu-window" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 350px; height: 500px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden; flex-direction: column; color: #f1f5f9;">
+            <!-- Header -->
+            <div style="padding: 16px 20px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 1.2rem; background: linear-gradient(135deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MESHU</span>
+                <button id="meshu-close" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+            <!-- Messages area -->
+            <div id="meshu-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            <!-- Input area -->
+            <div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6);">
+                <input id="meshu-input" type="text" placeholder="Ask me anything..." style="flex: 1; padding: 10px 14px; border-radius: 40px; border: none; background: #1e293b; color: #f1f5f9; font-size: 14px; outline: none;">
+                <button id="meshu-send" style="background: #2563eb; border: none; border-radius: 40px; padding: 8px 16px; color: white; font-weight: 600; cursor: pointer;">Send</button>
+            </div>
+        </div>
+
+        <style>
+            @keyframes meshu-pulse {{
+                0% {{ box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }}
+                70% {{ box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }}
+                100% {{ box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }}
+            }}
+            .meshu-message {{
+                max-width: 80%;
+                padding: 8px 14px;
+                border-radius: 20px;
+                font-size: 14px;
+                line-height: 1.5;
+                word-wrap: break-word;
+            }}
+            .meshu-user {{
+                align-self: flex-end;
+                background: #2563eb;
+                color: white;
+                border-bottom-right-radius: 4px;
+            }}
+            .meshu-assistant {{
+                align-self: flex-start;
+                background: #334155;
+                color: #f1f5f9;
+                border-bottom-left-radius: 4px;
+            }}
+            .meshu-typing {{
+                display: flex;
+                gap: 4px;
+                padding: 8px 12px;
+                background: #334155;
+                border-radius: 20px;
+                width: fit-content;
+            }}
+            .meshu-typing span {{
+                width: 8px;
+                height: 8px;
+                background: #94a3b8;
+                border-radius: 50%;
+                animation: meshu-bounce 1.4s infinite;
+            }}
+            .meshu-typing span:nth-child(2) {{ animation-delay: 0.2s; }}
+            .meshu-typing span:nth-child(3) {{ animation-delay: 0.4s; }}
+            @keyframes meshu-bounce {{
+                0%, 60%, 100% {{ transform: translateY(0); opacity: 0.6; }}
+                30% {{ transform: translateY(-6px); opacity: 1; }}
+            }}
+            #meshu-window {{
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                transform-origin: bottom center;
+            }}
+        </style>
+
+        <script>
+            (function() {{
+                const root = document.currentScript.parentElement;
+                const toggle = root.querySelector('#meshu-toggle');
+                const windowDiv = root.querySelector('#meshu-window');
+                const closeBtn = root.querySelector('#meshu-close');
+                const messagesDiv = root.querySelector('#meshu-messages');
+                const inputField = root.querySelector('#meshu-input');
+                const sendBtn = root.querySelector('#meshu-send');
+
+                if (!toggle || !windowDiv) {{
+                    console.error('MESHU: elements not found');
+                    return;
+                }}
+
+                const API_KEY = {f'"{deepseek_key}"' if key_ok else 'null'};
+                const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+                const keyValid = {str(key_ok).lower()};
+
+                function addMessage(text, sender) {{
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `meshu-message meshu-${{sender}}`;
+                    msgDiv.textContent = text;
+                    messagesDiv.appendChild(msgDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }}
+
+                function showTyping() {{
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'meshu-typing';
+                    typingDiv.id = 'meshu-typing';
+                    typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                    messagesDiv.appendChild(typingDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }}
+
+                function removeTyping() {{
+                    const typing = document.getElementById('meshu-typing');
+                    if (typing) typing.remove();
+                }}
+
+                async function sendToDeepSeek(userMessage) {{
+                    const response = await fetch(API_URL, {{
+                        method: 'POST',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${{API_KEY}}`
+                        }},
+                        body: JSON.stringify({{
+                            model: 'deepseek-chat',
+                            messages: [
+                                {{ role: 'system', content: 'You are MESHU, a friendly assistant for this app. Answer the user\'s question concisely.' }},
+                                {{ role: 'user', content: userMessage }}
+                            ],
+                            temperature: 0.7
+                        }})
+                    }});
+
+                    if (!response.ok) {{
+                        const errText = await response.text();
+                        throw new Error(`HTTP ${{response.status}}: ${{errText}}`);
+                    }}
+
+                    const data = await response.json();
+                    if (!data.choices || !data.choices[0]?.message?.content) {{
+                        throw new Error('Invalid response format');
+                    }}
+                    return data.choices[0].message.content;
+                }}
+
+                async function handleSend() {{
+                    const text = inputField.value.trim();
+                    if (text === '') return;
+
+                    if (!keyValid) {{
+                        addMessage("❌ MESHU is disabled because the API key is missing. Please add 'good' to secrets.", 'assistant');
+                        return;
+                    }}
+
+                    addMessage(text, 'user');
+                    inputField.value = '';
+                    showTyping();
+
+                    try {{
+                        const reply = await sendToDeepSeek(text);
+                        removeTyping();
+                        addMessage(reply, 'assistant');
+                    }} catch (error) {{
+                        console.error('MESHU error:', error);
+                        removeTyping();
+                        addMessage('❌ ' + error.message, 'assistant');
+                    }}
+                }}
+
+                toggle.onclick = () => {{
+                    const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
+                    windowDiv.style.display = isHidden ? 'flex' : 'none';
+                    if (isHidden) inputField.focus();
+                }};
+
+                closeBtn.onclick = () => {{
+                    windowDiv.style.display = 'none';
+                }};
+
+                sendBtn.onclick = handleSend;
+                inputField.addEventListener('keypress', (e) => {{
+                    if (e.key === 'Enter') handleSend();
+                }});
+
+                if (keyValid) {{
+                    addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
+                }} else {{
+                    addMessage("⚠️ MESHU is in demo mode – API key missing. Please add 'good' to secrets.", 'assistant');
+                }}
+            }})();
+        </script>
     </div>
-    <script>
-        console.log("MESHU TEST: script is running");
-        // Also add a small green dot at top left to confirm script injection
-        var dot = document.createElement('div');
-        dot.style.cssText = 'position:fixed; top:0; left:0; width:10px; height:10px; background:lime; z-index:10001;';
-        document.body.appendChild(dot);
-    </script>
     """
-    st.components.v1.html(html_code, height=0)
+    st.markdown(html, unsafe_allow_html=True)
 
 add_meshu_chatbot()
