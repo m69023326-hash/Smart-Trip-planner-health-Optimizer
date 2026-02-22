@@ -2297,16 +2297,18 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 def add_meshu_chatbot():
-    st.markdown("""
-    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: red; color: white; padding: 20px; border-radius: 10px;">
-        🔴 TEST BUTTON (click me)
+    html_code = """
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; background: red; color: white; padding: 20px; border-radius: 10px; font-size: 20px; font-weight: bold;">
+        🔴 TEST BOX – I AM VISIBLE
     </div>
     <script>
-        console.log("MESHU TEST: script running");
-        document.currentScript.parentElement.querySelector('div').onclick = function() {
-            alert('JavaScript works!');
-        };
+        console.log("MESHU TEST: script is running");
+        // Also add a small green dot at top left to confirm script injection
+        var dot = document.createElement('div');
+        dot.style.cssText = 'position:fixed; top:0; left:0; width:10px; height:10px; background:lime; z-index:10001;';
+        document.body.appendChild(dot);
     </script>
-    """, unsafe_allow_html=True)
+    """
+    st.components.v1.html(html_code, height=0)
 
 add_meshu_chatbot()
