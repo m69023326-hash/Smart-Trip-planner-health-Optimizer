@@ -2299,17 +2299,11 @@ with tourism_tab:
 # MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject DeepSeek‑powered chatbot using st.markdown for reliable placement."""
+    """Inject DeepSeek‑powered chatbot using st.markdown (key from secrets['good'])."""
     try:
-        deepseek_key = st.secrets["deepseek_api_key_2"]
-        key_valid = True
+        deepseek_key = st.secrets["good"]  # 👈 using your new key
     except KeyError:
-        key_valid = False
-        deepseek_key = ""
-
-    # If key missing, show error message via st.error (not in HTML)
-    if not key_valid:
-        st.error("❌ MESHU: DeepSeek API key 'deepseek_api_key_2' not found in secrets. Chatbot disabled.")
+        st.error("❌ MESHU: DeepSeek API key 'good' not found in secrets. Chatbot disabled.")
         return
 
     chatbot_html = f"""
@@ -2389,7 +2383,6 @@ def add_meshu_chatbot():
 
     <script>
         (function() {{
-            // Ensure we only run once
             if (window.meshuInitialized) return;
             window.meshuInitialized = true;
 
@@ -2408,7 +2401,6 @@ def add_meshu_chatbot():
                 return;
             }}
 
-            // Helper functions
             function addMessage(text, sender) {{
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2478,7 +2470,6 @@ def add_meshu_chatbot():
                 }}
             }}
 
-            // Event listeners
             toggle.onclick = () => {{
                 const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
                 windowDiv.style.display = isHidden ? 'flex' : 'none';
@@ -2494,13 +2485,11 @@ def add_meshu_chatbot():
                 if (e.key === 'Enter') handleSend();
             }});
 
-            // Welcome message
             addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
         }})();
     </script>
     """
 
-    # Inject HTML using st.markdown
     st.markdown(chatbot_html, unsafe_allow_html=True)
 
 # Call the function at the very end of your script
