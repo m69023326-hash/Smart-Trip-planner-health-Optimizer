@@ -2295,15 +2295,16 @@ with tourism_tab:
         current_selection = st.session_state.current_tourism_module
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
+
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek only)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject DeepSeek‑powered chatbot using components.html (targets parent document)."""
+    """Inject floating DeepSeek‑powered chatbot (bottom‑center)."""
     try:
-        deepseek_key = st.secrets["good"]  # 👈 using your new key
+        deepseek_key = st.secrets["good"]
     except KeyError:
-        st.error("❌ MESHU: DeepSeek API key 'good' not found in secrets. Chatbot disabled.")
+        st.error("DeepSeek API key 'good' not found in secrets.")
         return
 
     chatbot_html = f"""
@@ -2602,6 +2603,6 @@ def add_meshu_chatbot():
     </script>
     """
 
-    st.components.v1.html(chatbot_html, height=0)
+    components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
