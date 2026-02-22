@@ -2300,110 +2300,177 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
-# 🤖 MESHU - DeepSeek AI Assistant
+# 🤖 MESHU FLOATING AI ASSISTANT
 # ============================================================
 
-import requests
 import streamlit as st
+import streamlit.components.v1 as components
 import os
-import time
+import requests
 
 DEEPSEEK_API_KEY = os.environ.get("good")
-
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-# -------------------------------
-# Initialize Chat Memory
-# -------------------------------
-if "meshu_messages" not in st.session_state:
-    st.session_state.meshu_messages = [
+if "meshu_history" not in st.session_state:
+    st.session_state.meshu_history = [
         {
             "role": "system",
-            "content": "You are MESHU, a smart, friendly, intelligent AI assistant inside a professional web application. Be helpful, clear, confident, and concise."
+            "content": "You are MESHU, a smart, friendly AI assistant inside a professional web app. Be helpful and concise."
         }
     ]
 
-# -------------------------------
-# MESHU UI
-# -------------------------------
-st.markdown("""
----
-""")
+def ask_meshu(user_input):
+    st.session_state.meshu_history.append({"role": "user", "content": user_input})
 
-st.markdown(
-    """
-    <div style="text-align:center;">
-        <h2>🤖 MESHU Assistant</h2>
-        <p style="color:gray;">Your Intelligent AI Companion</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-# -------------------------------
-# Display Chat History
-# -------------------------------
-for msg in st.session_state.meshu_messages[1:]:
-    if msg["role"] == "user":
-        st.chat_message("user").write(msg["content"])
-    elif msg["role"] == "assistant":
-        st.chat_message("assistant").write(msg["content"])
-
-# -------------------------------
-# User Input
-# -------------------------------
-prompt = st.chat_input("Ask MESHU anything...")
-
-if prompt:
-    # Show user message
-    st.chat_message("user").write(prompt)
-
-    # Save to memory
-    st.session_state.meshu_messages.append(
-        {"role": "user", "content": prompt}
+    response = requests.post(
+        DEEPSEEK_URL,
+        headers={
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek-chat",
+            "messages": st.session_state.meshu_history,
+            "temperature": 0.7
+        },
+        timeout=60
     )
 
-    # Loading indicator
-    with st.chat_message("assistant"):
-        with st.spinner("MESHU is thinking..."):
-            try:
-                response = requests.post(
-                    DEEPSEEK_URL,
-                    headers={
-                        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "deepseek-chat",
-                        "messages": st.session_state.meshu_messages,
-                        "temperature": 0.7
-                    },
-                    timeout=60
-                )
+    result = response.json()
+    reply = result["choices"][0]["message"]["content"]
+    st.session_state.meshu_history.append({"role": "assistant", "content": reply})
+    return reply
 
-                result = response.json()
 
-                if "choices" in result:
-                    reply = result["choices"][0]["message"]["content"]
+# ================= FLOATING UI =================
 
-                    # Typing effect
-                    message_placeholder = st.empty()
-                    full_response = ""
+components.html(f"""
+<style>
+#meshu-button {{
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #6C63FF, #00C9FF);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: float 3s ease-in-out infinite;
+    z-index: 9999;
+}}
 
-                    for chunk in reply.split():
-                        full_response += chunk + " "
-                        time.sleep(0.03)
-                        message_placeholder.markdown(full_response + "▌")
+@keyframes float {{
+    0% {{ transform: translate(-50%, 0px); }}
+    50% {{ transform: translate(-50%, -10px); }}
+    100% {{ transform: translate(-50%, 0px); }}
+}}
 
-                    message_placeholder.markdown(full_response)
+#meshu-chat {{
+    display: none;
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    padding: 15px;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease-in-out;
+    z-index: 9999;
+}}
 
-                    # Save assistant response
-                    st.session_state.meshu_messages.append(
-                        {"role": "assistant", "content": reply}
-                    )
+@keyframes fadeIn {{
+    from {{ opacity: 0; transform: translate(-50%, 20px); }}
+    to {{ opacity: 1; transform: translate(-50%, 0px); }}
+}}
 
-                else:
-                    st.error("MESHU Error: Unexpected API response.")
+#meshu-header {{
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}}
 
-            except Exception as e:
-                st.error(f"MESHU Connection Error: {str(e)}")
+#meshu-messages {{
+    flex: 1;
+    overflow-y: auto;
+    font-size: 14px;
+}}
+
+.meshu-quick {{
+    background: #f1f3f6;
+    padding: 6px 10px;
+    border-radius: 12px;
+    margin: 4px 0;
+    cursor: pointer;
+}}
+
+#meshu-input {{
+    display: flex;
+    margin-top: 10px;
+}}
+
+#meshu-input input {{
+    flex: 1;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}}
+
+#meshu-input button {{
+    margin-left: 5px;
+    border-radius: 10px;
+    border: none;
+    background: #6C63FF;
+    color: white;
+    padding: 6px 12px;
+    cursor: pointer;
+}}
+</style>
+
+<div id="meshu-button" onclick="toggleMeshu()">🤖</div>
+
+<div id="meshu-chat">
+    <div id="meshu-header">🤖 MESHU Assistant</div>
+    <div id="meshu-messages">
+        <div class="meshu-quick" onclick="quickAsk('What can you do?')">What can you do?</div>
+        <div class="meshu-quick" onclick="quickAsk('Explain this app')">Explain this app</div>
+        <div class="meshu-quick" onclick="quickAsk('Help me get started')">Help me get started</div>
+    </div>
+    <div id="meshu-input">
+        <input type="text" id="meshu-text" placeholder="Ask MESHU..."/>
+        <button onclick="sendMeshu()">Send</button>
+    </div>
+</div>
+
+<script>
+function toggleMeshu() {{
+    var chat = document.getElementById("meshu-chat");
+    chat.style.display = chat.style.display === "flex" ? "none" : "flex";
+}}
+
+function quickAsk(text) {{
+    document.getElementById("meshu-text").value = text;
+}}
+
+function sendMeshu() {{
+    const input = document.getElementById("meshu-text");
+    if (input.value.trim() === "") return;
+    window.parent.postMessage({{type: "meshu_input", value: input.value}}, "*");
+    input.value = "";
+}}
+</script>
+""", height=0)
+
+
+# Receive message from JS
+user_msg = st.experimental_get_query_params().get("meshu", None)
