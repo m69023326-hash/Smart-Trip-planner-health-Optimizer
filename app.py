@@ -2301,7 +2301,7 @@ with tourism_tab:
 def add_meshu_chatbot():
     """Inject DeepSeek‑powered chatbot using components.html (targets parent document)."""
     try:
-        deepseek_key = st.secrets["good"]
+        deepseek_key = st.secrets["good"]  # 👈 using your new key
     except KeyError:
         st.error("❌ MESHU: DeepSeek API key 'good' not found in secrets. Chatbot disabled.")
         return
@@ -2310,17 +2310,14 @@ def add_meshu_chatbot():
     <div id="meshu-chatbot-placeholder"></div>
     <script>
         (function() {{
-            // Target the main window's document (parent of the iframe)
             const doc = window.parent.document;
             const containerId = 'meshu-chatbot-container';
-
-            // Avoid duplicate injections
             if (doc.getElementById(containerId)) return;
 
             const API_KEY = '{deepseek_key}';
             const API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-            // Create container div – centered at bottom
+            // Create container – centered at bottom
             const container = doc.createElement('div');
             container.id = containerId;
             container.style.cssText = `
@@ -2458,7 +2455,7 @@ def add_meshu_chatbot():
             container.appendChild(windowDiv);
             doc.body.appendChild(container);
 
-            // Add animation styles
+            // Styles
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2514,7 +2511,7 @@ def add_meshu_chatbot():
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic (DeepSeek) -----
+            // ----- Chat Logic (DeepSeek only) -----
             function addMessage(text, sender) {{
                 const msgDiv = doc.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2578,12 +2575,12 @@ def add_meshu_chatbot():
                     removeTyping();
                     addMessage(reply, 'assistant');
                 }} catch (error) {{
-                    console.error('MESHU error:', error);
                     removeTyping();
                     addMessage('❌ ' + error.message, 'assistant');
                 }}
             }}
 
+            // Event listeners
             toggle.onclick = () => {{
                 const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
                 windowDiv.style.display = isHidden ? 'flex' : 'none';
@@ -2599,12 +2596,12 @@ def add_meshu_chatbot():
                 if (e.key === 'Enter') handleSend();
             }});
 
+            // Welcome message
             addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?", 'assistant');
         }})();
     </script>
     """
 
-    # Inject via components.html (height=0 so iframe is invisible, script runs in parent)
     st.components.v1.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
