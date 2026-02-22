@@ -2300,178 +2300,232 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
-# 🤖 MESHU – Floating SaaS Chat Assistant (WORKING VERSION)
+# MESHU CHATBOT – Floating AI Assistant (bottom-right)
+# FIXED PREMIUM VERSION
 # ============================================================
 
 import streamlit as st
-import requests
-import os
-import time
+import streamlit.components.v1 as components
 
-DEEPSEEK_API_KEY = os.environ.get("good")
-DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-# -------------------------------
-# Session State
-# -------------------------------
-if "meshu_open" not in st.session_state:
-    st.session_state.meshu_open = False
+def add_meshu_chatbot():
+    """Inject floating Gemini-powered chatbot (bottom-right, premium style)."""
 
-if "meshu_messages" not in st.session_state:
-    st.session_state.meshu_messages = [
-        {
-            "role": "system",
-            "content": "You are MESHU, a smart, friendly, professional AI assistant inside a travel planning web application. Be helpful and concise."
-        }
-    ]
+    try:
+        gemini_key = st.secrets["gemini_key"]
+    except KeyError:
+        st.error("Gemini API key not found in secrets.")
+        return
 
-# -------------------------------
-# Floating Button CSS
-# -------------------------------
-st.markdown("""
-<style>
-.meshu-float-btn {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#2563eb,#7dd3fc);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 28px;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-    z-index: 9999;
-    transition: 0.3s;
-}
-.meshu-float-btn:hover {
-    transform: scale(1.1);
-}
+    chatbot_html = f"""
+    <div id="meshu-chatbot-placeholder"></div>
 
-.meshu-window {
-    position: fixed;
-    bottom: 100px;
-    right: 25px;
-    width: 360px;
-    height: 500px;
-    background: #0f172a;
-    border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.45);
-    display: flex;
-    flex-direction: column;
-    z-index: 9998;
-    overflow: hidden;
-}
-.meshu-header {
-    background: #1e293b;
-    padding: 14px;
-    font-weight: bold;
-    color: #7dd3fc;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.meshu-close {
-    cursor: pointer;
-    font-size: 18px;
-}
-.meshu-body {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-}
-.meshu-input {
-    padding: 10px;
-    background: #1e293b;
-}
-</style>
-""", unsafe_allow_html=True)
+    <script>
+    (function() {{
+        const doc = window.parent.document;
+        const containerId = 'meshu-chatbot-container';
 
-# -------------------------------
-# Floating Toggle Button
-# -------------------------------
-if st.button("🤖", key="meshu_toggle_btn"):
-    st.session_state.meshu_open = not st.session_state.meshu_open
+        if (doc.getElementById(containerId)) return;
 
-# -------------------------------
-# Chat Window
-# -------------------------------
-if st.session_state.meshu_open:
+        const container = doc.createElement('div');
+        container.id = containerId;
+        container.style.position = 'fixed';
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '999999';
 
-    st.markdown('<div class="meshu-window">', unsafe_allow_html=True)
+        // Toggle Button
+        const toggle = doc.createElement('button');
+        toggle.innerHTML = '💬';
+        toggle.style.cssText = `
+            width:60px;height:60px;border-radius:50%;
+            background:linear-gradient(135deg,#2563eb,#7c3aed);
+            border:none;color:white;font-size:26px;
+            cursor:pointer;
+            box-shadow:0 8px 30px rgba(0,0,0,0.4);
+            animation: meshuPulse 2s infinite;
+        `;
 
-    # Header
-    col1, col2 = st.columns([8,1])
-    with col1:
-        st.markdown('<div class="meshu-header">MESHU Assistant</div>', unsafe_allow_html=True)
-    with col2:
-        if st.button("✕", key="meshu_close"):
-            st.session_state.meshu_open = False
-            st.rerun()
+        // Chat Window
+        const windowDiv = doc.createElement('div');
+        windowDiv.style.cssText = `
+            display:none;
+            position:absolute;
+            bottom:80px;
+            right:0;
+            width:360px;
+            height:520px;
+            background:rgba(15,23,42,0.98);
+            backdrop-filter:blur(12px);
+            border-radius:22px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+            overflow:hidden;
+            flex-direction:column;
+            font-family:Inter,sans-serif;
+            color:#f1f5f9;
+        `;
 
-    st.markdown('<div class="meshu-body">', unsafe_allow_html=True)
+        // Header
+        const header = doc.createElement('div');
+        header.style.cssText = `
+            padding:16px 20px;
+            background:#0f172a;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-weight:700;
+        `;
+        header.innerHTML = `
+            <span style="background:linear-gradient(135deg,#60a5fa,#c084fc);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            MESHU</span>
+        `;
 
-    # Show chat history
-    for msg in st.session_state.meshu_messages[1:]:
-        if msg["role"] == "user":
-            with st.chat_message("user"):
-                st.markdown(msg["content"])
-        else:
-            with st.chat_message("assistant"):
-                st.markdown(msg["content"])
+        const closeBtn = doc.createElement('span');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.cursor = 'pointer';
+        header.appendChild(closeBtn);
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        // Messages
+        const messagesDiv = doc.createElement('div');
+        messagesDiv.style.cssText = `
+            flex:1;
+            padding:16px;
+            overflow-y:auto;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        `;
 
-    # Input
-    user_input = st.chat_input("Ask MESHU...")
+        // Input Area
+        const inputArea = doc.createElement('div');
+        inputArea.style.cssText = `
+            padding:12px;
+            display:flex;
+            gap:8px;
+            background:#0f172a;
+        `;
 
-    if user_input:
+        const input = doc.createElement('input');
+        input.placeholder = "Ask me anything...";
+        input.style.cssText = `
+            flex:1;
+            padding:10px 14px;
+            border-radius:40px;
+            border:none;
+            background:#1e293b;
+            color:white;
+            outline:none;
+        `;
 
-        st.session_state.meshu_messages.append(
-            {"role": "user", "content": user_input}
-        )
+        const send = doc.createElement('button');
+        send.innerText = "Send";
+        send.style.cssText = `
+            padding:8px 18px;
+            border-radius:40px;
+            border:none;
+            background:#2563eb;
+            color:white;
+            font-weight:600;
+            cursor:pointer;
+        `;
 
-        with st.chat_message("assistant"):
-            with st.spinner("MESHU is thinking..."):
-                try:
-                    response = requests.post(
-                        DEEPSEEK_URL,
-                        headers={
-                            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                            "Content-Type": "application/json"
-                        },
-                        json={
-                            "model": "deepseek-chat",
-                            "messages": st.session_state.meshu_messages,
-                            "temperature": 0.7
-                        },
-                        timeout=60
-                    )
+        inputArea.appendChild(input);
+        inputArea.appendChild(send);
 
-                    result = response.json()
+        windowDiv.appendChild(header);
+        windowDiv.appendChild(messagesDiv);
+        windowDiv.appendChild(inputArea);
 
-                    if "choices" in result:
-                        reply = result["choices"][0]["message"]["content"]
+        container.appendChild(toggle);
+        container.appendChild(windowDiv);
+        doc.body.appendChild(container);
 
-                        placeholder = st.empty()
-                        full = ""
-                        for word in reply.split():
-                            full += word + " "
-                            time.sleep(0.02)
-                            placeholder.markdown(full + "▌")
-                        placeholder.markdown(full)
+        // Styles
+        const style = doc.createElement('style');
+        style.textContent = `
+            @keyframes meshuPulse {{
+                0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}}
+                70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
+                100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+            }}
+            .meshu-msg {{
+                max-width:80%;
+                padding:10px 14px;
+                border-radius:20px;
+                font-size:14px;
+                line-height:1.4;
+            }}
+            .meshu-user {{
+                align-self:flex-end;
+                background:#2563eb;
+                color:white;
+                border-bottom-right-radius:6px;
+            }}
+            .meshu-ai {{
+                align-self:flex-start;
+                background:#334155;
+                color:#f1f5f9;
+                border-bottom-left-radius:6px;
+            }}
+        `;
+        doc.head.appendChild(style);
 
-                        st.session_state.meshu_messages.append(
-                            {"role": "assistant", "content": reply}
-                        )
-                    else:
-                        st.error("Unexpected API response.")
+        const API_KEY = "{gemini_key}";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${{API_KEY}}`;
 
-                except Exception as e:
-                    st.error(f"MESHU Error: {e}")
+        function addMessage(text, cls) {{
+            const div = doc.createElement('div');
+            div.className = 'meshu-msg ' + cls;
+            div.innerText = text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }}
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        async function sendMessage() {{
+            const text = input.value.trim();
+            if(!text) return;
+
+            addMessage(text,'meshu-user');
+            input.value = '';
+
+            try {{
+                const response = await fetch(API_URL, {{
+                    method:'POST',
+                    headers:{{'Content-Type':'application/json'}},
+                    body:JSON.stringify({{
+                        contents:[{{parts:[{{text:text}}]}}]
+                    }})
+                }});
+
+                const data = await response.json();
+                if(data.candidates) {{
+                    addMessage(data.candidates[0].content.parts[0].text,'meshu-ai');
+                }} else {{
+                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
+                }}
+
+            }} catch(err) {{
+                addMessage("Error: "+err.message,'meshu-ai');
+            }}
+        }}
+
+        toggle.onclick = ()=> {{
+            windowDiv.style.display =
+                windowDiv.style.display==='flex'?'none':'flex';
+        }};
+        closeBtn.onclick = ()=> windowDiv.style.display='none';
+        send.onclick = sendMessage;
+        input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
+
+        addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?",'meshu-ai');
+
+    }})();
+    </script>
+    """
+
+    # 🔥 IMPORTANT FIX — DO NOT USE height=0
+    components.html(chatbot_html, height=100, scrolling=False)
+
+
+add_meshu_chatbot()
