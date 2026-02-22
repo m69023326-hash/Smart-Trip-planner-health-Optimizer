@@ -2300,13 +2300,15 @@ def add_meshu_chatbot():
     st.markdown("""
     <div id="meshu-persist-dot" style="position: fixed; bottom: 5px; right: 5px; width: 12px; height: 12px; background: lime; border-radius: 50%; z-index: 10000;"></div>
     <div id="meshu-chatbot-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; font-family: 'Inter', sans-serif;">
-        <button id="meshu-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); border: none; color: white; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: meshu-pulse 2s infinite;">💬</button>
+        <button id="meshu-toggle" onclick="meshuToggle()" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); border: none; color: white; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: meshu-pulse 2s infinite;">💬</button>
         <div id="meshu-window" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 350px; height: 500px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden; flex-direction: column; color: #f1f5f9;">
             <div style="padding: 16px 20px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 700; font-size: 1.2rem; background: linear-gradient(135deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MESHU</span>
-                <button id="meshu-close" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;">&times;</button>
+                <button id="meshu-close" onclick="meshuClose()" style="background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer;">&times;</button>
             </div>
-            <div id="meshu-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            <div id="meshu-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <div class="meshu-message meshu-assistant">MESHU is ready! (Test message)</div>
+            </div>
             <div style="padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6);">
                 <input id="meshu-input" type="text" placeholder="Ask me anything..." style="flex: 1; padding: 10px 14px; border-radius: 40px; border: none; background: #1e293b; color: #f1f5f9; font-size: 14px; outline: none;">
                 <button id="meshu-send" style="background: #2563eb; border: none; border-radius: 40px; padding: 8px 16px; color: white; font-weight: 600; cursor: pointer;">Send</button>
@@ -2367,63 +2369,28 @@ def add_meshu_chatbot():
         .debug-click { background: red !important; }
     </style>
     <script>
-        (function() {
-            console.log("MESHU: script started");
-
-            function initialize() {
-                const toggle = document.getElementById('meshu-toggle');
-                const windowDiv = document.getElementById('meshu-window');
-                const closeBtn = document.getElementById('meshu-close');
-                const messagesDiv = document.getElementById('meshu-messages');
-
-                console.log("MESHU: toggle found?", !!toggle);
-                console.log("MESHU: window found?", !!windowDiv);
-                console.log("MESHU: close found?", !!closeBtn);
-
-                // Add a test message to confirm we can modify DOM
-                if (messagesDiv) {
-                    const testMsg = document.createElement('div');
-                    testMsg.className = 'meshu-message meshu-assistant';
-                    testMsg.textContent = 'MESHU is ready! (Test message)';
-                    messagesDiv.appendChild(testMsg);
+        function meshuToggle() {
+            console.log("MESHU: toggle clicked");
+            var win = document.getElementById('meshu-window');
+            var btn = document.getElementById('meshu-toggle');
+            if (win) {
+                if (win.style.display === 'none' || win.style.display === '') {
+                    win.style.display = 'flex';
                 } else {
-                    console.error("MESHU: messagesDiv not found");
+                    win.style.display = 'none';
                 }
-
-                if (toggle && windowDiv) {
-                    // Remove any existing listeners (just in case)
-                    toggle.onclick = null;
-                    // Add click listener
-                    toggle.addEventListener('click', function(e) {
-                        console.log("MESHU: toggle clicked");
-                        // Toggle window
-                        const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
-                        windowDiv.style.display = isHidden ? 'flex' : 'none';
-                        console.log("MESHU: window display set to", windowDiv.style.display);
-                        // Visual feedback: briefly change button color
-                        toggle.classList.add('debug-click');
-                        setTimeout(() => toggle.classList.remove('debug-click'), 200);
-                    });
-                } else {
-                    console.error("MESHU: toggle or windowDiv missing");
-                }
-
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', function(e) {
-                        console.log("MESHU: close clicked");
-                        if (windowDiv) windowDiv.style.display = 'none';
-                    });
-                } else {
-                    console.error("MESHU: closeBtn missing");
-                }
+                console.log("MESHU: window display set to", win.style.display);
             }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initialize);
-            } else {
-                initialize();
+            if (btn) {
+                btn.classList.add('debug-click');
+                setTimeout(function() { btn.classList.remove('debug-click'); }, 200);
             }
-        })();
+        }
+        function meshuClose() {
+            console.log("MESHU: close clicked");
+            var win = document.getElementById('meshu-window');
+            if (win) win.style.display = 'none';
+        }
     </script>
     """, unsafe_allow_html=True)
 
