@@ -2300,139 +2300,162 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
-# 🤖 MESHU Floating Assistant (Stable Version)
+# 🤖 MESHU PRO FLOATING WIDGET (SaaS Style)
 # ============================================================
 
 import streamlit as st
-import requests
+import streamlit.components.v1 as components
 import os
-import time
+import requests
+import json
 
 DEEPSEEK_API_KEY = os.environ.get("good")
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-# -------------------------------
-# Session State
-# -------------------------------
-if "meshu_open" not in st.session_state:
-    st.session_state.meshu_open = False
-
-if "meshu_messages" not in st.session_state:
-    st.session_state.meshu_messages = [
-        {
-            "role": "system",
-            "content": "You are MESHU, a smart, friendly AI assistant inside a professional web app. Be clear, helpful and confident."
-        }
-    ]
-
-
-# -------------------------------
-# Floating Button CSS
-# -------------------------------
-st.markdown("""
+components.html(f"""
 <style>
-.meshu-button {
+#meshu-container {{
+    position: fixed;
+    bottom: 90px;
+    right: 30px;
+    width: 340px;
+    height: 480px;
+    background: #0f172a;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9999;
+    animation: slideUp 0.3s ease;
+}}
+
+@keyframes slideUp {{
+    from {{ transform: translateY(30px); opacity: 0; }}
+    to {{ transform: translateY(0px); opacity: 1; }}
+}}
+
+#meshu-header {{
+    background: #1e293b;
+    padding: 14px;
+    font-weight: bold;
+    color: #7dd3fc;
+    display: flex;
+    justify-content: space-between;
+}}
+
+#meshu-body {{
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    font-size: 14px;
+    color: white;
+}}
+
+.meshu-user {{
+    background: #2563eb;
+    padding: 8px 12px;
+    border-radius: 15px;
+    margin: 6px 0;
+    align-self: flex-end;
+    max-width: 80%;
+}}
+
+.meshu-bot {{
+    background: #334155;
+    padding: 8px 12px;
+    border-radius: 15px;
+    margin: 6px 0;
+    align-self: flex-start;
+    max-width: 80%;
+}}
+
+#meshu-input {{
+    display: flex;
+    padding: 10px;
+    background: #1e293b;
+}}
+
+#meshu-input input {{
+    flex: 1;
+    padding: 8px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+}}
+
+#meshu-input button {{
+    margin-left: 6px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}}
+
+#meshu-toggle {{
     position: fixed;
     bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg,#6C63FF,#00C9FF);
-    width: 70px;
-    height: 70px;
+    right: 30px;
+    width: 65px;
+    height: 65px;
     border-radius: 50%;
+    background: linear-gradient(135deg,#2563eb,#7dd3fc);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 30px;
+    font-size: 28px;
     color: white;
     cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: float 3s ease-in-out infinite;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
     z-index: 9999;
-}
-
-@keyframes float {
-    0% { transform: translate(-50%,0px); }
-    50% { transform: translate(-50%,-10px); }
-    100% { transform: translate(-50%,0px); }
-}
+}}
 </style>
-""", unsafe_allow_html=True)
 
-# Floating button
-if st.button("🤖", key="meshu_toggle"):
-    st.session_state.meshu_open = not st.session_state.meshu_open
+<div id="meshu-container">
+    <div id="meshu-header">
+        MESHU
+        <span style="cursor:pointer;" onclick="toggleMeshu()">✕</span>
+    </div>
+    <div id="meshu-body" id="chatArea">
+        <div class="meshu-bot">
+            Hi! I'm MESHU. How can I help you today?
+        </div>
+    </div>
+    <div id="meshu-input">
+        <input type="text" id="meshuText" placeholder="Ask me anything..."/>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
 
-# -------------------------------
-# Chat Window
-# -------------------------------
-if st.session_state.meshu_open:
+<div id="meshu-toggle" onclick="toggleMeshu()">🤖</div>
 
-    st.markdown("## 🤖 MESHU Assistant")
+<script>
+function toggleMeshu() {{
+    const box = document.getElementById("meshu-container");
+    box.style.display = box.style.display === "flex" ? "none" : "flex";
+}}
 
-    # Quick Questions
-    col1, col2, col3 = st.columns(3)
-    if col1.button("What can you do?"):
-        user_input = "What can you do?"
-    elif col2.button("Explain this app"):
-        user_input = "Explain this app"
-    elif col3.button("Help me get started"):
-        user_input = "Help me get started"
-    else:
-        user_input = None
+function sendMessage() {{
+    const input = document.getElementById("meshuText");
+    if(input.value.trim() === "") return;
 
-    # Display history
-    for msg in st.session_state.meshu_messages[1:]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    const chat = document.getElementById("meshu-body");
 
-    prompt = st.chat_input("Ask MESHU...")
+    const userMsg = document.createElement("div");
+    userMsg.className = "meshu-user";
+    userMsg.innerText = input.value;
+    chat.appendChild(userMsg);
 
-    if prompt:
-        user_input = prompt
+    const botMsg = document.createElement("div");
+    botMsg.className = "meshu-bot";
+    botMsg.innerText = "Thinking...";
+    chat.appendChild(botMsg);
 
-    if user_input:
-        # Show user message
-        with st.chat_message("user"):
-            st.markdown(user_input)
+    chat.scrollTop = chat.scrollHeight;
 
-        st.session_state.meshu_messages.append(
-            {"role": "user", "content": user_input}
-        )
-
-        # API Call
-        with st.chat_message("assistant"):
-            with st.spinner("MESHU is thinking..."):
-                try:
-                    response = requests.post(
-                        DEEPSEEK_URL,
-                        headers={
-                            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                            "Content-Type": "application/json"
-                        },
-                        json={
-                            "model": "deepseek-chat",
-                            "messages": st.session_state.meshu_messages,
-                            "temperature": 0.7
-                        },
-                        timeout=60
-                    )
-
-                    result = response.json()
-                    reply = result["choices"][0]["message"]["content"]
-
-                    # Typing effect
-                    placeholder = st.empty()
-                    full = ""
-                    for word in reply.split():
-                        full += word + " "
-                        time.sleep(0.02)
-                        placeholder.markdown(full + "▌")
-                    placeholder.markdown(full)
-
-                    st.session_state.meshu_messages.append(
-                        {"role": "assistant", "content": reply}
-                    )
-
-                except Exception as e:
-                    st.error(f"MESHU Error: {e}")
+    input.value = "";
+}}
+</script>
+""", height=0)
