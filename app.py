@@ -2299,22 +2299,18 @@ with tourism_tab:
 import streamlit as st
 import streamlit.components.v1 as components
 
-# ============================================================
-# MESHU CHATBOT – Floating AI Assistant (Groq Version)
-# ============================================================
-
 import streamlit as st
 import streamlit.components.v1 as components
 
-
 def add_meshu_chatbot():
-
+    # 1. Safely get the key from secrets
     try:
-        groq_key = st.secrets["good"]   # ✅ your Groq key name
+        groq_key = st.secrets["good"]  
     except KeyError:
-        st.error("Groq API key not found in secrets.")
+        st.error("Groq API key 'good' not found in Streamlit Secrets.")
         return
 
+    # 2. The HTML/JS/CSS Block
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
 
@@ -2328,7 +2324,7 @@ def add_meshu_chatbot():
         const container = doc.createElement('div');
         container.id = containerId;
         container.style.position = 'fixed';
-        container.style.bottom = '90px';  // ✅ MOVED UP (was 20px)
+        container.style.bottom = '90px'; 
         container.style.right = '20px';
         container.style.zIndex = '999999';
 
@@ -2359,7 +2355,7 @@ def add_meshu_chatbot():
             box-shadow:0 20px 60px rgba(0,0,0,0.5);
             overflow:hidden;
             flex-direction:column;
-            font-family:Inter,sans-serif;
+            font-family: 'Inter', sans-serif;
             color:#f1f5f9;
         `;
 
@@ -2380,7 +2376,7 @@ def add_meshu_chatbot():
 
         const closeBtn = doc.createElement('span');
         closeBtn.innerHTML = '&times;';
-        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.cssText = 'cursor:pointer; font-size:24px; color:#94a3b8;';
         header.appendChild(closeBtn);
 
         const messagesDiv = doc.createElement('div');
@@ -2427,11 +2423,9 @@ def add_meshu_chatbot():
 
         inputArea.appendChild(input);
         inputArea.appendChild(send);
-
         windowDiv.appendChild(header);
         windowDiv.appendChild(messagesDiv);
         windowDiv.appendChild(inputArea);
-
         container.appendChild(toggle);
         container.appendChild(windowDiv);
         doc.body.appendChild(container);
@@ -2444,23 +2438,24 @@ def add_meshu_chatbot():
                 100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
             }}
             .meshu-msg {{
-                max-width:80%;
+                max-width:85%;
                 padding:10px 14px;
-                border-radius:20px;
+                border-radius:18px;
                 font-size:14px;
-                line-height:1.4;
+                line-height:1.5;
+                word-wrap: break-word;
             }}
             .meshu-user {{
                 align-self:flex-end;
                 background:#2563eb;
                 color:white;
-                border-bottom-right-radius:6px;
+                border-bottom-right-radius:4px;
             }}
             .meshu-ai {{
                 align-self:flex-start;
                 background:#334155;
                 color:#f1f5f9;
-                border-bottom-left-radius:6px;
+                border-bottom-left-radius:4px;
             }}
         `;
         doc.head.appendChild(style);
@@ -2480,52 +2475,56 @@ def add_meshu_chatbot():
             const text = input.value.trim();
             if(!text) return;
 
-            addMessage(text,'meshu-user');
+            addMessage(text, 'meshu-user');
             input.value = '';
 
             try {{
                 const response = await fetch(API_URL, {{
-                    method:'POST',
-                    headers:{{
-                        'Content-Type':'application/json',
-                        'Authorization':'Bearer ' + API_KEY
+                    method: 'POST',
+                    headers: {{
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + API_KEY
                     }},
-                    body:JSON.stringify({{
-                        model: "llama3-70b-8192",
+                    body: JSON.stringify({{
+                        model: "llama3-8b-8192", // Using 8b for faster response, change back to 70b if preferred
                         messages: [
-                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
-                            {{role:"user",content:text}}
-                        ]
+                            {{role: "system", content: "You are MESHU, a smart helpful assistant."}},
+                            {{role: "user", content: text}}
+                        ],
+                        temperature: 0.7
                     }})
                 }});
 
                 const data = await response.json();
-                if(data.choices) {{
-                    addMessage(data.choices[0].message.content,'meshu-ai');
+                
+                if (data.choices && data.choices.length > 0) {{
+                    addMessage(data.choices[0].message.content, 'meshu-ai');
+                } else if (data.error) {{
+                    addMessage("Error: " + data.error.message, 'meshu-ai');
                 }} else {{
-                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
+                    addMessage("Unexpected response format from Groq.", 'meshu-ai');
                 }}
 
-            }} catch(err) {{
-                addMessage("Error: "+err.message,'meshu-ai');
+            }} catch (err) {{
+                addMessage("Connection Error: " + err.message, 'meshu-ai');
             }}
         }}
 
-        toggle.onclick = ()=> {{
-            windowDiv.style.display =
-                windowDiv.style.display==='flex'?'none':'flex';
+        toggle.onclick = () => {{
+            windowDiv.style.display = (windowDiv.style.display === 'flex' ? 'none' : 'flex');
         }};
-        closeBtn.onclick = ()=> windowDiv.style.display='none';
+        closeBtn.onclick = () => windowDiv.style.display = 'none';
         send.onclick = sendMessage;
-        input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
+        input.addEventListener('keypress', (e) => {{ if(e.key === 'Enter') sendMessage(); }});
 
-        addMessage("Hi! I'm MESHU, your personal assistant. How can I help you today?",'meshu-ai');
+        addMessage("Hi! I'm MESHU. How can I help you today?", 'meshu-ai');
 
     }})();
     </script>
     """
 
-    components.html(chatbot_html, height=100, scrolling=False)
+    # We keep height low so the invisible iframe doesn't block your actual Streamlit UI
+    components.html(chatbot_html, height=0)
 
-
+# Run the function
 add_meshu_chatbot()
