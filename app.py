@@ -2296,34 +2296,45 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑right)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, with fallback)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject a floating Gemini‑powered chatbot directly into the main document (bottom‑right)."""
+    """Inject floating Gemini‑powered chatbot (bottom‑center) with fallback API key."""
     try:
-        gemini_key = st.secrets["gemini_key"]
+        primary_key = st.secrets["gemini_key"]
     except KeyError:
         st.error("Gemini API key not found in secrets. Please add 'gemini_key'.")
         return
+
+    # Optional fallback key – if missing, fallback is disabled
+    fallback_key = st.secrets.get("Orbit_api_key", None)
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
     <script>
         (function() {{
-            // Target the main window's document
             const doc = window.parent.document;
             const containerId = 'meshu-chatbot-container';
-
-            // Avoid duplicate injections
             if (doc.getElementById(containerId)) return;
 
-            // Create container div – now positioned at bottom‑right
+            // Keys
+            const PRIMARY_KEY = '{primary_key}';
+            const FALLBACK_KEY = {f'"{fallback_key}"' if fallback_key else 'null'};
+            const MODEL = 'gemini-1.5-flash';  // stable model
+
+            // Helper to build API URL with a given key
+            function apiUrl(key) {{
+                return `https://generativelanguage.googleapis.com/v1beta/models/${{MODEL}}:generateContent?key=${{key}}`;
+            }}
+
+            // Create container – centered at bottom
             const container = doc.createElement('div');
             container.id = containerId;
             container.style.cssText = `
                 position: fixed;
                 bottom: 20px;
-                right: 20px;          /* changed from left */
+                left: 50%;
+                transform: translateX(-50%);
                 z-index: 9999;
                 font-family: 'Inter', sans-serif;
             `;
@@ -2342,18 +2353,18 @@ def add_meshu_chatbot():
                 font-size: 26px;
                 cursor: pointer;
                 box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                transition: transform 0.2s;
                 animation: meshu-pulse 2s infinite;
             `;
 
-            // Chat window – now anchored to the right
+            // Chat window – centered above the button
             const windowDiv = doc.createElement('div');
             windowDiv.id = 'meshu-window';
             windowDiv.style.cssText = `
                 display: none;
                 position: absolute;
                 bottom: 80px;
-                right: 0;              /* changed from left */
+                left: 50%;
+                transform: translateX(-50%);
                 width: 350px;
                 height: 500px;
                 background: rgba(30, 41, 59, 0.95);
@@ -2450,14 +2461,11 @@ def add_meshu_chatbot():
             windowDiv.appendChild(header);
             windowDiv.appendChild(messagesDiv);
             windowDiv.appendChild(inputArea);
-
             container.appendChild(toggle);
             container.appendChild(windowDiv);
-
-            // Add to body
             doc.body.appendChild(container);
 
-            // Add styles to head (including updated transform-origin)
+            // Styles (including centering animations)
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2506,28 +2514,20 @@ def add_meshu_chatbot():
                     0%, 60%, 100% {{ transform: translateY(0); opacity: 0.6; }}
                     30% {{ transform: translateY(-6px); opacity: 1; }}
                 }}
-                /* Updated transform origin for bottom‑right */
                 #meshu-window {{
                     transition: opacity 0.2s ease, transform 0.2s ease;
-                    transform-origin: bottom right;
+                    transform-origin: bottom center;
                 }}
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic (unchanged) -----
-            const API_KEY = '{gemini_key}';
-            const MODEL = 'gemini-2.0-flash';
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${{MODEL}}:generateContent?key=${{API_KEY}}`;
-
-            let messageHistory = [];
-
+            // ----- Chat Logic with Fallback (identical to previous) -----
             function addMessage(text, sender) {{
                 const msgDiv = doc.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
                 msgDiv.textContent = text;
                 messagesDiv.appendChild(msgDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                messageHistory.push({{ role: sender, content: text }});
             }}
 
             function showTyping() {{
@@ -2544,10 +2544,11 @@ def add_meshu_chatbot():
                 if (typing) typing.remove();
             }}
 
-            async function sendToGemini(userMessage) {{
-                showTyping();
-                try {{
-                    const response = await fetch(API_URL, {{
+            // Core send function with retry logic
+            async function sendWithFallback(userMessage, retry = true) {{
+                const attemptWithKey = async (key) => {{
+                    const url = apiUrl(key);
+                    const response = await fetch(url, {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{
@@ -2558,26 +2559,51 @@ def add_meshu_chatbot():
                             }}]
                         }})
                     }});
-                    const data = await response.json();
-                    removeTyping();
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {{
-                        const reply = data.candidates[0].content.parts[0].text;
-                        addMessage(reply, 'assistant');
-                    }} else {{
-                        addMessage("Sorry, I couldn't process that.", 'assistant');
+                    if (!response.ok) {{
+                        const errText = await response.text();
+                        throw new Error(`HTTP ${{response.status}}: ${{errText}}`);
                     }}
-                }} catch (error) {{
-                    removeTyping();
-                    addMessage('Error: ' + error.message, 'assistant');
+                    const data = await response.json();
+                    if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {{
+                        throw new Error('Invalid response format');
+                    }}
+                    return data.candidates[0].content.parts[0].text;
+                }};
+
+                try {{
+                    // First attempt with primary key
+                    return await attemptWithKey(PRIMARY_KEY);
+                }} catch (primaryError) {{
+                    console.warn('Primary key failed:', primaryError);
+                    if (retry && FALLBACK_KEY) {{
+                        try {{
+                            // Second attempt with fallback key
+                            return await attemptWithKey(FALLBACK_KEY);
+                        }} catch (fallbackError) {{
+                            console.error('Fallback key also failed:', fallbackError);
+                            throw new Error('Both API keys failed. Please try again later.');
+                        }}
+                    }} else {{
+                        throw primaryError;  // no fallback available
+                    }}
                 }}
             }}
 
-            function handleSend() {{
+            async function handleSend() {{
                 const text = inputField.value.trim();
                 if (text === '') return;
                 addMessage(text, 'user');
                 inputField.value = '';
-                sendToGemini(text);
+                showTyping();
+
+                try {{
+                    const reply = await sendWithFallback(text, true);
+                    removeTyping();
+                    addMessage(reply, 'assistant');
+                }} catch (error) {{
+                    removeTyping();
+                    addMessage('❌ ' + error.message, 'assistant');
+                }}
             }}
 
             // Event listeners
