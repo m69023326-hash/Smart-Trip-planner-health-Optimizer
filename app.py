@@ -2391,7 +2391,7 @@ def add_meshu_chatbot():
                 70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
                 100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
             }}
-            .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; }}
+            .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; line-height:1.4; }}
             .meshu-user {{ align-self:flex-end; background:#2563eb; color:white; border-bottom-right-radius:6px; }}
             .meshu-ai {{ align-self:flex-start; background:#334155; color:#f1f5f9; border-bottom-left-radius:6px; }}
         `;
@@ -2423,7 +2423,7 @@ def add_meshu_chatbot():
                         'Authorization':'Bearer ' + API_KEY
                     }},
                     body:JSON.stringify({{
-                        model: "llama3-70b-8192",
+                        model: "llama-3.3-70b-versatile",
                         messages: [
                             {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
                             {{role:"user",content:text}}
@@ -2433,7 +2433,7 @@ def add_meshu_chatbot():
 
                 const data = await response.json();
                 
-                if(data.choices) {{
+                if(data.choices && data.choices[0]) {{
                     addMessage(data.choices[0].message.content,'meshu-ai');
                 }} else if(data.error) {{
                     addMessage("Error: " + data.error.message, 'meshu-ai');
