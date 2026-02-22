@@ -2330,7 +2330,7 @@ def add_meshu_chatbot():
         const container = doc.createElement('div');
         container.id = containerId;
         container.style.position = 'fixed';
-        container.style.bottom = '20px';
+        container.style.bottom = '40px';
         container.style.right = '20px';
         container.style.zIndex = '999999';
 
