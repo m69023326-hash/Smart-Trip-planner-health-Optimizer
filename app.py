@@ -22,7 +22,6 @@ from datetime import datetime
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
-
 # ============================================================
 # (Rest of your original code follows exactly as before)
 # ============================================================
@@ -538,6 +537,25 @@ base_css = """
         0% { opacity: 0; transform: translateY(20px); }
         100% { opacity: 1; transform: translateY(0); }
     }
+
+    /* Welcome tab specific animations */
+    @keyframes slideUp {
+        0% { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .welcome-title {
+        animation: slideUp 0.8s ease-out;
+    }
+    .welcome-subtitle {
+        animation: slideUp 0.8s ease-out 0.2s both;
+    }
+    .welcome-card {
+        animation: slideUp 0.8s ease-out;
+        animation-fill-mode: both;
+    }
+    .welcome-card:nth-child(1) { animation-delay: 0.1s; }
+    .welcome-card:nth-child(2) { animation-delay: 0.3s; }
+    .welcome-card:nth-child(3) { animation-delay: 0.5s; }
 </style>
 """
 
@@ -2098,6 +2116,79 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
+# NEW WELCOME TAB (added as the first tab)
+# ============================================================
+def tab_welcome():
+    st.markdown("""
+    <div style='text-align:center; padding: 40px 0 20px 0;' class='welcome-title'>
+        <h1 style='font-size: 3.5em; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>
+            👋 Welcome to Your Ultimate Companion
+        </h1>
+        <p style='font-size: 1.4em; color: var(--text-muted); max-width: 800px; margin: 0 auto;' class='welcome-subtitle'>
+            Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🗺️</div>
+            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Universal Trip Planner</h3>
+            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
+                Plan your journey to any city in the world with confidence. Get personalized itineraries, 
+                learn about local customs and dress codes, avoid common scams, and know exactly how to 
+                reach emergency services. We help you manage your time and blend in like a local – all with a friendly, welcoming touch.
+            </p>
+            <div style='margin-top: 20px; text-align: center;'>
+                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>✈️ Start Exploring</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🤖</div>
+            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>AI Health Companion</h3>
+            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
+                Doctors aren't always available – but your health doesn't wait. Upload medical reports 
+                and receive instant, easy‑to‑understand analyses. Get personalized diet plans and wellness 
+                advice, all powered by advanced AI that speaks your language. It's like having a doctor in your pocket, 24/7.
+            </p>
+            <div style='margin-top: 20px; text-align: center;'>
+                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>🩺 Check Your Health</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🇵🇰</div>
+            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Pakistan Tourism Guide</h3>
+            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
+                A treasure trove for foreigners wanting to explore Pakistan. Discover famous places, 
+                get detailed budgets, interactive maps, cultural insights, and practical tips. 
+                From the mountains of the north to the bustling cities, every piece of information you need is right here.
+            </p>
+            <div style='margin-top: 20px; text-align: center;'>
+                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>🏔️ Discover Pakistan</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style='text-align: center; margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);' class='fade-in-card'>
+        <p style='font-size: 1.3em; color: var(--text-primary);'>
+            🌟 Ready to begin? Just click any tab above and let the journey start!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================
 # MAIN APP LAYOUT with Theme Toggle
 # ============================================================
 # Apply theme CSS
@@ -2113,11 +2204,20 @@ with header_col3:
         toggle_theme()
         st.rerun()
 
-# Tabs
-main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
+# Tabs – WELCOME TAB ADDED AS THE FIRST TAB
+main_tab, planner_tab, companion_tab, tourism_tab = st.tabs([
+    "👋 Welcome", 
+    "📅 Trip Planner", 
+    "🤖 Health Companion", 
+    "🇵🇰 Pakistan Tourism"
+])
 
-# --- TAB 1: EXPANDED TRIP PLANNER ---
+# --- TAB 0: WELCOME ---
 with main_tab:
+    tab_welcome()
+
+# --- TAB 1: TRIP PLANNER ---
+with planner_tab:
     planner_sidebar_col, planner_content_col = st.columns([2.5, 7.5])
     
     with planner_sidebar_col:
@@ -2131,7 +2231,7 @@ with main_tab:
             "💰 Budget Planner": planner_budget,
             "🧳 Travel Tips": planner_tips,
             "🤝 Local Customs": planner_customs,
-            "🗓️ Generate Trip": planner_generate,  # This now has the animated button
+            "🗓️ Generate Trip": planner_generate,
         }
         
         # Determine index for radio
@@ -2296,15 +2396,9 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 
-import streamlit as st
-import streamlit.components.v1 as components
-
-import streamlit as st
-import streamlit.components.v1 as components
-
-import streamlit as st
-import streamlit.components.v1 as components
-
+# ============================================================
+# MESHU CHATBOT (unchanged)
+# ============================================================
 def add_meshu_chatbot():
     try:
         groq_key = st.secrets["good"]  
