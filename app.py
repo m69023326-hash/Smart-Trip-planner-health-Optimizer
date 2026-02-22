@@ -2367,21 +2367,31 @@ def add_meshu_chatbot():
     </style>
     <script>
         (function() {
-            console.log("MESHU: script running");
-            // Toggle chat window
+            console.log("MESHU: script started");
             const toggle = document.getElementById('meshu-toggle');
             const windowDiv = document.getElementById('meshu-window');
             const closeBtn = document.getElementById('meshu-close');
+            console.log("MESHU: toggle found?", !!toggle);
+            console.log("MESHU: window found?", !!windowDiv);
+            console.log("MESHU: close found?", !!closeBtn);
             if (toggle && windowDiv) {
-                toggle.onclick = () => {
-                    windowDiv.style.display = windowDiv.style.display === 'none' ? 'flex' : 'none';
+                toggle.onclick = function() {
+                    console.log("MESHU: toggle clicked");
+                    const isHidden = windowDiv.style.display === 'none' || windowDiv.style.display === '';
+                    windowDiv.style.display = isHidden ? 'flex' : 'none';
+                    console.log("MESHU: window display set to", windowDiv.style.display);
                 };
-                closeBtn.onclick = () => {
+            } else {
+                console.error("MESHU: toggle or windowDiv missing");
+            }
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    console.log("MESHU: close clicked");
                     windowDiv.style.display = 'none';
                 };
+            } else {
+                console.error("MESHU: closeBtn missing");
             }
-            // Placeholder for future API integration
-            console.log("MESHU: UI ready");
         })();
     </script>
     """, unsafe_allow_html=True)
