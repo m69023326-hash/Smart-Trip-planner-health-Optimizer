@@ -2296,26 +2296,64 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 # ============================================================
-# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek only)
+# MESHU CHATBOT – Floating AI Assistant (bottom‑center, DeepSeek)
 # ============================================================
 def add_meshu_chatbot():
-    """Inject floating DeepSeek‑powered chatbot (bottom‑center)."""
+    """Inject DeepSeek‑powered chatbot at bottom center with error handling."""
+    # Try to get the API key from secrets
     try:
         deepseek_key = st.secrets["deepseek_api_key_2"]
+        key_exists = True
     except KeyError:
-        st.error("DeepSeek API key 'deepseek_api_key_2' not found in secrets.")
-        return
+        deepseek_key = ""
+        key_exists = False
 
+    # We'll inject a script that either shows the chatbot or an error message
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
     <script>
         (function() {{
+            // --- Debug: log that script runs ---
+            console.log("MESHU: script starting");
+
+            // Target the main window's document (Streamlit runs in an iframe, so we use parent)
             const doc = window.parent.document;
             const containerId = 'meshu-chatbot-container';
-            if (doc.getElementById(containerId)) return;
+
+            // Avoid duplicate injections
+            if (doc.getElementById(containerId)) {{
+                console.log("MESHU: already exists");
+                return;
+            }}
+
+            // If the API key is missing, show a red error message instead of the chatbot
+            const hasKey = {str(key_exists).lower()};
+            if (!hasKey) {{
+                console.error("MESHU: API key 'deepseek_api_key_2' not found in secrets");
+                const errorDiv = doc.createElement('div');
+                errorDiv.id = containerId;
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 9999;
+                    background: #ef4444;
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 40px;
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 600;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                `;
+                errorDiv.textContent = '❌ MESHU: API key missing (deepseek_api_key_2)';
+                doc.body.appendChild(errorDiv);
+                return;
+            }}
 
             const API_KEY = '{deepseek_key}';
             const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+            console.log("MESHU: API key found");
 
             // Create container – centered at bottom
             const container = doc.createElement('div');
@@ -2455,7 +2493,7 @@ def add_meshu_chatbot():
             container.appendChild(windowDiv);
             doc.body.appendChild(container);
 
-            // Styles
+            // Add animation styles
             const style = doc.createElement('style');
             style.textContent = `
                 @keyframes meshu-pulse {{
@@ -2511,7 +2549,7 @@ def add_meshu_chatbot():
             `;
             doc.head.appendChild(style);
 
-            // ----- Chat Logic (DeepSeek only) -----
+            // ----- Chat Logic (DeepSeek) -----
             function addMessage(text, sender) {{
                 const msgDiv = doc.createElement('div');
                 msgDiv.className = `meshu-message meshu-${{sender}}`;
@@ -2575,6 +2613,7 @@ def add_meshu_chatbot():
                     removeTyping();
                     addMessage(reply, 'assistant');
                 }} catch (error) {{
+                    console.error('MESHU error:', error);
                     removeTyping();
                     addMessage('❌ ' + error.message, 'assistant');
                 }}
