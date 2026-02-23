@@ -2513,7 +2513,7 @@ import base64
 from pathlib import Path
 
 # ============================================================
-# MESHU CHATBOT (Original Code + Bouncing Robot + Jokes)
+# MESHU CHATBOT (unchanged)
 # ============================================================
 def add_meshu_chatbot():
     try:
@@ -2521,14 +2521,6 @@ def add_meshu_chatbot():
     except KeyError:
         st.error("Groq API key 'good' not found in secrets.")
         return
-
-    # --- Fetch Local Robot Image ---
-    try:
-        img_path = Path("assets/meshu.png")
-        img_base64 = base64.b64encode(img_path.read_bytes()).decode()
-        bot_avatar = f"data:image/png;base64,{img_base64}"
-    except Exception:
-        bot_avatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
@@ -2547,18 +2539,15 @@ def add_meshu_chatbot():
         container.style.right = '20px';
         container.style.zIndex = '999999';
 
-        // --- UPDATED: Bouncing Robot Button ---
         const toggle = doc.createElement('button');
-        toggle.innerHTML = `<img src="{bot_avatar}" style="width: 85%; height: 85%; transform-origin: bottom center;">`;
+        toggle.innerHTML = '💬';
         toggle.style.cssText = `
             width:60px;height:60px;border-radius:50%;
-            background:white;
-            border:2px solid #2563eb;
-            color:white;font-size:26px;
+            background:linear-gradient(135deg,#2563eb,#7c3aed);
+            border:none;color:white;font-size:26px;
             cursor:pointer;
             box-shadow:0 8px 30px rgba(0,0,0,0.4);
-            animation: meshuJump 2.5s infinite cubic-bezier(0.28, 0.84, 0.42, 1);
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            animation: meshuPulse 2s infinite;
         `;
 
         const windowDiv = doc.createElement('div');
@@ -2611,39 +2600,26 @@ def add_meshu_chatbot():
         container.appendChild(windowDiv);
         doc.body.appendChild(container);
 
-        // --- UPDATED: Added Jumping CSS and Chip CSS for the Joke ---
         const style = doc.createElement('style');
         style.textContent = `
-            @keyframes meshuJump {{
-                0%, 100% {{ transform: translateY(0); }}
-                40% {{ transform: translateY(-18px); }}
-                60% {{ transform: translateY(-10px); }}
-                80% {{ transform: translateY(-18px); }}
+            @keyframes meshuPulse {{
+                0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}}
+                70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
+                100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
             }}
             .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; line-height:1.4; }}
             .meshu-user {{ align-self:flex-end; background:#2563eb; color:white; border-bottom-right-radius:6px; }}
             .meshu-ai {{ align-self:flex-start; background:#334155; color:#f1f5f9; border-bottom-left-radius:6px; }}
-            
-            .chip {{ 
-                background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; 
-                color: #60a5fa; padding: 6px 12px; border-radius: 16px; 
-                font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; display: inline-block;
-            }}
-            .chip:hover {{ background: #2563eb; color: white; }}
         `;
         doc.head.appendChild(style);
 
         const API_KEY = "{groq_key}";
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-        // Joke Memory Variables
-        let firstJokeName = null;
-        let waitingForKon = false;
-
         function addMessage(text, cls) {{
             const div = doc.createElement('div');
             div.className = 'meshu-msg ' + cls;
-            div.innerHTML = text; // Changed to innerHTML so joke buttons render correctly
+            div.innerText = text;
             messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }}
@@ -2654,37 +2630,6 @@ def add_meshu_chatbot():
 
             addMessage(text,'meshu-user');
             input.value = '';
-
-            // --- INJECTED JOKE LOGIC ---
-            const lowerText = text.toLowerCase();
-            const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
-            
-            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText) || (lowerText === "kon" && waitingForKon)) {{
-                if (lowerText.includes("who created you")) {{
-                    addMessage("My owner Mubashir Arshad.", 'meshu-ai');
-                }} 
-                else if (text === "12345") {{
-                    const friendsHTML = 'i think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>';
-                    addMessage(friendsHTML, 'meshu-ai');
-                }} 
-                else if (lowerText === "kon" && waitingForKon) {{
-                    addMessage("whi pehlay wala " + firstJokeName + "", 'meshu-ai');
-                    waitingForKon = false; 
-                }}
-                else if (jokeNames.includes(lowerText)) {{
-                    if (firstJokeName === null) {{
-                        firstJokeName = text; 
-                        addMessage("from your brother bundle of curse upon you 😂", 'meshu-ai');
-                    }} else if (lowerText !== firstJokeName.toLowerCase()) {{
-                        addMessage("lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha", 'meshu-ai');
-                        waitingForKon = true; 
-                    }} else {{
-                        addMessage("from your brother bundle of curse upon you 😂", 'meshu-ai');
-                    }}
-                }}
-                return; // Stop here, do not call Groq
-            }}
-            // --- END JOKE LOGIC ---
 
             try {{
                 const response = await fetch(API_URL, {{
@@ -2716,18 +2661,6 @@ def add_meshu_chatbot():
                 addMessage("Error: "+err.message,'meshu-ai');
             }}
         }}
-
-        // Allow clicking the joke buttons
-        windowDiv.addEventListener('click', (e) => {{
-            const chip = e.target.closest('.chip');
-            if (chip) {{
-                const query = chip.getAttribute('data-query');
-                if (query) {{
-                    input.value = query;
-                    sendMessage();
-                }}
-            }}
-        }});
 
         toggle.onclick = () => {{
             windowDiv.style.display = windowDiv.style.display==='flex'?'none':'flex';
