@@ -556,6 +556,26 @@ base_css = """
     .welcome-card:nth-child(1) { animation-delay: 0.1s; }
     .welcome-card:nth-child(2) { animation-delay: 0.3s; }
     .welcome-card:nth-child(3) { animation-delay: 0.5s; }
+
+    /* Background wrapper classes */
+    .welcome-tab-bg, .health-tab-bg, .tourism-tab-bg {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        padding: 20px;
+        border-radius: 16px;
+        box-sizing: border-box;
+    }
+    /* Fallback background colors */
+    .welcome-tab-bg { background-color: #f8fafc; }
+    .health-tab-bg { background-color: #f8fafc; }
+    .tourism-tab-bg { background-color: #f8fafc; }
+    .dark .welcome-tab-bg, .dark .health-tab-bg, .dark .tourism-tab-bg {
+        background-color: #1e293b;
+    }
 </style>
 """
 
@@ -2126,26 +2146,14 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
 # NEW WELCOME TAB (added as the first tab)
 # ============================================================
 def tab_welcome():
-    # Background image based on theme
+    # Background image based on theme (clean URLs without query parameters)
     if st.session_state.theme == "light":
-        bg_url = "https://img.freepik.com/free-photo/top-view-travel-kit-wooden-table_23-2148315686.jpg?semt=ais_user_personalization&w=740&q=80"
+        bg_url = "https://img.freepik.com/free-photo/top-view-travel-kit-wooden-table_23-2148315686.jpg"
     else:
-        bg_url = "https://img.freepik.com/premium-photo/outfit-traveler-black-background-with-copy-space-travel-concept_146508-536.jpg?semt=ais_user_personalization&w=740&q=80"
+        bg_url = "https://img.freepik.com/premium-photo/outfit-traveler-black-background-with-copy-space-travel-concept_146508-536.jpg"
     
     st.markdown(f"""
-    <style>
-        .welcome-tab-bg {{
-            background-image: url("{bg_url}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100%;
-            width: 100%;
-            padding: 20px;
-            border-radius: 16px;
-        }}
-    </style>
-    <div class='welcome-tab-bg'>
+    <div class='welcome-tab-bg' style="background-image: url('{bg_url}');">
     """, unsafe_allow_html=True)
     
     st.markdown("""
@@ -2249,9 +2257,7 @@ with main_tab:
 
 # --- TAB 1: TRIP PLANNER ---
 with planner_tab:
-    # Background image based on theme (these are not provided, so we use the same as welcome or leave default)
-    # Since no specific images were given for trip planner, we keep default background.
-    # (No changes to planner_tab)
+    # No background images for trip planner (kept as default)
     planner_sidebar_col, planner_content_col = st.columns([2.5, 7.5])
     
     with planner_sidebar_col:
@@ -2288,26 +2294,14 @@ with planner_tab:
 
 # --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
 with companion_tab:
-    # Background image based on theme
+    # Background image based on theme (clean URLs)
     if st.session_state.theme == "light":
         bg_url = "https://www.shutterstock.com/image-vector/hand-holding-medical-cross-icon-600nw-2604825705.jpg"
     else:
         bg_url = "https://www.gov.si/assets/ministrstva/MK/Projekti/e-Kultura/background-6297148_1280.jpg"
     
     st.markdown(f"""
-    <style>
-        .health-tab-bg {{
-            background-image: url("{bg_url}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100%;
-            width: 100%;
-            padding: 20px;
-            border-radius: 16px;
-        }}
-    </style>
-    <div class='health-tab-bg'>
+    <div class='health-tab-bg' style="background-image: url('{bg_url}');">
     """, unsafe_allow_html=True)
     
     # Use the dual‑AI function instead of direct Groq client
@@ -2404,26 +2398,14 @@ with companion_tab:
 
 # --- TAB 3: PAKISTAN TOURISM (unchanged) ---
 with tourism_tab:
-    # Background image based on theme
+    # Background image based on theme (clean URLs)
     if st.session_state.theme == "light":
         bg_url = "https://nishathotels.com/wp-content/uploads/2023/11/blog-6-cover.webp"
     else:
         bg_url = "https://pakistantourntravel.com/wp-content/uploads/2019/07/Epic-Accessible-Landscapes-Pakistans-Best.jpg"
     
     st.markdown(f"""
-    <style>
-        .tourism-tab-bg {{
-            background-image: url("{bg_url}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            min-height: 100%;
-            width: 100%;
-            padding: 20px;
-            border-radius: 16px;
-        }}
-    </style>
-    <div class='tourism-tab-bg'>
+    <div class='tourism-tab-bg' style="background-image: url('{bg_url}');">
     """, unsafe_allow_html=True)
     
     header_col, toggle_col = st.columns([8.5, 1.5])
