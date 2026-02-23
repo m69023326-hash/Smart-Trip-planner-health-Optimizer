@@ -777,49 +777,49 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# DUAL AI FUNCTION FOR HEALTH COMPANION
+# ENHANCED analyze_image FUNCTION (with error handling & fallback)
 # ============================================================
-def get_ai_response(messages, model="llama-3.3-70b-versatile"):
+def analyze_image(file, client):
     """
-    Attempts to get response from Groq first.
-    If Groq fails, falls back to DeepSeek.
-    If both fail, returns an error message.
+    Analyze an image using Groq's vision model.
+    If the image is too large or the API fails, it falls back to a text prompt
+    using the dual‑AI function.
     """
-    # Try Groq first
+    # Read and encode image
+    img_data = file.read()
+    file_size_mb = len(img_data) / (1024 * 1024)
+    
+    # Warn if image is too large (Groq vision models typically have a ~20MB limit)
+    if file_size_mb > 20:
+        st.warning(f"Image is {file_size_mb:.1f} MB, which may exceed API limits. Try compressing it or using a PDF.")
+    
+    img_b64 = base64.b64encode(img_data).decode('utf-8')
+    
     try:
-        groq_client = Groq(api_key=GROQ_KEY)
-        response = groq_client.chat.completions.create(
-            messages=messages,
-            model=model
+        # Attempt Groq vision API
+        res = client.chat.completions.create(
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                ]
+            }],
+            model="llama-3.2-90b-vision-preview"
         )
-        return response.choices[0].message.content, "groq"
-    except Exception as e:
-        st.warning(f"Groq API failed: {str(e)[:100]}. Falling back to DeepSeek...")
+        return res.choices[0].message.content
         
-        # Fallback to DeepSeek
-        try:
-            # DeepSeek API call (assuming OpenAI-compatible endpoint)
-            headers = {
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "deepseek-chat",
-                "messages": messages,
-                "temperature": 0.7
-            }
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            result = response.json()
-            return result["choices"][0]["message"]["content"], "deepseek"
-        except Exception as e2:
-            st.error(f"Both AI services failed. Groq: {str(e)[:100]}, DeepSeek: {str(e2)[:100]}")
-            return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
+    except Exception as e:
+        st.error(f"❌ Image analysis failed: {str(e)[:200]}")
+        st.info("🔄 Falling back to text‑based analysis. Please describe the image in the chat, or upload a PDF version.")
+        
+        # Use dual‑AI fallback with a prompt asking for help
+        messages = [
+            {"role": "system", "content": "You are a helpful medical assistant. The user tried to upload an image but it couldn't be processed. Politely ask them to describe the image or upload a PDF."},
+            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
+        ]
+        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+        return response
 
 # ============================================================
 # TOURISM FUNCTIONS
