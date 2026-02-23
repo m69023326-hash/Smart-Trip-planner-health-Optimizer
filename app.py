@@ -2607,7 +2607,7 @@ def add_meshu_chatbot():
         // --- HTML STRUCTURE ---
         const container = doc.createElement('div');
         container.id = containerId;
-        container.style.cssText = "position:fixed; bottom:30px; right:25px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
+        container.style.cssText = "position:fixed; bottom:60px; right:25px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
         
         const windowDiv = doc.createElement('div');
         windowDiv.id = "meshu-window";
