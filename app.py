@@ -2617,7 +2617,7 @@ def add_meshu_chatbot():
         const container = doc.createElement('div');
         container.id = containerId;
         // Right is 20px, combined with max-width calc(100vw - 40px), ensures perfect 20px padding on left side of mobile screens!
-        container.style.cssText = "position:fixed; bottom:90px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
+        container.style.cssText = "position:fixed; bottom:60px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
         
         const windowDiv = doc.createElement('div');
         windowDiv.id = "meshu-window";
