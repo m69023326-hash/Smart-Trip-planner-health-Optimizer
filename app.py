@@ -2116,14 +2116,28 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
-# NEW WELCOME TAB (added as the first tab)
+# NEW WELCOME TAB (added as the first tab) – ENHANCED
 # ============================================================
 def tab_welcome():
+    # We'll inject a script to handle tab switching
     st.markdown("""
-    <div style='text-align:center; padding: 40px 0 20px 0;' class='welcome-title'>
-        <h1 style='font-size: 3.5em; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>
-            👋 Welcome to Your Ultimate Companion
-        </h1>
+    <script>
+    function switchTab(tabName) {
+        // Find all tab buttons (they have role="tab")
+        const tabs = document.querySelectorAll('button[role="tab"]');
+        for (let tab of tabs) {
+            if (tab.innerText.includes(tabName)) {
+                tab.click();
+                break;
+            }
+        }
+    }
+    </script>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style='text-align:center; padding: 20px 0 10px 0;' class='welcome-title'>
+        <h1 class='animated-welcome'>Welcome</h1>
         <p style='font-size: 1.4em; color: var(--text-muted); max-width: 800px; margin: 0 auto;' class='welcome-subtitle'>
             Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
         </p>
@@ -2134,7 +2148,7 @@ def tab_welcome():
     
     with col1:
         st.markdown("""
-        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Trip Planner")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
             <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🗺️</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Universal Trip Planner</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
@@ -2150,7 +2164,7 @@ def tab_welcome():
     
     with col2:
         st.markdown("""
-        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Health Companion")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
             <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🤖</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>AI Health Companion</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
@@ -2166,7 +2180,7 @@ def tab_welcome():
     
     with col3:
         st.markdown("""
-        <div class='premium-card welcome-card' style='height: 100%; display: flex; flex-direction: column;'>
+        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Pakistan Tourism")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
             <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🇵🇰</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Pakistan Tourism Guide</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
@@ -2183,38 +2197,105 @@ def tab_welcome():
     st.markdown("""
     <div style='text-align: center; margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);' class='fade-in-card'>
         <p style='font-size: 1.3em; color: var(--text-primary);'>
-            🌟 Ready to begin? Just click any tab above and let the journey start!
+            🌟 Ready to begin? Just click any card above and let the journey start!
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 # ============================================================
-# MAIN APP LAYOUT with Theme Toggle
+# Add these new CSS classes to your base_css (inside the <style> block)
 # ============================================================
-# Apply theme CSS
-st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
-st.markdown(base_css, unsafe_allow_html=True)
+# Add the following inside base_css, after the existing animations:
 
-# Header with title and theme toggle
-header_col1, header_col2, header_col3 = st.columns([4, 6, 2])
-with header_col1:
-    st.title("🗺️ Ultimate Planner & Hub")
-with header_col3:
-    if st.button(f"{'🌙 Dark' if st.session_state.theme == 'light' else '☀️ Light'}", key="theme_toggle", help="Switch theme"):
-        toggle_theme()
-        st.rerun()
-
-# Tabs – WELCOME TAB ADDED AS THE FIRST TAB
-main_tab, planner_tab, companion_tab, tourism_tab = st.tabs([
-    "👋 Welcome", 
-    "📅 Trip Planner", 
-    "🤖 Health Companion", 
-    "🇵🇰 Pakistan Tourism"
-])
-
-# --- TAB 0: WELCOME ---
-with main_tab:
-    tab_welcome()
+"""
+    /* Animated Welcome Text */
+    .animated-welcome {
+        font-size: 5em;
+        font-weight: 900;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 300% 300%;
+        animation: slideInFromLeft 1s ease-out, gradientShift 6s ease infinite;
+        margin-bottom: 20px;
+        text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        letter-spacing: -0.02em;
+    }
+    @keyframes slideInFromLeft {
+        0% { opacity: 0; transform: translateX(-50px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Clickable cards */
+    .clickable-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+    .clickable-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
+        border-color: var(--text-accent);
+    }
+    .clickable-card:active {
+        transform: translateY(-2px) scale(0.98);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .animated-welcome {
+            font-size: 3em;
+        }
+        .welcome-subtitle {
+            font-size: 1.1em !important;
+            padding: 0 15px;
+        }
+        .premium-card h3 {
+            font-size: 1.4em !important;
+        }
+        .premium-card p {
+            font-size: 0.95em !important;
+        }
+        .stButton>button {
+            height: 44px;  /* better touch target */
+        }
+        .gallery-img-container img {
+            height: 180px;
+        }
+        .info-panel-header {
+            font-size: 20px !important;
+        }
+        div[role="radiogroup"] > label {
+            padding: 12px 14px;
+            font-size: 0.9em;
+        }
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .scroll-btn {
+            bottom: 70px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 18px;
+        }
+    }
+    @media (max-width: 480px) {
+        .animated-welcome {
+            font-size: 2.2em;
+        }
+        .welcome-subtitle {
+            font-size: 1em !important;
+        }
+        .stButton>button {
+            font-size: 0.9rem;
+            padding-left: 12px;
+        }
+    }
+"""
 
 # --- TAB 1: TRIP PLANNER ---
 with planner_tab:
