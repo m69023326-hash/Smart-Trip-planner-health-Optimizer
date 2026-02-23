@@ -22,7 +22,6 @@ from datetime import datetime
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
 
-
 # ============================================================
 # (Rest of your original code follows exactly as before)
 # ============================================================
@@ -611,6 +610,11 @@ if "feeling_asked" not in st.session_state:
     st.session_state.feeling_asked = False
 if "diet_generated" not in st.session_state:
     st.session_state.diet_generated = False
+# NEW: flags to prevent duplicate file processing
+if "last_uploaded_filename" not in st.session_state:
+    st.session_state.last_uploaded_filename = None
+if "file_processed" not in st.session_state:
+    st.session_state.file_processed = False
 
 def clear_chat():
     st.session_state.chat_history = []
@@ -623,6 +627,8 @@ def clear_chat():
     st.session_state.file_uploaded = False
     st.session_state.feeling_asked = False
     st.session_state.diet_generated = False
+    st.session_state.last_uploaded_filename = None
+    st.session_state.file_processed = False
 
 def update_planner_module():
     st.session_state.planner_module = st.session_state.planner_nav
@@ -2345,11 +2351,29 @@ with companion_tab:
 
     # --- Handle file upload (acknowledge only, no analysis) ---
     if uploaded_file:
-        st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded file: {uploaded_file.name}"})
-        st.session_state.file_uploaded = True
-        st.session_state.chat_history.append({"role": "assistant", "content": "Thank you. Now, how are you feeling today? Please describe your current symptoms or how you feel."})
-        st.session_state.feeling_asked = True
-        st.rerun()
+        # Check if this is a new file (by filename) to avoid duplicate processing
+        if uploaded_file.name != st.session_state.last_uploaded_filename:
+            # New file uploaded – reset the conversation for a fresh start
+            st.session_state.disease_info = None
+            st.session_state.disease_asked = False
+            st.session_state.file_uploaded = False
+            st.session_state.feeling_asked = False
+            st.session_state.diet_generated = False
+            st.session_state.last_uploaded_filename = uploaded_file.name
+            st.session_state.file_processed = True
+            st.session_state.file_uploaded = True
+            st.session_state.feeling_asked = True
+            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded file: {uploaded_file.name}"})
+            st.session_state.chat_history.append({"role": "assistant", "content": "Thank you. Now, how are you feeling today? Please describe your current symptoms or how you feel."})
+            st.rerun()
+        elif not st.session_state.file_processed:
+            # Same file but not processed (shouldn't happen, but handle)
+            st.session_state.file_processed = True
+            st.session_state.file_uploaded = True
+            st.session_state.feeling_asked = True
+            st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded file: {uploaded_file.name}"})
+            st.session_state.chat_history.append({"role": "assistant", "content": "Thank you. Now, how are you feeling today? Please describe your current symptoms or how you feel."})
+            st.rerun()
 
     # --- Handle voice input (unchanged) ---
     if audio_val and audio_val != st.session_state.last_audio:
