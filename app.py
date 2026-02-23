@@ -16,12 +16,12 @@ import json
 import os
 import hashlib
 from datetime import datetime
-import time  # for retry delays
 
 # ============================================================
 # PAGE CONFIG & INITIAL SETUP
 # ============================================================
 st.set_page_config(page_title="Ultimate Planner & Tourism Guide", page_icon="🌍", layout="wide")
+
 
 # ============================================================
 # (Rest of your original code follows exactly as before)
@@ -538,153 +538,22 @@ base_css = """
         0% { opacity: 0; transform: translateY(20px); }
         100% { opacity: 1; transform: translateY(0); }
     }
-
-    /* Welcome tab specific animations */
-    @keyframes slideUp {
-        0% { opacity: 0; transform: translateY(30px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    .welcome-title {
-        animation: slideUp 0.8s ease-out;
-    }
-    .welcome-subtitle {
-        animation: slideUp 0.8s ease-out 0.2s both;
-    }
-    .welcome-card {
-        animation: slideUp 0.8s ease-out;
-        animation-fill-mode: both;
-    }
-    .welcome-card:nth-child(1) { animation-delay: 0.1s; }
-    .welcome-card:nth-child(2) { animation-delay: 0.3s; }
-    .welcome-card:nth-child(3) { animation-delay: 0.5s; }
-
-    /* ===== NEW ANIMATIONS FOR WELCOME TAB ===== */
-    .animated-welcome {
-        font-size: 5em;
-        font-weight: 900;
-        text-align: center;
-        margin-bottom: 20px;
-        animation: slideInFromLeft 1s ease-out, floatShadow 3s ease-in-out infinite;
-    }
-    .animated-welcome span {
-        display: inline-block;
-        background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 300% 300%;
-        animation: gradientShift 6s ease infinite;
-        text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
-    }
-    @keyframes slideInFromLeft {
-        0% { opacity: 0; transform: translateX(-50px); }
-        100% { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes floatShadow {
-        0% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
-        50% { text-shadow: 0 20px 40px rgba(79, 70, 229, 0.5); transform: translateY(-5px); }
-        100% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
-    }
-    .welcome-subtitle {
-        font-size: 1.4em;
-        color: var(--text-muted);
-        max-width: 800px;
-        margin: 0 auto 40px;
-        text-align: center;
-        animation: fadeInUp 1s ease-out 0.2s both;
-    }
-    @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(20px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    .floating-icons {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        margin-bottom: 40px;
-        animation: fadeInUp 1s ease-out 0.4s both;
-    }
-    .floating-icons i {
-        font-size: 3em;
-        animation: float 3s ease-in-out infinite;
-        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-    }
-    .floating-icons i:nth-child(1) { animation-delay: 0s; }
-    .floating-icons i:nth-child(2) { animation-delay: 0.5s; }
-    .floating-icons i:nth-child(3) { animation-delay: 1s; }
-    @keyframes float {
-        0% { transform: translateY(0); }
-        50% { transform: translateY(-15px); }
-        100% { transform: translateY(0); }
-    }
-    .clickable-card {
-        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        border: 2px solid transparent;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        background: var(--bg-card);
-        backdrop-filter: blur(10px);
-        box-shadow: var(--shadow);
-    }
-    .clickable-card:hover {
-        transform: translateY(-10px) scale(1.02);
-        box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
-        border-color: var(--text-accent);
-    }
-    .clickable-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    .clickable-card:hover::before {
-        left: 100%;
-    }
-    .clickable-card:active {
-        transform: translateY(-2px) scale(0.98);
-    }
-    .card-icon {
-        font-size: 4em;
-        text-align: center;
-        margin-bottom: 15px;
-        animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    @media (max-width: 768px) {
-        .animated-welcome { font-size: 3em; }
-        .welcome-subtitle { font-size: 1.1em; }
-        .floating-icons i { font-size: 2.5em; }
-    }
-    @media (max-width: 480px) {
-        .animated-welcome { font-size: 2.2em; }
-        .floating-icons i { font-size: 2em; }
-    }
 </style>
 """
 
 # ============================================================
-# SECRETS MANAGEMENT & CONFIG (UPDATED WITH ALL KEYS)
+# SECRETS MANAGEMENT & CONFIG
 # ============================================================
 try:
     GROQ_KEY = st.secrets["groq_api_key"]
-    GROQ_KEY_2 = st.secrets["grok_api_key_2"]          # exact name as given
     WEATHER_KEY = st.secrets["weather_api_key"]
     TAVILY_KEY = st.secrets["tavily_api_key"]
-    DEEPSEEK_KEY = st.secrets["deepseek_api_key"]
-    DEEPSEEK_KEY_2 = st.secrets["deepseek_api_key_2"]
+    DEEPSEEK_KEY = st.secrets["deepseek_api_key"]  # NEW: DeepSeek API key
 except FileNotFoundError:
     st.error("Secrets file not found.")
     st.stop()
-except KeyError as e:
-    st.error(f"Missing key in secrets: {e}")
+except KeyError:
+    st.error("Missing keys in secrets. Please ensure groq_api_key, weather_api_key, tavily_api_key, and deepseek_api_key are set.")
     st.stop()
 
 # Tourism Config
@@ -779,6 +648,14 @@ def extract_pdf(file):
     reader = PyPDF2.PdfReader(file)
     return "".join([p.extract_text() for p in reader.pages])
 
+def analyze_image(file, client):
+    img = base64.b64encode(file.read()).decode('utf-8')
+    res = client.chat.completions.create(
+        messages=[{"role": "user", "content": [{"type": "text", "text": "Extract text."}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img}"}}]}],
+        model="llama-3.2-90b-vision-preview"
+    )
+    return res.choices[0].message.content
+
 async def tts(text, lang):
     voice = "ur-PK-UzmaNeural" if lang == "UR" else "hi-IN-SwaraNeural" if lang == "HI" else "en-US-AriaNeural"
     comm = edge_tts.Communicate(text, voice)
@@ -794,97 +671,91 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# SINGLE‑KEY AI FUNCTION FOR HEALTH COMPANION (using only GROQ_KEY_2)
+# DUAL AI FUNCTION FOR HEALTH COMPANION
 # ============================================================
 def get_ai_response(messages, model="llama-3.3-70b-versatile"):
     """
-    Attempts to get response from Groq using only the second key (grok_api_key_2).
-    If it fails, returns an error message.
+    Attempts to get response from Groq first.
+    If Groq fails, falls back to DeepSeek.
+    If both fail, returns an error message.
     """
+    # Try Groq first
     try:
-        groq_client = Groq(api_key=GROQ_KEY_2)
+        groq_client = Groq(api_key=GROQ_KEY)
         response = groq_client.chat.completions.create(
             messages=messages,
             model=model
         )
-        return response.choices[0].message.content, "groq_key_2"
+        return response.choices[0].message.content, "groq"
     except Exception as e:
-        st.error(f"❌ Groq API failed: {str(e)[:200]}")
-        return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
+        st.warning(f"Groq API failed: {str(e)[:100]}. Falling back to DeepSeek...")
+        
+        # Fallback to DeepSeek
+        try:
+            # DeepSeek API call (assuming OpenAI-compatible endpoint)
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "deepseek-chat",
+                "messages": messages,
+                "temperature": 0.7
+            }
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"], "deepseek"
+        except Exception as e2:
+            st.error(f"Both AI services failed. Groq: {str(e)[:100]}, DeepSeek: {str(e2)[:100]}")
+            return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
 
 # ============================================================
-# ULTIMATE IMAGE ANALYSIS (updated vision models, single key)
+# TOURISM FUNCTIONS
 # ============================================================
-def analyze_image(file):
-    """
-    Analyze an image using Groq's vision models with a single key and retry on rate limit.
-    Tries a list of known working vision models in order, with exponential backoff on 429 errors.
-    If all models fail, returns a user‑friendly message.
-    """
-    # Read and encode image
-    img_data = file.read()
-    file_size_mb = len(img_data) / (1024 * 1024)
-    
-    if file_size_mb > 20:
-        st.warning(f"⚠️ Image is {file_size_mb:.1f} MB. Large images may fail. Consider compressing or using a PDF.")
-    
-    img_b64 = base64.b64encode(img_data).decode('utf-8')
-    
-    # Updated list of Groq vision models (as of early 2025)
-    vision_models = [
-        "llama-3.2-11b-vision",          # newest 11B vision model
-        "llama-3.2-90b-vision",          # newest 90B vision model
-        "llama-3.2-11b-vision-preview",  # older but may still work
-        "llama-3.2-90b-vision-preview",  # older
-        "llava-v1.5-7b-4096-preview",    # LLaVA 7B
-        "llava-v1.5-13b-4096-preview",   # LLaVA 13B
-    ]
-    
-    last_error = ""
-    for model in vision_models:
-        retries = 3
-        for attempt in range(retries):
-            try:
-                client = Groq(api_key=GROQ_KEY_2)
-                res = client.chat.completions.create(
-                    messages=[{
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                        ]
-                    }],
-                    model=model
-                )
-                return res.choices[0].message.content
-            except Exception as e:
-                last_error = str(e)
-                if "429" in last_error:  # rate limit
-                    wait = 2 ** attempt
-                    st.warning(f"Rate limit hit for model '{model}'. Retrying in {wait} seconds...")
-                    time.sleep(wait)
-                else:
-                    st.warning(f"Vision model '{model}' failed: {last_error[:100]}. Trying next model...")
-                    break  # break retry loop, try next model
-        # If all retries failed, continue to next model
-        st.warning(f"All retries failed for model '{model}'. Trying next vision model...")
-    
-    # All models failed – give a helpful message
-    st.error(f"❌ Image analysis failed with all vision models. Last error: {last_error[:200]}")
-    st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
-    
-    # Fallback to text‑only response using the single‑key text function
+def load_json(filename):
+    filepath = os.path.join(DATA_DIR, filename)
     try:
-        fallback_msg, _ = get_ai_response([
-            {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
-            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-        ])
-        return fallback_msg
-    except:
-        return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return [] if filename == "destinations.json" else {}
+
+def save_json(filename, data):
+    filepath = os.path.join(DATA_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def get_admin_hash():
+    return hashlib.sha256("admin123".encode()).hexdigest()
+
+def sanitize_messages(messages):
+    if not messages: return messages
+    cleaned = [messages[0]]
+    for msg in messages[1:]:
+        if cleaned and msg["role"] == cleaned[-1]["role"] and msg["role"] != "system":
+            cleaned[-1] = {"role": msg["role"], "content": cleaned[-1]["content"] + "\n" + msg["content"]}
+        else: cleaned.append(msg)
+    return cleaned
+
+def fetch_weather_tourism(lat, lon):
+    params = {"latitude": lat, "longitude": lon, "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code", "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code", "timezone": "Asia/Karachi", "forecast_days": 7}
+    try:
+        resp = requests.get(OPEN_METEO_URL, params=params, timeout=10)
+        return resp.json()
+    except: return None
+
+def weather_code_to_text(code):
+    codes = {0:"☀️ Clear",1:"🌤️ Mainly Clear",2:"⛅ Partly Cloudy",3:"☁️ Overcast", 45:"🌫️ Foggy",51:"🌦️ Light Drizzle",61:"🌧️ Slight Rain",63:"🌧️ Moderate Rain",65:"🌧️ Heavy Rain",71:"🌨️ Slight Snow",95:"⛈️ Thunderstorm"}
+    return codes.get(code, f"Code {code}")
 
 # ============================================================
-# TOURISM FUNCTIONS (unchanged, with CSS variables)
+# TOURISM PAGES VIEWS (unchanged, with CSS variables)
 # ============================================================
 def page_home():
     st.markdown("""
@@ -2227,265 +2098,6 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
-# NEW WELCOME TAB (ENHANCED WITH PREMIUM ANIMATIONS)
-# ============================================================
-def tab_welcome():
-    # Inject script for tab switching
-    st.markdown("""
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script>
-    function switchTab(tabName) {
-        const tabs = document.querySelectorAll('button[role="tab"]');
-        for (let tab of tabs) {
-            if (tab.innerText.includes(tabName)) {
-                tab.click();
-                break;
-            }
-        }
-    }
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Theme‑based background (light/dark) with particle overlay
-    if st.session_state.theme == "light":
-        bg_url = "https://img.freepik.com/free-photo/top-view-travel-kit-wooden-table_23-2148315686.jpg"
-        particle_color = "#4f46e5"
-        overlay_color = "rgba(255,255,255,0.85)"
-    else:
-        bg_url = "https://img.freepik.com/premium-photo/outfit-traveler-black-background-with-copy-space-travel-concept_146508-536.jpg"
-        particle_color = "#c084fc"
-        overlay_color = "rgba(15,23,42,0.9)"
-
-    st.markdown(f"""
-    <style>
-        .welcome-container {{
-            position: relative;
-            min-height: 100vh;
-            width: 100%;
-            background: linear-gradient({overlay_color}, {overlay_color}), url('{bg_url}');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            border-radius: 24px;
-            padding: 40px 20px;
-            overflow: hidden;
-        }}
-        #particles-js {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }}
-        .content {{
-            position: relative;
-            z-index: 2;
-        }}
-        .animated-welcome {{
-            font-size: 5em;
-            font-weight: 900;
-            text-align: center;
-            margin-bottom: 20px;
-            animation: slideInFromLeft 1s ease-out, floatShadow 3s ease-in-out infinite;
-        }}
-        .animated-welcome span {{
-            display: inline-block;
-            background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 300% 300%;
-            animation: gradientShift 6s ease infinite;
-            text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
-        }}
-        @keyframes slideInFromLeft {{
-            0% {{ opacity: 0; transform: translateX(-50px); }}
-            100% {{ opacity: 1; transform: translateX(0); }}
-        }}
-        @keyframes floatShadow {{
-            0% {{ text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }}
-            50% {{ text-shadow: 0 20px 40px rgba(79, 70, 229, 0.5); transform: translateY(-5px); }}
-            100% {{ text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }}
-        }}
-        .welcome-subtitle {{
-            font-size: 1.4em;
-            color: var(--text-muted);
-            max-width: 800px;
-            margin: 0 auto 40px;
-            text-align: center;
-            animation: fadeInUp 1s ease-out 0.2s both;
-        }}
-        @keyframes fadeInUp {{
-            0% {{ opacity: 0; transform: translateY(20px); }}
-            100% {{ opacity: 1; transform: translateY(0); }}
-        }}
-        .floating-icons {{
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 40px;
-            animation: fadeInUp 1s ease-out 0.4s both;
-        }}
-        .floating-icons i {{
-            font-size: 3em;
-            animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-        }}
-        .floating-icons i:nth-child(1) {{ animation-delay: 0s; }}
-        .floating-icons i:nth-child(2) {{ animation-delay: 0.5s; }}
-        .floating-icons i:nth-child(3) {{ animation-delay: 1s; }}
-        @keyframes float {{
-            0% {{ transform: translateY(0); }}
-            50% {{ transform: translateY(-15px); }}
-            100% {{ transform: translateY(0); }}
-        }}
-        .clickable-card {{
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow);
-        }}
-        .clickable-card:hover {{
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
-            border-color: var(--text-accent);
-        }}
-        .clickable-card::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }}
-        .clickable-card:hover::before {{
-            left: 100%;
-        }}
-        .clickable-card:active {{
-            transform: translateY(-2px) scale(0.98);
-        }}
-        .card-icon {{
-            font-size: 4em;
-            text-align: center;
-            margin-bottom: 15px;
-            animation: pulse 2s infinite;
-        }}
-        @keyframes pulse {{
-            0% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
-            100% {{ transform: scale(1); }}
-        }}
-        @media (max-width: 768px) {{
-            .animated-welcome {{ font-size: 3em; }}
-            .welcome-subtitle {{ font-size: 1.1em; }}
-            .floating-icons i {{ font-size: 2.5em; }}
-        }}
-        @media (max-width: 480px) {{
-            .animated-welcome {{ font-size: 2.2em; }}
-            .floating-icons i {{ font-size: 2em; }}
-        }}
-    </style>
-    <div class="welcome-container">
-        <div id="particles-js"></div>
-        <div class="content">
-            <h1 class="animated-welcome"><span>Welcome</span></h1>
-            <p class="welcome-subtitle">
-                Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
-            </p>
-            <div class="floating-icons">
-                <i>🗺️</i>
-                <i>🤖</i>
-                <i>🇵🇰</i>
-            </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("""
-        <div class='premium-card clickable-card' onclick='switchTab("Trip Planner")' style='height: 100%; display: flex; flex-direction: column;'>
-            <div class='card-icon'>🗺️</div>
-            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Universal Trip Planner</h3>
-            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
-                Plan your journey to any city in the world with confidence. Get personalized itineraries, 
-                learn about local customs and dress codes, avoid common scams, and know exactly how to 
-                reach emergency services. We help you manage your time and blend in like a local – all with a friendly, welcoming touch.
-            </p>
-            <div style='margin-top: 20px; text-align: center;'>
-                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>✈️ Start Exploring</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class='premium-card clickable-card' onclick='switchTab("Health Companion")' style='height: 100%; display: flex; flex-direction: column;'>
-            <div class='card-icon'>🤖</div>
-            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>AI Health Companion</h3>
-            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
-                Doctors aren't always available – but your health doesn't wait. Upload medical reports 
-                and receive instant, easy‑to‑understand analyses. Get personalized diet plans and wellness 
-                advice, all powered by advanced AI that speaks your language. It's like having a doctor in your pocket, 24/7.
-            </p>
-            <div style='margin-top: 20px; text-align: center;'>
-                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>🩺 Check Your Health</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class='premium-card clickable-card' onclick='switchTab("Pakistan Tourism")' style='height: 100%; display: flex; flex-direction: column;'>
-            <div class='card-icon'>🇵🇰</div>
-            <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Pakistan Tourism Guide</h3>
-            <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
-                A treasure trove for foreigners wanting to explore Pakistan. Discover famous places, 
-                get detailed budgets, interactive maps, cultural insights, and practical tips. 
-                From the mountains of the north to the bustling cities, every piece of information you need is right here.
-            </p>
-            <div style='margin-top: 20px; text-align: center;'>
-                <span style='background: var(--bg-secondary); padding: 8px 16px; border-radius: 40px; color: var(--text-accent); font-weight: 600;'>🏔️ Discover Pakistan</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("""
-            <div style='text-align: center; margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);' class='fade-in-card'>
-                <p style='font-size: 1.3em; color: var(--text-primary);'>
-                    🌟 Ready to begin? Just click any card above and let the journey start!
-                </p>
-            </div>
-        </div>
-    </div>
-    <script>
-    particlesJS("particles-js", {
-        "particles": {
-            "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-            "color": { "value": " """ + particle_color + """" },
-            "shape": { "type": "circle" },
-            "opacity": { "value": 0.5, "random": true },
-            "size": { "value": 3, "random": true },
-            "line_linked": { "enable": true, "distance": 150, "color": """" + particle_color + """", "opacity": 0.4, "width": 1 },
-            "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "straight": false, "out_mode": "out" }
-        },
-        "interactivity": {
-            "detect_on": "canvas",
-            "events": { "onhover": { "enable": true, "mode": "repulse" }, "resize": true },
-            "modes": { "repulse": { "distance": 100, "duration": 0.4 } }
-        },
-        "retina_detect": true
-    });
-    </script>
-    """, unsafe_allow_html=True)
-
-# ============================================================
 # MAIN APP LAYOUT with Theme Toggle
 # ============================================================
 # Apply theme CSS
@@ -2501,20 +2113,11 @@ with header_col3:
         toggle_theme()
         st.rerun()
 
-# Tabs – WELCOME TAB ADDED AS THE FIRST TAB
-main_tab, planner_tab, companion_tab, tourism_tab = st.tabs([
-    "👋 Welcome", 
-    "📅 Trip Planner", 
-    "🤖 Health Companion", 
-    "🇵🇰 Pakistan Tourism"
-])
+# Tabs
+main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
 
-# --- TAB 0: WELCOME ---
+# --- TAB 1: EXPANDED TRIP PLANNER ---
 with main_tab:
-    tab_welcome()
-
-# --- TAB 1: TRIP PLANNER ---
-with planner_tab:
     planner_sidebar_col, planner_content_col = st.columns([2.5, 7.5])
     
     with planner_sidebar_col:
@@ -2528,7 +2131,7 @@ with planner_tab:
             "💰 Budget Planner": planner_budget,
             "🧳 Travel Tips": planner_tips,
             "🤝 Local Customs": planner_customs,
-            "🗓️ Generate Trip": planner_generate,
+            "🗓️ Generate Trip": planner_generate,  # This now has the animated button
         }
         
         # Determine index for radio
@@ -2549,9 +2152,9 @@ with planner_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-# --- TAB 2: HEALTH COMPANION (now with single‑key AI) ---
+# --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
 with companion_tab:
-    # Use the single‑key AI function instead of direct Groq client
+    # Use the dual‑AI function instead of direct Groq client
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
@@ -2590,9 +2193,9 @@ with companion_tab:
         audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
     if uploaded_file:
-        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file)
+        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, Groq(api_key=GROQ_KEY))
         st.session_state.medical_data = txt
-        # Use single‑key AI
+        # Use dual AI
         messages = [
             {"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."},
             {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}
@@ -2606,8 +2209,8 @@ with companion_tab:
 
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        # Transcribe with Groq (still using first key for audio, but you could use the second key if needed)
-        groq_client = Groq(api_key=GROQ_KEY_2)
+        # Transcribe with Groq (still using Groq for audio)
+        groq_client = Groq(api_key=GROQ_KEY)
         txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
         
         sys_prompt = "You are a friendly AI companion. Reply in the exact same language as the user. YOU MUST start your response with exactly [LANG:UR] for Urdu, [LANG:HI] for Hindi, or [LANG:EN] for English. Always use emojis."
@@ -2693,14 +2296,20 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 
-# ============================================================
-# MESHU CHATBOT (unchanged, but using the second key for consistency)
-# ============================================================
+import streamlit as st
+import streamlit.components.v1 as components
+
+import streamlit as st
+import streamlit.components.v1 as components
+
+import streamlit as st
+import streamlit.components.v1 as components
+
 def add_meshu_chatbot():
     try:
-        groq_key = st.secrets["grok_api_key_2"]   # use the second key
+        groq_key = st.secrets["good"]  
     except KeyError:
-        st.error("Groq API key 'grok_api_key_2' not found in secrets.")
+        st.error("Groq API key 'good' not found in secrets.")
         return
 
     chatbot_html = f"""
