@@ -777,65 +777,48 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# ULTIMATE analyze_image FUNCTION (handles model deprecation, no NameError)
+# DUAL AI FUNCTION FOR HEALTH COMPANION
 # ============================================================
-def analyze_image(file, client):
+def get_ai_response(messages, model="llama-3.3-70b-versatile"):
     """
-    Analyze an image using Groq's vision models.
-    Tries a list of known working vision models in order.
-    If all vision models fail, falls back to a text‑only response.
+    Attempts to get response from Groq first.
+    If Groq fails, falls back to DeepSeek.
+    If both fail, returns an error message.
     """
-    # Read and encode image
-    img_data = file.read()
-    file_size_mb = len(img_data) / (1024 * 1024)
-    
-    if file_size_mb > 20:
-        st.warning(f"⚠️ Image is {file_size_mb:.1f} MB. Large images may fail. Consider compressing or using a PDF.")
-    
-    img_b64 = base64.b64encode(img_data).decode('utf-8')
-    
-    # List of likely‑active vision models (as of 2025)
-    vision_models = [
-        "llama-3.2-11b-vision-preview",   # may still work
-        "llama-3.2-90b-vision-preview",   # older, but try as fallback
-        "llava-v1.5-7b-4096-preview",     # another vision model
-        "llava-v1.5-13b-4096-preview",
-    ]
-    
-    last_error = ""
-    for model in vision_models:
-        try:
-            res = client.chat.completions.create(
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings."},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                    ]
-                }],
-                model=model
-            )
-            return res.choices[0].message.content
-        except Exception as e:
-            last_error = str(e)
-            continue  # try next model
-    
-    # All vision models failed – give a helpful text‑only response
-    st.error(f"❌ Image analysis failed with all vision models. Last error: {last_error[:200]}")
-    st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
-    
-    # Use a text model to generate a friendly fallback message
+    # Try Groq first
     try:
-        fallback_res = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
-                {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-            ],
-            model="llama-3.3-70b-versatile"
+        groq_client = Groq(api_key=GROQ_KEY)
+        response = groq_client.chat.completions.create(
+            messages=messages,
+            model=model
         )
-        return fallback_res.choices[0].message.content
-    except:
-        return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
+        return response.choices[0].message.content, "groq"
+    except Exception as e:
+        st.warning(f"Groq API failed: {str(e)[:100]}. Falling back to DeepSeek...")
+        
+        # Fallback to DeepSeek
+        try:
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "deepseek-chat",
+                "messages": messages,
+                "temperature": 0.7
+            }
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"], "deepseek"
+        except Exception as e2:
+            st.error(f"Both AI services failed. Groq: {str(e)[:100]}, DeepSeek: {str(e2)[:100]}")
+            return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
 # ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
