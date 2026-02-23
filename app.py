@@ -2154,7 +2154,7 @@ with main_tab:
 
 v
 
-    if audio_val and audio_val != st.session_state.last_audio:
+     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
         # Transcribe with Groq (still using Groq for audio)
         groq_client = Groq(api_key=GROQ_KEY)
