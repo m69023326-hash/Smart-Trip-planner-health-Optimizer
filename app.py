@@ -600,11 +600,29 @@ if "current_tourism_module" not in st.session_state:
 if "planner_module" not in st.session_state:
     st.session_state.planner_module = "📋 Dashboard"
 
+# NEW STATE FOR HEALTH COMPANION QUESTIONNAIRE
+if "disease_info" not in st.session_state:
+    st.session_state.disease_info = None
+if "disease_asked" not in st.session_state:
+    st.session_state.disease_asked = False
+if "file_uploaded" not in st.session_state:
+    st.session_state.file_uploaded = False
+if "feeling_asked" not in st.session_state:
+    st.session_state.feeling_asked = False
+if "diet_generated" not in st.session_state:
+    st.session_state.diet_generated = False
+
 def clear_chat():
     st.session_state.chat_history = []
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
     st.session_state.autoplay_audio = None
+    # Reset health questionnaire state
+    st.session_state.disease_info = None
+    st.session_state.disease_asked = False
+    st.session_state.file_uploaded = False
+    st.session_state.feeling_asked = False
+    st.session_state.diet_generated = False
 
 def update_planner_module():
     st.session_state.planner_module = st.session_state.planner_nav
@@ -649,6 +667,8 @@ def extract_pdf(file):
     return "".join([p.extract_text() for p in reader.pages])
 
 def analyze_image(file, client):
+    # This function is kept but will not be used in the new flow.
+    # We still keep it for backward compatibility, but the new flow bypasses it.
     img = base64.b64encode(file.read()).decode('utf-8')
     res = client.chat.completions.create(
         messages=[{"role": "user", "content": [{"type": "text", "text": "Extract text."}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img}"}}]}],
@@ -671,7 +691,7 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# DUAL AI FUNCTION FOR HEALTH COMPANION
+# DUAL AI FUNCTION FOR HEALTH COMPANION (unchanged)
 # ============================================================
 def get_ai_response(messages, model="llama-3.3-70b-versatile"):
     """
@@ -2098,6 +2118,132 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
+# NEW WELCOME TAB (premium animated intro)
+# ============================================================
+def tab_welcome():
+    st.markdown("""
+    <style>
+        @keyframes slideInFromLeft {
+            0% { opacity: 0; transform: translateX(-50px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes floatShadow {
+            0% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
+            50% { text-shadow: 0 20px 40px rgba(79, 70, 229, 0.5); transform: translateY(-5px); }
+            100% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .welcome-title {
+            font-size: 4.5em;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideInFromLeft 1s ease-out, floatShadow 3s ease-in-out infinite;
+        }
+        .welcome-title span {
+            display: inline-block;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+        }
+        .welcome-subtitle {
+            font-size: 1.6em;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 40px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+        .welcome-card-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        .welcome-card {
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 1s ease-out;
+            animation-fill-mode: both;
+        }
+        .welcome-card:nth-child(1) { animation-delay: 0.1s; }
+        .welcome-card:nth-child(2) { animation-delay: 0.3s; }
+        .welcome-card:nth-child(3) { animation-delay: 0.5s; }
+        .welcome-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+        }
+        .welcome-card-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .welcome-card h3 {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-accent);
+        }
+        .welcome-card p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        @media (max-width: 768px) {
+            .welcome-title { font-size: 3em; }
+            .welcome-subtitle { font-size: 1.2em; }
+            .welcome-card { min-width: 100%; }
+        }
+    </style>
+
+    <div style='text-align:center; padding: 40px 20px;'>
+        <h1 class='welcome-title'><span>Welcome</span></h1>
+        <p class='welcome-subtitle'>
+            Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
+        </p>
+        <div class='welcome-card-container'>
+            <div class='welcome-card'>
+                <div class='welcome-card-icon'>🗺️</div>
+                <h3>Trip Planner</h3>
+                <p>Plan your journey to any city with personalized itineraries, local insights, and smart time management.</p>
+            </div>
+            <div class='welcome-card'>
+                <div class='welcome-card-icon'>🤖</div>
+                <h3>Health Companion</h3>
+                <p>Upload medical reports, get instant analyses, and receive personalized diet plans – your 24/7 health assistant.</p>
+            </div>
+            <div class='welcome-card'>
+                <div class='welcome-card-icon'>🇵🇰</div>
+                <h3>Pakistan Tourism</h3>
+                <p>Discover the wonders of Pakistan: detailed guides, budgets, maps, and cultural tips for an unforgettable journey.</p>
+            </div>
+        </div>
+        <div class='fade-in-card' style='margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);'>
+            <p style='font-size: 1.3em; color: var(--text-primary);'>✨ Ready to begin? Just click any tab above and let the journey start!</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================
 # MAIN APP LAYOUT with Theme Toggle
 # ============================================================
 # Apply theme CSS
@@ -2113,8 +2259,17 @@ with header_col3:
         toggle_theme()
         st.rerun()
 
-# Tabs
-main_tab, companion_tab, tourism_tab = st.tabs(["📅 Trip Planner", "🤖 Health Companion", "🇵🇰 Pakistan Tourism"])
+# Tabs – WELCOME TAB ADDED AS THE FIRST TAB
+welcome_tab, main_tab, companion_tab, tourism_tab = st.tabs([
+    "👋 Welcome", 
+    "📅 Trip Planner", 
+    "🤖 Health Companion", 
+    "🇵🇰 Pakistan Tourism"
+])
+
+# --- TAB 0: WELCOME ---
+with welcome_tab:
+    tab_welcome()
 
 # --- TAB 1: EXPANDED TRIP PLANNER ---
 with main_tab:
@@ -2152,11 +2307,53 @@ with main_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-v
+# --- TAB 2: HEALTH COMPANION (enhanced with questionnaire) ---
+with companion_tab:
+    # Initialize state variables for the questionnaire if not already set
+    if "disease_info" not in st.session_state:
+        st.session_state.disease_info = None
+        st.session_state.disease_asked = False
+        st.session_state.file_uploaded = False
+        st.session_state.feeling_asked = False
+        st.session_state.diet_generated = False
 
-     if audio_val and audio_val != st.session_state.last_audio:
+    # Display chat history
+    for i, msg in enumerate(st.session_state.chat_history):
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+            with st.expander("📋 Copy Text"): 
+                st.code(msg["content"], language="markdown")
+            if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
+                st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
+                
+    if st.session_state.autoplay_audio:
+        st.audio(st.session_state.autoplay_audio, autoplay=True)
+        st.session_state.autoplay_audio = None
+
+    st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
+    if st.session_state.chat_history:
+        st.markdown('<a href="#chat-bottom" class="scroll-btn">⬇️</a>', unsafe_allow_html=True)
+
+    col_plus, col_clear, col_voice = st.columns([0.08, 0.08, 0.84]) 
+    with col_plus:
+        with st.popover("➕", use_container_width=True):
+            uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
+    with col_clear: 
+        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+    with col_voice: 
+        audio_val = st.audio_input("Voice", label_visibility="collapsed")
+
+    # --- Handle file upload (acknowledge only, no analysis) ---
+    if uploaded_file:
+        st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded file: {uploaded_file.name}"})
+        st.session_state.file_uploaded = True
+        st.session_state.chat_history.append({"role": "assistant", "content": "Thank you. Now, how are you feeling today? Please describe your current symptoms or how you feel."})
+        st.session_state.feeling_asked = True
+        st.rerun()
+
+    # --- Handle voice input (unchanged) ---
+    if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        # Transcribe with Groq (still using Groq for audio)
         groq_client = Groq(api_key=GROQ_KEY)
         txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
         
@@ -2178,17 +2375,79 @@ v
         st.session_state.autoplay_audio = asyncio.run(tts(clean, lang))
         st.rerun()
 
+    # --- Handle text input (the core questionnaire) ---
     if prompt := st.chat_input("Message..."):
-        ctx = f"Medical Context: {st.session_state.medical_data}" if st.session_state.medical_data else ""
-        messages = [
-            {"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"},
-            {"role": "user", "content": prompt}
-        ]
-        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
-        st.session_state.chat_history.extend([
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": response}
-        ])
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+
+        # Determine next step based on state
+        if not st.session_state.disease_asked:
+            # This is the answer to the disease question
+            st.session_state.disease_info = prompt
+            st.session_state.disease_asked = True
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload any medical report file (PDF, image, etc.). You can use the ➕ button above."})
+
+        elif st.session_state.disease_asked and not st.session_state.file_uploaded:
+            # User typed instead of uploading – remind to upload
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload a file using the ➕ button."})
+
+        elif st.session_state.file_uploaded and not st.session_state.feeling_asked:
+            # Should not happen (handled after upload), but just in case
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please describe how you are feeling."})
+
+        elif st.session_state.feeling_asked and not st.session_state.diet_generated:
+            # User provided feeling – generate diet plan
+            feeling = prompt
+            diet_prompt = f"""
+You are a professional nutritionist. Based on the following information, create a detailed, personalized diet plan.
+
+User's disease/condition: {st.session_state.disease_info if st.session_state.disease_info else "None reported"}
+User's current feeling/symptoms: {feeling}
+
+Please provide a comprehensive diet plan including:
+- General dietary recommendations
+- Foods to include and avoid
+- Sample meal ideas (breakfast, lunch, dinner, snacks)
+- Hydration advice
+- Any supplements if appropriate
+- Lifestyle tips
+
+Format the plan in a clear, easy-to-read manner with headings and bullet points. Use emojis where helpful.
+"""
+            messages = [{"role": "system", "content": "You are a helpful nutritionist."},
+                        {"role": "user", "content": diet_prompt}]
+            response, source = get_ai_response(messages)
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+            st.session_state.diet_generated = True
+            st.session_state.chat_history.append({"role": "assistant", "content": "Would you like to share your daily routine so I can refine the diet plan further? (Reply with your routine or say 'no thanks')"})
+
+        elif st.session_state.diet_generated:
+            # User may respond with routine or decline
+            if "no" in prompt.lower() or "thanks" in prompt.lower():
+                st.session_state.chat_history.append({"role": "assistant", "content": "You're welcome! If you have any more questions, feel free to ask."})
+            else:
+                refine_prompt = f"""
+Based on the user's routine: {prompt}, refine the previously given diet plan to better fit their schedule. Provide updated meal timing and suggestions.
+"""
+                messages = [{"role": "system", "content": "You are a helpful nutritionist."},
+                            {"role": "user", "content": refine_prompt}]
+                response, source = get_ai_response(messages)
+                st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+        else:
+            # Fallback for general chat (should rarely occur)
+            ctx = f"Medical Context: {st.session_state.medical_data}" if st.session_state.medical_data else ""
+            messages = [
+                {"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"},
+                {"role": "user", "content": prompt}
+            ]
+            response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+        st.rerun()
+
+    # --- Initial greeting if no chat history ---
+    if not st.session_state.chat_history:
+        st.session_state.chat_history.append({"role": "assistant", "content": "Hello! I'm your AI Health Companion. Do you have any disease or medical condition? (Please answer Yes or No, and if Yes, specify.)"})
         st.rerun()
 
 # --- TAB 3: PAKISTAN TOURISM (unchanged) ---
