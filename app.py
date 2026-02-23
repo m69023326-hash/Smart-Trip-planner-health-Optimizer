@@ -2502,30 +2502,39 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+# ============================================================
+# MESHU CHATBOT (Premium Edition with Fixed Logic)
+# ============================================================
 def add_meshu_chatbot():
+    # 1. API Key Setup
     try:
-        groq_key = st.secrets["good"]
+        groq_key = st.secrets["good"]  
     except KeyError:
         st.error("Groq API key 'good' not found in secrets.")
         return
 
-    # Base64 Image handling for the waving bot
+    # 2. Local Image Setup (Base64)
     try:
         img_path = Path("assets/meshu.png")
         img_base64 = base64.b64encode(img_path.read_bytes()).decode()
         bot_avatar = f"data:image/png;base64,{img_base64}"
-    except:
+    except Exception:
+        # Fallback to a placeholder icon if the folder/image is missing
         bot_avatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
 
+    # 3. Chatbot HTML/CSS/JS Injection
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
+
     <script>
     (function() {{
         const doc = window.parent.document;
         const containerId = 'meshu-chatbot-container';
+        
+        // Prevent duplicate instances if the app reloads
         if (doc.getElementById(containerId)) return;
 
-        // --- PREMIUM STYLES ---
+        // --- PREMIUM CSS STYLES ---
         const style = doc.createElement('style');
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -2535,6 +2544,7 @@ def add_meshu_chatbot():
                 25% {{ transform: rotate(10deg); }}
                 75% {{ transform: rotate(-10deg); }}
             }}
+            @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
             
             #meshu-toggle-btn {{
                 width: 70px; height: 70px; border-radius: 50%;
@@ -2559,16 +2569,16 @@ def add_meshu_chatbot():
             .meshu-header h3 {{ margin: 0; font-size: 18px; color: white; }}
             .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; }}
 
-            .meshu-messages {{ flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }}
+            .meshu-messages {{ flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }}
             
             .meshu-msg {{ 
                 max-width: 85%; padding: 12px 16px; border-radius: 18px; 
-                font-size: 14px; line-height: 1.5; color: #f1f5f9;
+                font-size: 14px; line-height: 1.5; color: #f1f5f9; word-wrap: break-word;
             }}
             .meshu-user {{ align-self: flex-end; background: #2563eb; border-bottom-right-radius: 4px; }}
             .meshu-ai {{ align-self: flex-start; background: #1e293b; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }}
             
-            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 20px; background: transparent; }}
+            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 20px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
             .chip {{ 
                 background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; 
                 color: #60a5fa; padding: 6px 12px; border-radius: 20px; 
@@ -2576,20 +2586,27 @@ def add_meshu_chatbot():
             }}
             .chip:hover {{ background: #2563eb; color: white; }}
 
-            .meshu-input-area {{ padding: 20px; display: flex; gap: 10px; background: #0f172a; }}
+            .meshu-input-area {{ padding: 15px 20px; display: flex; gap: 10px; background: #0f172a; }}
             .meshu-input-area input {{ 
                 flex: 1; padding: 12px 18px; border-radius: 12px; border: 1px solid #334155;
-                background: #1e293b; color: white; outline: none;
+                background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif;
             }}
             .meshu-input-area button {{ 
                 background: #2563eb; border: none; padding: 0 18px; 
                 border-radius: 12px; color: white; font-weight: 600; cursor: pointer;
+                font-family: 'Inter', sans-serif; transition: 0.2s;
             }}
+            .meshu-input-area button:hover {{ background: #1d4ed8; }}
+            
+            .typing-dot {{ display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; margin-right: 3px; animation: typing 1.4s infinite both; }}
+            .typing-dot:nth-child(2) {{ animation-delay: .2s; }}
+            .typing-dot:nth-child(3) {{ animation-delay: .4s; margin-right: 0; }}
         `;
         doc.head.appendChild(style);
 
-        // --- UI STRUCTURE ---
+        // --- HTML STRUCTURE ---
         const container = doc.createElement('div');
+        container.id = containerId;
         container.style.cssText = "position:fixed; bottom:30px; right:25px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
         
         const windowDiv = doc.createElement('div');
@@ -2601,9 +2618,9 @@ def add_meshu_chatbot():
             </div>
             <div id="meshu-messages" class="meshu-messages"></div>
             <div class="quick-chips">
-                <div class="chip" onclick="window.sendChip('Tell me about this app ℹ️')">About App</div>
-                <div class="chip" onclick="window.sendChip('How to use this? 🛠️')">How to use</div>
-                <div class="chip" onclick="window.sendChip('Surprise me! 🎲')">Surprise me</div>
+                <div class="chip" data-query="Tell me about this app ℹ️">About App</div>
+                <div class="chip" data-query="How to use this? 🛠️">How to use</div>
+                <div class="chip" data-query="Surprise me! 🎲">Surprise me</div>
             </div>
             <div class="meshu-input-area">
                 <input type="text" id="meshu-input" placeholder="Type a message...">
@@ -2613,67 +2630,111 @@ def add_meshu_chatbot():
 
         const toggleBtn = doc.createElement('button');
         toggleBtn.id = "meshu-toggle-btn";
-        toggleBtn.innerHTML = `<img src="{bot_avatar}">`;
+        toggleBtn.innerHTML = `<img src="{bot_avatar}" alt="MESHU">`;
 
         container.append(windowDiv, toggleBtn);
         doc.body.appendChild(container);
 
-        // --- BOT LOGIC ---
+        // --- JAVASCRIPT LOGIC ---
         const messagesContainer = windowDiv.querySelector('#meshu-messages');
         const inputField = windowDiv.querySelector('#meshu-input');
         const sendBtn = windowDiv.querySelector('#meshu-send');
+        const chips = windowDiv.querySelectorAll('.chip');
+        const API_KEY = "{groq_key}";
 
-        function addMessage(text, type) {{
+        function addMessage(text, type, isTyping = false) {{
             const div = doc.createElement('div');
-            div.className = `meshu-msg meshu-${{type}}`;
-            div.innerText = text;
+            div.className = 'meshu-msg meshu-' + type;
+            
+            if (isTyping) {{
+                div.id = 'meshu-typing';
+                div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            }} else {{
+                // Quick Markdown Formatting (Bolding and Line Breaks)
+                let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+                formattedText = formattedText.replace(/\\n/g, '<br>');
+                div.innerHTML = formattedText;
+            }}
             messagesContainer.appendChild(div);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }}
 
-        // Expose function for chips
-        window.sendChip = (text) => {{
-            inputField.value = text;
-            sendMessage();
-        }};
-
-        async function sendMessage() {{
-            const text = inputField.value.trim();
+        async function sendMessage(overrideText = null) {{
+            const text = overrideText || inputField.value.trim();
             if(!text) return;
+
             addMessage(text, 'user');
             inputField.value = '';
+
+            // Show Thinking Dots
+            addMessage('', 'ai', true);
 
             try {{
                 const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {{
                     method: 'POST',
-                    headers: {{ 'Content-Type': 'application/json', 'Authorization': 'Bearer {groq_key}' }},
+                    headers: {{ 
+                        'Content-Type': 'application/json', 
+                        'Authorization': 'Bearer ' + API_KEY 
+                    }},
                     body: JSON.stringify({{
                         model: "llama-3.3-70b-versatile",
                         messages: [
-                            {{role: "system", content: "You are MESHU, the friendly robot assistant for this high-end web app. Your tone is helpful, cheerful, and professional. Use emojis naturally. Help users understand that this app is for advanced data intelligence and AI interaction. Be concise but warm."}},
+                            {{
+                                role: "system", 
+                                content: "You are MESHU, a smart, friendly AI assistant for this high-end web app. Use emojis naturally. Use short paragraphs and bold key terms to make your answers scannable. Be helpful, concise, and professional."
+                            }},
                             {{role: "user", content: text}}
                         ]
                     }})
                 }});
                 const data = await response.json();
-                addMessage(data.choices[0].message.content, 'ai');
+                
+                // Remove the thinking dots
+                const typingInd = doc.getElementById('meshu-typing');
+                if(typingInd) typingInd.remove();
+
+                if(data.choices && data.choices[0]) {{
+                    addMessage(data.choices[0].message.content, 'ai');
+                }} else {{
+                    addMessage("Oops! Something went wrong processing your request. 🤖", 'ai');
+                }}
             }} catch (e) {{
-                addMessage("Oops! I hit a snag. Please try again! 🤖", 'ai');
+                const typingInd = doc.getElementById('meshu-typing');
+                if(typingInd) typingInd.remove();
+                addMessage("I'm having trouble connecting to the server. Check your network or API key! 📡", 'ai');
             }}
         }}
 
-        toggleBtn.onclick = () => {{
-            const show = windowDiv.style.display === 'flex';
-            windowDiv.style.display = show ? 'none' : 'flex';
-        }};
+        // --- SECURE EVENT LISTENERS ---
+        // Using event listeners here fixes the Streamlit iframe scoping issue
+        sendBtn.addEventListener('click', () => sendMessage());
+        
+        inputField.addEventListener('keypress', (e) => {{
+            if(e.key === 'Enter') sendMessage();
+        }});
 
-        sendBtn.onclick = sendMessage;
-        inputField.onkeypress = (e) => e.key === 'Enter' && sendMessage();
+        chips.forEach(chip => {{
+            chip.addEventListener('click', () => {{
+                // Get the text from the data-query attribute and send it
+                const query = chip.getAttribute('data-query');
+                sendMessage(query);
+            }});
+        }});
 
-        addMessage("Hello! I'm MESHU, your AI guide. How can I brighten your experience today? 👋", 'ai');
+        toggleBtn.addEventListener('click', () => {{
+            const isVisible = windowDiv.style.display === 'flex';
+            windowDiv.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) inputField.focus(); // Auto-focus when opened
+        }});
+
+        // Greet the user automatically
+        addMessage("Hello! I'm MESHU, your AI guide. Click a button below or type a question! ✨", 'ai');
+
     }})();
     </script>
     """
+    
     components.html(chatbot_html, height=0)
 
+# Start the Chatbot
 add_meshu_chatbot()
