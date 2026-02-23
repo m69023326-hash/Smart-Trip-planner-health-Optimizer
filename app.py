@@ -2519,8 +2519,13 @@ import json
 import requests
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (Pro Backend Architecture - Adblocker Immune)
+# MESHU CHATBOT (Fast Frontend + Adblocker Detection + Easter Eggs)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2529,87 +2534,6 @@ def add_meshu_chatbot():
     except KeyError:
         st.error("Groq API key 'good' not found in secrets.")
         return
-
-    # --- 🌉 THE HIDDEN BRIDGE (Python to JS) ---
-    # This hides the Streamlit input we use to communicate with the frontend
-    st.markdown("""
-        <style>
-            div[data-testid="stTextInput"]:has(input[aria-label="meshu_hidden_input"]) {
-                display: none !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # The JS sends messages to this hidden input
-    user_msg_raw = st.text_input("meshu_hidden_input", key="meshu_backend_input", label_visibility="hidden")
-    
-    if user_msg_raw and "|||" in user_msg_raw:
-        user_msg = user_msg_raw.split("|||")[0]
-        response_text = ""
-        
-        # Memory variables for Easter Eggs
-        if 'meshu_first_name' not in st.session_state:
-            st.session_state.meshu_first_name = None
-        if 'meshu_waiting_kon' not in st.session_state:
-            st.session_state.meshu_waiting_kon = False
-            
-        lower_text = user_msg.lower()
-        joke_names = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"]
-        
-        # --- 🥚 EASTER EGG & JOKE LOGIC ---
-        if "who created you" in lower_text:
-            response_text = "My owner **Mubashir Arshad**."
-        elif user_msg == "12345":
-            response_text = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>'
-        elif lower_text == "kon" and st.session_state.meshu_waiting_kon:
-            first_name = st.session_state.meshu_first_name
-            response_text = f"whi pehlay wala **{first_name}** 😂"
-            st.session_state.meshu_waiting_kon = False
-        elif lower_text in joke_names:
-            if st.session_state.meshu_first_name is None:
-                st.session_state.meshu_first_name = user_msg
-                response_text = "from your brother bundle of curse upon you"
-            elif lower_text != st.session_state.meshu_first_name.lower():
-                response_text = "lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha"
-                st.session_state.meshu_waiting_kon = True
-            else:
-                response_text = "from your brother bundle of curse upon you"
-        else:
-            # --- 🤖 SECURE BACKEND GROQ API CALL ---
-            try:
-                headers = {
-                    "Authorization": f"Bearer {groq_key}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "model": "llama-3.3-70b-versatile",
-                    "messages": [
-                        {"role": "system", "content": "You are MESHU, a smart, friendly AI assistant. Never use emojis in your responses. Use short paragraphs. Be helpful, concise, and professional."},
-                        {"role": "user", "content": user_msg}
-                    ]
-                }
-                resp = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
-                
-                if not resp.ok:
-                    err_data = resp.json()
-                    err_msg = err_data.get('error', {}).get('message', resp.status_code)
-                    response_text = f"System Error: {err_msg}"
-                else:
-                    data = resp.json()
-                    response_text = data["choices"][0]["message"]["content"].replace('\n', '<br>')
-            except Exception as e:
-                response_text = f"Server Connection Error: {str(e)}"
-        
-        # Send the response BACK to the JavaScript Widget
-        safe_msg = json.dumps(response_text)
-        components.html(f"""
-            <script>
-                const doc = window.parent.document;
-                if (doc.meshuReceiveMessage) {{
-                    doc.meshuReceiveMessage({safe_msg});
-                }}
-            </script>
-        """, height=0)
 
     # 2. Local Image Setup (Base64)
     try:
@@ -2629,15 +2553,6 @@ def add_meshu_chatbot():
         const containerId = 'meshu-chatbot-container';
         
         if (doc.getElementById(containerId)) return;
-
-        // --- GLOBAL RECEIVER (Catches messages from Python) ---
-        if (!doc.meshuReceiveMessage) {{
-            doc.meshuReceiveMessage = function(text) {{
-                const typingInd = doc.getElementById('meshu-typing');
-                if (typingInd) typingInd.remove();
-                addMessage(text, 'ai');
-            }};
-        }}
 
         // --- CSS STYLES ---
         const style = doc.createElement('style');
@@ -2716,6 +2631,10 @@ def add_meshu_chatbot():
         const inputField = windowDiv.querySelector('#meshu-input');
         const sendBtn = windowDiv.querySelector('#meshu-send');
         const micBtn = windowDiv.querySelector('#meshu-mic');
+        const API_KEY = "{groq_key}";
+
+        let firstJokeName = null;
+        let waitingForKon = false;
 
         function speakText(text) {{
             if (!('speechSynthesis' in window)) return;
@@ -2727,6 +2646,7 @@ def add_meshu_chatbot():
             window.speechSynthesis.speak(utterance);
         }}
 
+        // Microphone Logic
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
         if (SpeechRecognition) {{
@@ -2746,7 +2666,6 @@ def add_meshu_chatbot():
                 micBtn.classList.remove('recording');
                 inputField.placeholder = "Message...";
             }};
-            
             micBtn.addEventListener('click', () => {{
                 micBtn.classList.contains('recording') ? recognition.stop() : recognition.start();
             }});
@@ -2770,31 +2689,97 @@ def add_meshu_chatbot():
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }}
 
-        // Send message to the Python Backend Bridge securely
         async function sendMessage(overrideText = null) {{
             const text = overrideText || inputField.value.trim();
             if(!text) return;
 
             addMessage(text, 'user');
             inputField.value = '';
-            addMessage('', 'ai', true); // Show typing dots locally
 
-            const backendInput = doc.querySelector('input[aria-label="meshu_hidden_input"]');
-            if (backendInput) {{
-                // Append a timestamp so Streamlit recognizes it as a "new" input even if you repeat yourself
-                const payload = text + "|||" + Date.now();
-                const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                nativeValueSetter.call(backendInput, payload);
-                backendInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            // --- EASTER EGGS / MEMORY LOGIC ---
+            const lowerText = text.toLowerCase();
+            const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
+            
+            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText) || (lowerText === "kon" && waitingForKon)) {{
+                addMessage('', 'ai', true); 
                 
-                // Emulate 'Enter' to submit the text to Python
-                backendInput.dispatchEvent(new KeyboardEvent('keydown', {{
-                    bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13
-                }}));
-            }} else {{
+                setTimeout(() => {{
+                    const typingInd = doc.getElementById('meshu-typing');
+                    if(typingInd) typingInd.remove();
+                    
+                    if (lowerText.includes("who created you")) {{
+                        addMessage("My owner **Mubashir Arshad**.", 'ai');
+                    }} 
+                    else if (text === "12345") {{
+                        const friendsHTML = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>';
+                        addMessage(friendsHTML, 'ai');
+                    }} 
+                    else if (lowerText === "kon" && waitingForKon) {{
+                        addMessage("whi pehlay wala **" + firstJokeName + "**", 'ai');
+                        waitingForKon = false; 
+                    }}
+                    else if (jokeNames.includes(lowerText)) {{
+                        if (firstJokeName === null) {{
+                            firstJokeName = text; 
+                            addMessage("from your brother bundle of curse upon you", 'ai');
+                        }} else if (lowerText !== firstJokeName.toLowerCase()) {{
+                            addMessage("lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha", 'ai');
+                            waitingForKon = true; 
+                        }} else {{
+                            addMessage("from your brother bundle of curse upon you", 'ai');
+                        }}
+                    }}
+                }}, 600);
+                return; 
+            }}
+            // --- END OF EASTER EGGS ---
+
+            addMessage('', 'ai', true);
+
+            try {{
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {{
+                    method: 'POST',
+                    headers: {{ 
+                        'Content-Type': 'application/json', 
+                        'Authorization': 'Bearer ' + API_KEY 
+                    }},
+                    body: JSON.stringify({{
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {{
+                                role: "system", 
+                                content: "You are MESHU, a smart, friendly AI assistant. Never use emojis in your responses. Use short paragraphs. Be helpful, concise, and professional."
+                            }},
+                            {{role: "user", content: text}}
+                        ]
+                    }})
+                }});
+
                 const typingInd = doc.getElementById('meshu-typing');
                 if(typingInd) typingInd.remove();
-                addMessage("Backend bridge disconnected.", 'ai');
+
+                if (!response.ok) {{
+                    throw new Error("HTTP " + response.status);
+                }}
+
+                const data = await response.json();
+                
+                if(data.choices && data.choices[0]) {{
+                    let finalResponse = data.choices[0].message.content.replace(/\\n/g, '<br>');
+                    addMessage(finalResponse, 'ai');
+                }} else {{
+                    addMessage("Oops! Something went wrong processing your request.", 'ai');
+                }}
+            }} catch (e) {{
+                const typingInd = doc.getElementById('meshu-typing');
+                if(typingInd) typingInd.remove();
+                
+                // 🛡️ THE NEW ADBLOCKER/BRAVE CATCHER
+                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {{
+                    addMessage("🚨 **Connection Blocked!**<br>Are you using Brave Browser or an Adblocker? Please turn off 'Shields' or disable your adblocker for this site so I can connect to my brain!", 'ai');
+                }} else {{
+                    addMessage("Server Error: Check your internet connection.", 'ai');
+                }}
             }}
         }}
 
