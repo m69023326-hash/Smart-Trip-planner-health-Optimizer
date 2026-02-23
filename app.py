@@ -557,109 +557,133 @@ base_css = """
     .welcome-card:nth-child(2) { animation-delay: 0.3s; }
     .welcome-card:nth-child(3) { animation-delay: 0.5s; }
 
-    /* ===== NEW ANIMATIONS & RESPONSIVE STYLES FOR WELCOME TAB ===== */
+    /* ===== NEW ANIMATIONS FOR WELCOME TAB ===== */
     .animated-welcome {
         font-size: 5em;
         font-weight: 900;
+        text-align: center;
+        margin-bottom: 20px;
+        animation: slideInFromLeft 1s ease-out, floatShadow 3s ease-in-out infinite;
+    }
+    .animated-welcome span {
+        display: inline-block;
         background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-size: 300% 300%;
-        animation: slideInFromLeft 1s ease-out, gradientShift 6s ease infinite;
-        margin-bottom: 20px;
+        animation: gradientShift 6s ease infinite;
         text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
-        letter-spacing: -0.02em;
     }
     @keyframes slideInFromLeft {
         0% { opacity: 0; transform: translateX(-50px); }
         100% { opacity: 1; transform: translateX(0); }
     }
-    
+    @keyframes floatShadow {
+        0% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
+        50% { text-shadow: 0 20px 40px rgba(79, 70, 229, 0.5); transform: translateY(-5px); }
+        100% { text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }
+    }
+    .welcome-subtitle {
+        font-size: 1.4em;
+        color: var(--text-muted);
+        max-width: 800px;
+        margin: 0 auto 40px;
+        text-align: center;
+        animation: fadeInUp 1s ease-out 0.2s both;
+    }
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .floating-icons {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 40px;
+        animation: fadeInUp 1s ease-out 0.4s both;
+    }
+    .floating-icons i {
+        font-size: 3em;
+        animation: float 3s ease-in-out infinite;
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+    }
+    .floating-icons i:nth-child(1) { animation-delay: 0s; }
+    .floating-icons i:nth-child(2) { animation-delay: 0.5s; }
+    .floating-icons i:nth-child(3) { animation-delay: 1s; }
+    @keyframes float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0); }
+    }
     .clickable-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         border: 2px solid transparent;
         position: relative;
         overflow: hidden;
         cursor: pointer;
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
     }
     .clickable-card:hover {
-        transform: translateY(-8px) scale(1.02);
+        transform: translateY(-10px) scale(1.02);
         box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
         border-color: var(--text-accent);
+    }
+    .clickable-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    .clickable-card:hover::before {
+        left: 100%;
     }
     .clickable-card:active {
         transform: translateY(-2px) scale(0.98);
     }
-    
-    /* Mobile responsiveness */
+    .card-icon {
+        font-size: 4em;
+        text-align: center;
+        margin-bottom: 15px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
     @media (max-width: 768px) {
-        .animated-welcome {
-            font-size: 3em;
-        }
-        .welcome-subtitle {
-            font-size: 1.1em !important;
-            padding: 0 15px;
-        }
-        .premium-card h3 {
-            font-size: 1.4em !important;
-        }
-        .premium-card p {
-            font-size: 0.95em !important;
-        }
-        .stButton>button {
-            height: 44px;  /* better touch target */
-        }
-        .gallery-img-container img {
-            height: 180px;
-        }
-        .info-panel-header {
-            font-size: 20px !important;
-        }
-        div[role="radiogroup"] > label {
-            padding: 12px 14px;
-            font-size: 0.9em;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 8px 12px;
-            font-size: 0.9rem;
-        }
-        .scroll-btn {
-            bottom: 70px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            font-size: 18px;
-        }
+        .animated-welcome { font-size: 3em; }
+        .welcome-subtitle { font-size: 1.1em; }
+        .floating-icons i { font-size: 2.5em; }
     }
     @media (max-width: 480px) {
-        .animated-welcome {
-            font-size: 2.2em;
-        }
-        .welcome-subtitle {
-            font-size: 1em !important;
-        }
-        .stButton>button {
-            font-size: 0.9rem;
-            padding-left: 12px;
-        }
+        .animated-welcome { font-size: 2.2em; }
+        .floating-icons i { font-size: 2em; }
     }
 </style>
 """
 
 # ============================================================
-# SECRETS MANAGEMENT & CONFIG
+# SECRETS MANAGEMENT & CONFIG (UPDATED WITH ALL KEYS)
 # ============================================================
 try:
     GROQ_KEY = st.secrets["groq_api_key"]
+    GROQ_KEY_2 = st.secrets["grok_api_key_2"]          # exact name as given
     WEATHER_KEY = st.secrets["weather_api_key"]
     TAVILY_KEY = st.secrets["tavily_api_key"]
-    DEEPSEEK_KEY = st.secrets["deepseek_api_key"]  # NEW: DeepSeek API key
+    DEEPSEEK_KEY = st.secrets["deepseek_api_key"]
+    DEEPSEEK_KEY_2 = st.secrets["deepseek_api_key_2"]
 except FileNotFoundError:
     st.error("Secrets file not found.")
     st.stop()
-except KeyError:
-    st.error("Missing keys in secrets. Please ensure groq_api_key, weather_api_key, tavily_api_key, and deepseek_api_key are set.")
+except KeyError as e:
+    st.error(f"Missing key in secrets: {e}")
     st.stop()
 
 # Tourism Config
@@ -754,14 +778,6 @@ def extract_pdf(file):
     reader = PyPDF2.PdfReader(file)
     return "".join([p.extract_text() for p in reader.pages])
 
-def analyze_image(file, client):
-    img = base64.b64encode(file.read()).decode('utf-8')
-    res = client.chat.completions.create(
-        messages=[{"role": "user", "content": [{"type": "text", "text": "Extract text."}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img}"}}]}],
-        model="llama-3.2-90b-vision-preview"
-    )
-    return res.choices[0].message.content
-
 async def tts(text, lang):
     voice = "ur-PK-UzmaNeural" if lang == "UR" else "hi-IN-SwaraNeural" if lang == "HI" else "en-US-AriaNeural"
     comm = edge_tts.Communicate(text, voice)
@@ -777,13 +793,67 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# UPDATED analyze_image FUNCTION (with active vision models)
+# ULTIMATE MULTI‑KEY AI FUNCTION FOR HEALTH COMPANION
 # ============================================================
-def analyze_image(file, client):
+def get_ai_response(messages, model="llama-3.3-70b-versatile"):
     """
-    Analyze an image using Groq's vision models.
-    Tries a list of known working vision models in order.
-    If all vision models fail, returns a user‑friendly message.
+    Attempts to get response from Groq first, using all available Groq keys.
+    If all Groq keys fail, falls back to DeepSeek using all available DeepSeek keys.
+    If both providers fail, returns an error message.
+    """
+    groq_keys = [GROQ_KEY, GROQ_KEY_2]
+    deepseek_keys = [DEEPSEEK_KEY, DEEPSEEK_KEY_2]
+
+    # Try Groq keys in order
+    for idx, key in enumerate(groq_keys):
+        try:
+            groq_client = Groq(api_key=key)
+            response = groq_client.chat.completions.create(
+                messages=messages,
+                model=model
+            )
+            return response.choices[0].message.content, f"groq_key_{idx+1}"
+        except Exception as e:
+            st.warning(f"Groq key {idx+1} failed: {str(e)[:100]}. Trying next Groq key...")
+            continue
+
+    # All Groq keys failed – try DeepSeek keys
+    for idx, key in enumerate(deepseek_keys):
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "deepseek-chat",
+                "messages": messages,
+                "temperature": 0.7
+            }
+            response = requests.post(
+                "https://api.deepseek.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"], f"deepseek_key_{idx+1}"
+        except Exception as e2:
+            st.warning(f"DeepSeek key {idx+1} failed: {str(e2)[:100]}. Trying next DeepSeek key...")
+            continue
+
+    # All keys failed
+    st.error("All AI services failed. Please check your API keys and try again later.")
+    return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
+
+# ============================================================
+# ULTIMATE IMAGE ANALYSIS (multi‑key, multi‑model)
+# ============================================================
+def analyze_image(file):
+    """
+    Analyze an image using Groq's vision models with key rotation.
+    Tries a list of known working vision models in order, and for each model
+    cycles through all Groq keys. If all models/keys fail, returns a user‑friendly message.
     """
     # Read and encode image
     img_data = file.read()
@@ -802,40 +872,46 @@ def analyze_image(file, client):
         "llama-3.2-90b-vision-preview",   # older but may still work (try last)
     ]
     
+    groq_keys = [GROQ_KEY, GROQ_KEY_2]
+    
     last_error = ""
     for model in vision_models:
-        try:
-            res = client.chat.completions.create(
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings."},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                    ]
-                }],
-                model=model
-            )
-            return res.choices[0].message.content
-        except Exception as e:
-            last_error = str(e)
-            continue  # try next model
+        for key_idx, key in enumerate(groq_keys):
+            try:
+                client = Groq(api_key=key)
+                res = client.chat.completions.create(
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                        ]
+                    }],
+                    model=model
+                )
+                return res.choices[0].message.content
+            except Exception as e:
+                last_error = str(e)
+                st.warning(f"Vision model '{model}' with Groq key {key_idx+1} failed: {last_error[:100]}. Trying next key...")
+                continue  # try next key for the same model
+        # If all keys failed for this model, try next model
+        st.warning(f"All keys failed for model '{model}'. Trying next vision model...")
     
-    # All vision models failed – give a helpful message
-    st.error(f"❌ Image analysis failed with all vision models. Last error: {last_error[:200]}")
+    # All models/keys failed – give a helpful message
+    st.error(f"❌ Image analysis failed with all vision models and keys. Last error: {last_error[:200]}")
     st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
     
-    # Fallback to text‑only response
+    # Fallback to text‑only response using the multi‑key text function
     try:
-        fallback_res = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
-                {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-            ],
-            model="llama-3.3-70b-versatile"
-        )
-        return fallback_res.choices[0].message.content
+        fallback_msg, _ = get_ai_response([
+            {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
+            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
+        ])
+        return fallback_msg
     except:
         return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
+
+# ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
 def load_json(filename):
@@ -2218,11 +2294,12 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
-# NEW WELCOME TAB (ENHANCED)
+# NEW WELCOME TAB (ENHANCED WITH PREMIUM ANIMATIONS)
 # ============================================================
 def tab_welcome():
-    # Inject script to handle tab switching
+    # Inject script for tab switching
     st.markdown("""
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
     function switchTab(tabName) {
         const tabs = document.querySelectorAll('button[role="tab"]');
@@ -2236,21 +2313,172 @@ def tab_welcome():
     </script>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div style='text-align:center; padding: 20px 0 10px 0;' class='welcome-title'>
-        <h1 class='animated-welcome'>Welcome</h1>
-        <p style='font-size: 1.4em; color: var(--text-muted); max-width: 800px; margin: 0 auto;' class='welcome-subtitle'>
-            Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
-        </p>
-    </div>
+    # Theme‑based background (light/dark) with particle overlay
+    if st.session_state.theme == "light":
+        bg_url = "https://img.freepik.com/free-photo/top-view-travel-kit-wooden-table_23-2148315686.jpg"
+        particle_color = "#4f46e5"
+        overlay_color = "rgba(255,255,255,0.85)"
+    else:
+        bg_url = "https://img.freepik.com/premium-photo/outfit-traveler-black-background-with-copy-space-travel-concept_146508-536.jpg"
+        particle_color = "#c084fc"
+        overlay_color = "rgba(15,23,42,0.9)"
+
+    st.markdown(f"""
+    <style>
+        .welcome-container {{
+            position: relative;
+            min-height: 100vh;
+            width: 100%;
+            background: linear-gradient({overlay_color}, {overlay_color}), url('{bg_url}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            border-radius: 24px;
+            padding: 40px 20px;
+            overflow: hidden;
+        }}
+        #particles-js {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }}
+        .content {{
+            position: relative;
+            z-index: 2;
+        }}
+        .animated-welcome {{
+            font-size: 5em;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideInFromLeft 1s ease-out, floatShadow 3s ease-in-out infinite;
+        }}
+        .animated-welcome span {{
+            display: inline-block;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+            text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        }}
+        @keyframes slideInFromLeft {{
+            0% {{ opacity: 0; transform: translateX(-50px); }}
+            100% {{ opacity: 1; transform: translateX(0); }}
+        }}
+        @keyframes floatShadow {{
+            0% {{ text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }}
+            50% {{ text-shadow: 0 20px 40px rgba(79, 70, 229, 0.5); transform: translateY(-5px); }}
+            100% {{ text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3); transform: translateY(0); }}
+        }}
+        .welcome-subtitle {{
+            font-size: 1.4em;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 40px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }}
+        @keyframes fadeInUp {{
+            0% {{ opacity: 0; transform: translateY(20px); }}
+            100% {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .floating-icons {{
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }}
+        .floating-icons i {{
+            font-size: 3em;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }}
+        .floating-icons i:nth-child(1) {{ animation-delay: 0s; }}
+        .floating-icons i:nth-child(2) {{ animation-delay: 0.5s; }}
+        .floating-icons i:nth-child(3) {{ animation-delay: 1s; }}
+        @keyframes float {{
+            0% {{ transform: translateY(0); }}
+            50% {{ transform: translateY(-15px); }}
+            100% {{ transform: translateY(0); }}
+        }}
+        .clickable-card {{
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+        }}
+        .clickable-card:hover {{
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
+            border-color: var(--text-accent);
+        }}
+        .clickable-card::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }}
+        .clickable-card:hover::before {{
+            left: 100%;
+        }}
+        .clickable-card:active {{
+            transform: translateY(-2px) scale(0.98);
+        }}
+        .card-icon {{
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }}
+        @keyframes pulse {{
+            0% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.05); }}
+            100% {{ transform: scale(1); }}
+        }}
+        @media (max-width: 768px) {{
+            .animated-welcome {{ font-size: 3em; }}
+            .welcome-subtitle {{ font-size: 1.1em; }}
+            .floating-icons i {{ font-size: 2.5em; }}
+        }}
+        @media (max-width: 480px) {{
+            .animated-welcome {{ font-size: 2.2em; }}
+            .floating-icons i {{ font-size: 2em; }}
+        }}
+    </style>
+    <div class="welcome-container">
+        <div id="particles-js"></div>
+        <div class="content">
+            <h1 class="animated-welcome"><span>Welcome</span></h1>
+            <p class="welcome-subtitle">
+                Three powerful tools, one seamless experience – designed to make your travels smarter, your health simpler, and your discoveries unforgettable.
+            </p>
+            <div class="floating-icons">
+                <i>🗺️</i>
+                <i>🤖</i>
+                <i>🇵🇰</i>
+            </div>
     """, unsafe_allow_html=True)
-    
+
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
-        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Trip Planner")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
-            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🗺️</div>
+        <div class='premium-card clickable-card' onclick='switchTab("Trip Planner")' style='height: 100%; display: flex; flex-direction: column;'>
+            <div class='card-icon'>🗺️</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Universal Trip Planner</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
                 Plan your journey to any city in the world with confidence. Get personalized itineraries, 
@@ -2265,8 +2493,8 @@ def tab_welcome():
     
     with col2:
         st.markdown("""
-        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Health Companion")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
-            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🤖</div>
+        <div class='premium-card clickable-card' onclick='switchTab("Health Companion")' style='height: 100%; display: flex; flex-direction: column;'>
+            <div class='card-icon'>🤖</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>AI Health Companion</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
                 Doctors aren't always available – but your health doesn't wait. Upload medical reports 
@@ -2281,8 +2509,8 @@ def tab_welcome():
     
     with col3:
         st.markdown("""
-        <div class='premium-card welcome-card clickable-card' onclick='switchTab("Pakistan Tourism")' style='height: 100%; display: flex; flex-direction: column; cursor: pointer;'>
-            <div style='font-size: 4em; text-align: center; margin-bottom: 15px;'>🇵🇰</div>
+        <div class='premium-card clickable-card' onclick='switchTab("Pakistan Tourism")' style='height: 100%; display: flex; flex-direction: column;'>
+            <div class='card-icon'>🇵🇰</div>
             <h3 style='color: var(--text-accent); font-size: 1.8em; font-weight: 700; text-align: center;'>Pakistan Tourism Guide</h3>
             <p style='color: var(--text-secondary); font-size: 1.1em; line-height: 1.6; flex-grow: 1;'>
                 A treasure trove for foreigners wanting to explore Pakistan. Discover famous places, 
@@ -2296,11 +2524,32 @@ def tab_welcome():
         """, unsafe_allow_html=True)
     
     st.markdown("""
-    <div style='text-align: center; margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);' class='fade-in-card'>
-        <p style='font-size: 1.3em; color: var(--text-primary);'>
-            🌟 Ready to begin? Just click any card above and let the journey start!
-        </p>
+            <div style='text-align: center; margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: 60px; border: 1px solid var(--border-color);' class='fade-in-card'>
+                <p style='font-size: 1.3em; color: var(--text-primary);'>
+                    🌟 Ready to begin? Just click any card above and let the journey start!
+                </p>
+            </div>
+        </div>
     </div>
+    <script>
+    particlesJS("particles-js", {
+        "particles": {
+            "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": " """ + particle_color + """" },
+            "shape": { "type": "circle" },
+            "opacity": { "value": 0.5, "random": true },
+            "size": { "value": 3, "random": true },
+            "line_linked": { "enable": true, "distance": 150, "color": """" + particle_color + """", "opacity": 0.4, "width": 1 },
+            "move": { "enable": true, "speed": 2, "direction": "none", "random": true, "straight": false, "out_mode": "out" }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": { "onhover": { "enable": true, "mode": "repulse" }, "resize": true },
+            "modes": { "repulse": { "distance": 100, "duration": 0.4 } }
+        },
+        "retina_detect": true
+    });
+    </script>
     """, unsafe_allow_html=True)
 
 # ============================================================
@@ -2367,9 +2616,9 @@ with planner_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-# --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
+# --- TAB 2: HEALTH COMPANION (now with multi‑key AI) ---
 with companion_tab:
-    # Use the dual‑AI function instead of direct Groq client
+    # Use the multi‑key AI function instead of direct Groq client
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
@@ -2408,9 +2657,9 @@ with companion_tab:
         audio_val = st.audio_input("Voice", label_visibility="collapsed")
 
     if uploaded_file:
-        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, Groq(api_key=GROQ_KEY))
+        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file)
         st.session_state.medical_data = txt
-        # Use dual AI
+        # Use multi‑key AI
         messages = [
             {"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."},
             {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}
@@ -2424,7 +2673,7 @@ with companion_tab:
 
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        # Transcribe with Groq (still using Groq for audio)
+        # Transcribe with Groq (still using first key for audio)
         groq_client = Groq(api_key=GROQ_KEY)
         txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
         
@@ -2511,53 +2760,16 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-from pathlib import Path
-
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-from pathlib import Path
-
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-from pathlib import Path
-
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-import json
-import requests
-from pathlib import Path
-
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-from pathlib import Path
-
 # ============================================================
-# MESHU CHATBOT (Fast Frontend + Adblocker Detection + Easter Eggs)
+# MESHU CHATBOT (unchanged)
 # ============================================================
 def add_meshu_chatbot():
-    # 1. API Key Setup
     try:
         groq_key = st.secrets["good"]  
     except KeyError:
         st.error("Groq API key 'good' not found in secrets.")
         return
 
-    # 2. Local Image Setup (Base64)
-    try:
-        img_path = Path("assets/meshu.png")
-        img_base64 = base64.b64encode(img_path.read_bytes()).decode()
-        bot_avatar = f"data:image/png;base64,{img_base64}"
-    except Exception:
-        bot_avatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
-
-    # 3. Chatbot HTML/CSS/JS Injection
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
 
@@ -2565,261 +2777,152 @@ def add_meshu_chatbot():
     (function() {{
         const doc = window.parent.document;
         const containerId = 'meshu-chatbot-container';
-        
+
         if (doc.getElementById(containerId)) return;
 
-        // --- CSS STYLES ---
+        const container = doc.createElement('div');
+        container.id = containerId;
+        container.style.position = 'fixed';
+        container.style.bottom = '90px'; 
+        container.style.right = '20px';
+        container.style.zIndex = '999999';
+
+        const toggle = doc.createElement('button');
+        toggle.innerHTML = '💬';
+        toggle.style.cssText = `
+            width:60px;height:60px;border-radius:50%;
+            background:linear-gradient(135deg,#2563eb,#7c3aed);
+            border:none;color:white;font-size:26px;
+            cursor:pointer;
+            box-shadow:0 8px 30px rgba(0,0,0,0.4);
+            animation: meshuPulse 2s infinite;
+        `;
+
+        const windowDiv = doc.createElement('div');
+        windowDiv.style.cssText = `
+            display:none;
+            position:absolute;
+            bottom:80px;
+            right:0;
+            width:360px;
+            height:520px;
+            background:rgba(15,23,42,0.98);
+            backdrop-filter:blur(12px);
+            border-radius:22px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+            overflow:hidden;
+            flex-direction:column;
+            font-family: sans-serif;
+            color:#f1f5f9;
+        `;
+
+        const header = doc.createElement('div');
+        header.style.cssText = `padding:16px 20px; background:#0f172a; display:flex; justify-content:space-between; align-items:center; font-weight:700;`;
+        header.innerHTML = `<span style="background:linear-gradient(135deg,#60a5fa,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MESHU</span>`;
+
+        const closeBtn = doc.createElement('span');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.cssText = 'cursor:pointer; font-size:24px;';
+        header.appendChild(closeBtn);
+
+        const messagesDiv = doc.createElement('div');
+        messagesDiv.style.cssText = `flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;`;
+
+        const inputArea = doc.createElement('div');
+        inputArea.style.cssText = `padding:12px; display:flex; gap:8px; background:#0f172a;`;
+
+        const input = doc.createElement('input');
+        input.placeholder = "Ask me anything...";
+        input.style.cssText = `flex:1; padding:10px 14px; border-radius:40px; border:none; background:#1e293b; color:white; outline:none;`;
+
+        const send = doc.createElement('button');
+        send.innerText = "Send";
+        send.style.cssText = `padding:8px 18px; border-radius:40px; border:none; background:#2563eb; color:white; font-weight:600; cursor:pointer;`;
+
+        inputArea.appendChild(input);
+        inputArea.appendChild(send);
+        windowDiv.appendChild(header);
+        windowDiv.appendChild(messagesDiv);
+        windowDiv.appendChild(inputArea);
+        container.appendChild(toggle);
+        container.appendChild(windowDiv);
+        doc.body.appendChild(container);
+
         const style = doc.createElement('style');
         style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-            @keyframes meshuJump {{ 0%, 100% {{ transform: translateY(0); }} 40% {{ transform: translateY(-18px); }} 60% {{ transform: translateY(-10px); }} 80% {{ transform: translateY(-18px); }} }}
-            @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
-            @keyframes pulseRed {{ 0% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }} 70% {{ box-shadow: 0 0 0 10px rgba(239,68,68,0); }} 100% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0); }} }}
-            
-            #meshu-toggle-btn {{ width: 65px; height: 65px; border-radius: 50%; background: white; border: 2px solid #2563eb; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 0.3s; animation: meshuJump 2.5s infinite cubic-bezier(0.28, 0.84, 0.42, 1); }}
-            #meshu-toggle-btn img {{ width: 85%; height: 85%; transform-origin: bottom center; }}
-
-            #meshu-window {{ display: none; width: 380px; max-width: calc(100vw - 40px); height: 520px; max-height: calc(100vh - 200px); background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: absolute; bottom: 80px; right: 0; flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.1); font-family: 'Inter', sans-serif; overflow: hidden; }}
-
-            .meshu-header {{ padding: 15px 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
-            .meshu-header h3 {{ margin: 0; font-size: 16px; color: white; }}
-            .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.3; }}
-
-            .meshu-messages {{ flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }}
-            .meshu-msg {{ max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; color: #f1f5f9; word-wrap: break-word; }}
-            .meshu-user {{ align-self: flex-end; background: #2563eb; border-bottom-right-radius: 4px; }}
-            .meshu-ai {{ align-self: flex-start; background: #1e293b; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }}
-            
-            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 15px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
-            .chip {{ background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; color: #60a5fa; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; }}
-            .chip:hover {{ background: #2563eb; color: white; }}
-
-            .meshu-input-area {{ padding: 10px 15px; display: flex; gap: 8px; background: #0f172a; }}
-            #meshu-mic {{ background: #334155; border: none; padding: 0 12px; border-radius: 12px; color: white; cursor: pointer; transition: 0.2s; font-size: 12px; font-weight: bold; }}
-            #meshu-mic:hover {{ background: #475569; }}
-            #meshu-mic.recording {{ background: #ef4444; animation: pulseRed 1.5s infinite; }}
-
-            .meshu-input-area input {{ flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; }}
-            .meshu-input-area button.send-btn {{ background: #2563eb; border: none; padding: 0 16px; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.2s; font-size: 14px; }}
-            .meshu-input-area button.send-btn:hover {{ background: #1d4ed8; }}
-            .typing-dot {{ display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; margin-right: 3px; animation: typing 1.4s infinite both; }}
-            .typing-dot:nth-child(2) {{ animation-delay: .2s; }}
-            .typing-dot:nth-child(3) {{ animation-delay: .4s; margin-right: 0; }}
+            @keyframes meshuPulse {{
+                0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}}
+                70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
+                100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+            }}
+            .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; line-height:1.4; }}
+            .meshu-user {{ align-self:flex-end; background:#2563eb; color:white; border-bottom-right-radius:6px; }}
+            .meshu-ai {{ align-self:flex-start; background:#334155; color:#f1f5f9; border-bottom-left-radius:6px; }}
         `;
         doc.head.appendChild(style);
 
-        // --- HTML STRUCTURE ---
-        const container = doc.createElement('div');
-        container.id = containerId;
-        container.style.cssText = "position:fixed; bottom:80px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
-        
-        const windowDiv = doc.createElement('div');
-        windowDiv.id = "meshu-window";
-        windowDiv.innerHTML = `
-            <div class="meshu-header">
-                <h3>MESHU Assistant</h3>
-                <p>Always online to help you navigate.</p>
-            </div>
-            <div id="meshu-messages" class="meshu-messages"></div>
-            <div class="quick-chips">
-                <div class="chip" data-query="Tell me about this app">About App</div>
-                <div class="chip" data-query="How to use this?">How to use</div>
-                <div class="chip" data-query="Surprise me!">Surprise me</div>
-            </div>
-            <div class="meshu-input-area">
-                <button id="meshu-mic" title="Click to speak">Mic</button>
-                <input type="text" id="meshu-input" placeholder="Message...">
-                <button id="meshu-send" class="send-btn">Send</button>
-            </div>
-        `;
-
-        const toggleBtn = doc.createElement('button');
-        toggleBtn.id = "meshu-toggle-btn";
-        toggleBtn.innerHTML = `<img src="{bot_avatar}" alt="MESHU">`;
-
-        container.append(windowDiv, toggleBtn);
-        doc.body.appendChild(container);
-
-        // --- JAVASCRIPT LOGIC ---
-        const messagesContainer = windowDiv.querySelector('#meshu-messages');
-        const inputField = windowDiv.querySelector('#meshu-input');
-        const sendBtn = windowDiv.querySelector('#meshu-send');
-        const micBtn = windowDiv.querySelector('#meshu-mic');
         const API_KEY = "{groq_key}";
+        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-        let firstJokeName = null;
-        let waitingForKon = false;
-
-        function speakText(text) {{
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            let cleanText = text.replace(/<[^>]*>?/gm, '').replace(/\\*/g, '');
-            let utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.pitch = 1.8; 
-            utterance.rate = 1.15;
-            window.speechSynthesis.speak(utterance);
-        }}
-
-        // Microphone Logic
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition;
-        if (SpeechRecognition) {{
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            
-            recognition.onstart = function() {{
-                micBtn.classList.add('recording');
-                inputField.placeholder = "Listening...";
-            }};
-            recognition.onresult = function(event) {{
-                inputField.value = event.results[0][0].transcript;
-                sendMessage(); 
-            }};
-            recognition.onend = recognition.onerror = function() {{
-                micBtn.classList.remove('recording');
-                inputField.placeholder = "Message...";
-            }};
-            micBtn.addEventListener('click', () => {{
-                micBtn.classList.contains('recording') ? recognition.stop() : recognition.start();
-            }});
-        }} else {{
-            micBtn.style.display = 'none'; 
-        }}
-
-        function addMessage(text, type, isTyping = false) {{
+        function addMessage(text, cls) {{
             const div = doc.createElement('div');
-            div.className = 'meshu-msg meshu-' + type;
-            
-            if (isTyping) {{
-                div.id = 'meshu-typing';
-                div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-            }} else {{
-                let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
-                div.innerHTML = formattedText;
-                if (type === 'ai') speakText(text);
-            }}
-            messagesContainer.appendChild(div);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            div.className = 'meshu-msg ' + cls;
+            div.innerText = text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }}
 
-        async function sendMessage(overrideText = null) {{
-            const text = overrideText || inputField.value.trim();
+        async function sendMessage() {{
+            const text = input.value.trim();
             if(!text) return;
 
-            addMessage(text, 'user');
-            inputField.value = '';
-
-            // --- EASTER EGGS / MEMORY LOGIC ---
-            const lowerText = text.toLowerCase();
-            const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
-            
-            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText) || (lowerText === "kon" && waitingForKon)) {{
-                addMessage('', 'ai', true); 
-                
-                setTimeout(() => {{
-                    const typingInd = doc.getElementById('meshu-typing');
-                    if(typingInd) typingInd.remove();
-                    
-                    if (lowerText.includes("who created you")) {{
-                        addMessage("My owner **Mubashir Arshad**.", 'ai');
-                    }} 
-                    else if (text === "12345") {{
-                        const friendsHTML = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>';
-                        addMessage(friendsHTML, 'ai');
-                    }} 
-                    else if (lowerText === "kon" && waitingForKon) {{
-                        addMessage("whi pehlay wala **" + firstJokeName + "**", 'ai');
-                        waitingForKon = false; 
-                    }}
-                    else if (jokeNames.includes(lowerText)) {{
-                        if (firstJokeName === null) {{
-                            firstJokeName = text; 
-                            addMessage("from your brother bundle of curse upon you", 'ai');
-                        }} else if (lowerText !== firstJokeName.toLowerCase()) {{
-                            addMessage("lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha", 'ai');
-                            waitingForKon = true; 
-                        }} else {{
-                            addMessage("from your brother bundle of curse upon you", 'ai');
-                        }}
-                    }}
-                }}, 600);
-                return; 
-            }}
-            // --- END OF EASTER EGGS ---
-
-            addMessage('', 'ai', true);
+            addMessage(text,'meshu-user');
+            input.value = '';
 
             try {{
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {{
-                    method: 'POST',
-                    headers: {{ 
-                        'Content-Type': 'application/json', 
-                        'Authorization': 'Bearer ' + API_KEY 
+                const response = await fetch(API_URL, {{
+                    method:'POST',
+                    headers:{{
+                        'Content-Type':'application/json',
+                        'Authorization':'Bearer ' + API_KEY
                     }},
-                    body: JSON.stringify({{
+                    body:JSON.stringify({{
                         model: "llama-3.3-70b-versatile",
                         messages: [
-                            {{
-                                role: "system", 
-                                content: "You are MESHU, a smart, friendly AI assistant. Never use emojis in your responses. Use short paragraphs. Be helpful, concise, and professional."
-                            }},
-                            {{role: "user", content: text}}
+                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
+                            {{role:"user",content:text}}
                         ]
                     }})
                 }});
 
-                const typingInd = doc.getElementById('meshu-typing');
-                if(typingInd) typingInd.remove();
-
-                if (!response.ok) {{
-                    throw new Error("HTTP " + response.status);
-                }}
-
                 const data = await response.json();
                 
                 if(data.choices && data.choices[0]) {{
-                    let finalResponse = data.choices[0].message.content.replace(/\\n/g, '<br>');
-                    addMessage(finalResponse, 'ai');
+                    addMessage(data.choices[0].message.content,'meshu-ai');
+                }} else if(data.error) {{
+                    addMessage("Error: " + data.error.message, 'meshu-ai');
                 }} else {{
-                    addMessage("Oops! Something went wrong processing your request.", 'ai');
+                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
                 }}
-            }} catch (e) {{
-                const typingInd = doc.getElementById('meshu-typing');
-                if(typingInd) typingInd.remove();
-                
-                // 🛡️ THE NEW ADBLOCKER/BRAVE CATCHER
-                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {{
-                    addMessage("🚨 **Connection Blocked!**<br>Are you using Brave Browser or an Adblocker? Please turn off 'Shields' or disable your adblocker for this site so I can connect to my brain!", 'ai');
-                }} else {{
-                    addMessage("Server Error: Check your internet connection.", 'ai');
-                }}
+
+            }} catch(err) {{
+                addMessage("Error: "+err.message,'meshu-ai');
             }}
         }}
 
-        sendBtn.addEventListener('click', () => sendMessage());
-        inputField.addEventListener('keypress', (e) => {{ if(e.key === 'Enter') sendMessage(); }});
+        toggle.onclick = () => {{
+            windowDiv.style.display = windowDiv.style.display==='flex'?'none':'flex';
+        }};
+        closeBtn.onclick = () => windowDiv.style.display='none';
+        send.onclick = sendMessage;
+        input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
 
-        windowDiv.addEventListener('click', (e) => {{
-            const chip = e.target.closest('.chip');
-            if (chip) {{
-                const query = chip.getAttribute('data-query');
-                if (query) sendMessage(query);
-            }}
-        }});
-
-        toggleBtn.addEventListener('click', () => {{
-            const isVisible = windowDiv.style.display === 'flex';
-            windowDiv.style.display = isVisible ? 'none' : 'flex';
-            if (!isVisible) inputField.focus(); 
-        }});
-
-        addMessage("Hello! I'm MESHU, your AI guide. Click a button below or use the microphone to talk!", 'ai');
+        addMessage("Hi! I'm MESHU. How can I help you today?",'meshu-ai');
 
     }})();
     </script>
     """
-    
+
     components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
