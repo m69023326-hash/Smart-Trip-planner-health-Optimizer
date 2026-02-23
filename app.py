@@ -777,56 +777,65 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# FIXED analyze_image FUNCTION (with updated model & safe fallback)
+# ULTIMATE analyze_image FUNCTION (handles model deprecation, no NameError)
 # ============================================================
 def analyze_image(file, client):
     """
-    Analyze an image using Groq's vision model.
-    If the image is too large or the API fails, it falls back to a text prompt.
+    Analyze an image using Groq's vision models.
+    Tries a list of known working vision models in order.
+    If all vision models fail, falls back to a text‑only response.
     """
     # Read and encode image
     img_data = file.read()
     file_size_mb = len(img_data) / (1024 * 1024)
     
-    # Warn if image is too large (Groq vision models typically have a ~20MB limit)
     if file_size_mb > 20:
-        st.warning(f"Image is {file_size_mb:.1f} MB, which may exceed API limits. Try compressing it or using a PDF.")
+        st.warning(f"⚠️ Image is {file_size_mb:.1f} MB. Large images may fail. Consider compressing or using a PDF.")
     
     img_b64 = base64.b64encode(img_data).decode('utf-8')
     
-    # Current Groq vision model (as of 2025)
-    vision_model = "llama-3.2-11b-vision-preview"
+    # List of likely‑active vision models (as of 2025)
+    vision_models = [
+        "llama-3.2-11b-vision-preview",   # may still work
+        "llama-3.2-90b-vision-preview",   # older, but try as fallback
+        "llava-v1.5-7b-4096-preview",     # another vision model
+        "llava-v1.5-13b-4096-preview",
+    ]
     
-    try:
-        # Attempt Groq vision API
-        res = client.chat.completions.create(
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings."},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                ]
-            }],
-            model=vision_model
-        )
-        return res.choices[0].message.content
-        
-    except Exception as e:
-        st.error(f"❌ Image analysis failed: {str(e)[:200]}")
-        st.info("🔄 Falling back to text‑based analysis. Please describe the image in the chat, or upload a PDF version.")
-        
-        # Use a direct text model for fallback (avoiding NameError)
+    last_error = ""
+    for model in vision_models:
         try:
-            fallback_res = client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": "You are a helpful medical assistant. The user tried to upload an image but it couldn't be processed. Politely ask them to describe the image or upload a PDF."},
-                    {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-                ],
-                model="llama-3.3-70b-versatile"
+            res = client.chat.completions.create(
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings."},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                    ]
+                }],
+                model=model
             )
-            return fallback_res.choices[0].message.content
-        except:
-            return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
+            return res.choices[0].message.content
+        except Exception as e:
+            last_error = str(e)
+            continue  # try next model
+    
+    # All vision models failed – give a helpful text‑only response
+    st.error(f"❌ Image analysis failed with all vision models. Last error: {last_error[:200]}")
+    st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
+    
+    # Use a text model to generate a friendly fallback message
+    try:
+        fallback_res = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
+                {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
+            ],
+            model="llama-3.3-70b-versatile"
+        )
+        return fallback_res.choices[0].message.content
+    except:
+        return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
 # ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
