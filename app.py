@@ -2512,16 +2512,114 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+import json
+import requests
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (unchanged)
+# MESHU CHATBOT (Pro Backend Architecture - Adblocker Immune)
 # ============================================================
 def add_meshu_chatbot():
+    # 1. API Key Setup
     try:
         groq_key = st.secrets["good"]  
     except KeyError:
         st.error("Groq API key 'good' not found in secrets.")
         return
 
+    # --- 🌉 THE HIDDEN BRIDGE (Python to JS) ---
+    # This hides the Streamlit input we use to communicate with the frontend
+    st.markdown("""
+        <style>
+            div[data-testid="stTextInput"]:has(input[aria-label="meshu_hidden_input"]) {
+                display: none !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # The JS sends messages to this hidden input
+    user_msg_raw = st.text_input("meshu_hidden_input", key="meshu_backend_input", label_visibility="hidden")
+    
+    if user_msg_raw and "|||" in user_msg_raw:
+        user_msg = user_msg_raw.split("|||")[0]
+        response_text = ""
+        
+        # Memory variables for Easter Eggs
+        if 'meshu_first_name' not in st.session_state:
+            st.session_state.meshu_first_name = None
+        if 'meshu_waiting_kon' not in st.session_state:
+            st.session_state.meshu_waiting_kon = False
+            
+        lower_text = user_msg.lower()
+        joke_names = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"]
+        
+        # --- 🥚 EASTER EGG & JOKE LOGIC ---
+        if "who created you" in lower_text:
+            response_text = "My owner **Mubashir Arshad**."
+        elif user_msg == "12345":
+            response_text = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>'
+        elif lower_text == "kon" and st.session_state.meshu_waiting_kon:
+            first_name = st.session_state.meshu_first_name
+            response_text = f"whi pehlay wala **{first_name}** 😂"
+            st.session_state.meshu_waiting_kon = False
+        elif lower_text in joke_names:
+            if st.session_state.meshu_first_name is None:
+                st.session_state.meshu_first_name = user_msg
+                response_text = "from your brother bundle of curse upon you"
+            elif lower_text != st.session_state.meshu_first_name.lower():
+                response_text = "lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha"
+                st.session_state.meshu_waiting_kon = True
+            else:
+                response_text = "from your brother bundle of curse upon you"
+        else:
+            # --- 🤖 SECURE BACKEND GROQ API CALL ---
+            try:
+                headers = {
+                    "Authorization": f"Bearer {groq_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": "llama-3.3-70b-versatile",
+                    "messages": [
+                        {"role": "system", "content": "You are MESHU, a smart, friendly AI assistant. Never use emojis in your responses. Use short paragraphs. Be helpful, concise, and professional."},
+                        {"role": "user", "content": user_msg}
+                    ]
+                }
+                resp = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+                
+                if not resp.ok:
+                    err_data = resp.json()
+                    err_msg = err_data.get('error', {}).get('message', resp.status_code)
+                    response_text = f"System Error: {err_msg}"
+                else:
+                    data = resp.json()
+                    response_text = data["choices"][0]["message"]["content"].replace('\n', '<br>')
+            except Exception as e:
+                response_text = f"Server Connection Error: {str(e)}"
+        
+        # Send the response BACK to the JavaScript Widget
+        safe_msg = json.dumps(response_text)
+        components.html(f"""
+            <script>
+                const doc = window.parent.document;
+                if (doc.meshuReceiveMessage) {{
+                    doc.meshuReceiveMessage({safe_msg});
+                }}
+            </script>
+        """, height=0)
+
+    # 2. Local Image Setup (Base64)
+    try:
+        img_path = Path("assets/meshu.png")
+        img_base64 = base64.b64encode(img_path.read_bytes()).decode()
+        bot_avatar = f"data:image/png;base64,{img_base64}"
+    except Exception:
+        bot_avatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
+
+    # 3. Chatbot HTML/CSS/JS Injection
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
 
@@ -2529,152 +2627,200 @@ def add_meshu_chatbot():
     (function() {{
         const doc = window.parent.document;
         const containerId = 'meshu-chatbot-container';
-
+        
         if (doc.getElementById(containerId)) return;
 
-        const container = doc.createElement('div');
-        container.id = containerId;
-        container.style.position = 'fixed';
-        container.style.bottom = '90px'; 
-        container.style.right = '20px';
-        container.style.zIndex = '999999';
+        // --- GLOBAL RECEIVER (Catches messages from Python) ---
+        if (!doc.meshuReceiveMessage) {{
+            doc.meshuReceiveMessage = function(text) {{
+                const typingInd = doc.getElementById('meshu-typing');
+                if (typingInd) typingInd.remove();
+                addMessage(text, 'ai');
+            }};
+        }}
 
-        const toggle = doc.createElement('button');
-        toggle.innerHTML = '💬';
-        toggle.style.cssText = `
-            width:60px;height:60px;border-radius:50%;
-            background:linear-gradient(135deg,#2563eb,#7c3aed);
-            border:none;color:white;font-size:26px;
-            cursor:pointer;
-            box-shadow:0 8px 30px rgba(0,0,0,0.4);
-            animation: meshuPulse 2s infinite;
-        `;
-
-        const windowDiv = doc.createElement('div');
-        windowDiv.style.cssText = `
-            display:none;
-            position:absolute;
-            bottom:80px;
-            right:0;
-            width:360px;
-            height:520px;
-            background:rgba(15,23,42,0.98);
-            backdrop-filter:blur(12px);
-            border-radius:22px;
-            box-shadow:0 20px 60px rgba(0,0,0,0.5);
-            overflow:hidden;
-            flex-direction:column;
-            font-family: sans-serif;
-            color:#f1f5f9;
-        `;
-
-        const header = doc.createElement('div');
-        header.style.cssText = `padding:16px 20px; background:#0f172a; display:flex; justify-content:space-between; align-items:center; font-weight:700;`;
-        header.innerHTML = `<span style="background:linear-gradient(135deg,#60a5fa,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MESHU</span>`;
-
-        const closeBtn = doc.createElement('span');
-        closeBtn.innerHTML = '&times;';
-        closeBtn.style.cssText = 'cursor:pointer; font-size:24px;';
-        header.appendChild(closeBtn);
-
-        const messagesDiv = doc.createElement('div');
-        messagesDiv.style.cssText = `flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;`;
-
-        const inputArea = doc.createElement('div');
-        inputArea.style.cssText = `padding:12px; display:flex; gap:8px; background:#0f172a;`;
-
-        const input = doc.createElement('input');
-        input.placeholder = "Ask me anything...";
-        input.style.cssText = `flex:1; padding:10px 14px; border-radius:40px; border:none; background:#1e293b; color:white; outline:none;`;
-
-        const send = doc.createElement('button');
-        send.innerText = "Send";
-        send.style.cssText = `padding:8px 18px; border-radius:40px; border:none; background:#2563eb; color:white; font-weight:600; cursor:pointer;`;
-
-        inputArea.appendChild(input);
-        inputArea.appendChild(send);
-        windowDiv.appendChild(header);
-        windowDiv.appendChild(messagesDiv);
-        windowDiv.appendChild(inputArea);
-        container.appendChild(toggle);
-        container.appendChild(windowDiv);
-        doc.body.appendChild(container);
-
+        // --- CSS STYLES ---
         const style = doc.createElement('style');
         style.textContent = `
-            @keyframes meshuPulse {{
-                0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}}
-                70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
-                100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
-            }}
-            .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; line-height:1.4; }}
-            .meshu-user {{ align-self:flex-end; background:#2563eb; color:white; border-bottom-right-radius:6px; }}
-            .meshu-ai {{ align-self:flex-start; background:#334155; color:#f1f5f9; border-bottom-left-radius:6px; }}
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            @keyframes meshuJump {{ 0%, 100% {{ transform: translateY(0); }} 40% {{ transform: translateY(-18px); }} 60% {{ transform: translateY(-10px); }} 80% {{ transform: translateY(-18px); }} }}
+            @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
+            @keyframes pulseRed {{ 0% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }} 70% {{ box-shadow: 0 0 0 10px rgba(239,68,68,0); }} 100% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0); }} }}
+            
+            #meshu-toggle-btn {{ width: 65px; height: 65px; border-radius: 50%; background: white; border: 2px solid #2563eb; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; transition: 0.3s; animation: meshuJump 2.5s infinite cubic-bezier(0.28, 0.84, 0.42, 1); }}
+            #meshu-toggle-btn img {{ width: 85%; height: 85%; transform-origin: bottom center; }}
+
+            #meshu-window {{ display: none; width: 380px; max-width: calc(100vw - 40px); height: 520px; max-height: calc(100vh - 200px); background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: absolute; bottom: 80px; right: 0; flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.1); font-family: 'Inter', sans-serif; overflow: hidden; }}
+
+            .meshu-header {{ padding: 15px 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+            .meshu-header h3 {{ margin: 0; font-size: 16px; color: white; }}
+            .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.3; }}
+
+            .meshu-messages {{ flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }}
+            .meshu-msg {{ max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; color: #f1f5f9; word-wrap: break-word; }}
+            .meshu-user {{ align-self: flex-end; background: #2563eb; border-bottom-right-radius: 4px; }}
+            .meshu-ai {{ align-self: flex-start; background: #1e293b; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }}
+            
+            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 15px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
+            .chip {{ background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; color: #60a5fa; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; }}
+            .chip:hover {{ background: #2563eb; color: white; }}
+
+            .meshu-input-area {{ padding: 10px 15px; display: flex; gap: 8px; background: #0f172a; }}
+            #meshu-mic {{ background: #334155; border: none; padding: 0 12px; border-radius: 12px; color: white; cursor: pointer; transition: 0.2s; font-size: 12px; font-weight: bold; }}
+            #meshu-mic:hover {{ background: #475569; }}
+            #meshu-mic.recording {{ background: #ef4444; animation: pulseRed 1.5s infinite; }}
+
+            .meshu-input-area input {{ flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; }}
+            .meshu-input-area button.send-btn {{ background: #2563eb; border: none; padding: 0 16px; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: 0.2s; font-size: 14px; }}
+            .meshu-input-area button.send-btn:hover {{ background: #1d4ed8; }}
+            .typing-dot {{ display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; margin-right: 3px; animation: typing 1.4s infinite both; }}
+            .typing-dot:nth-child(2) {{ animation-delay: .2s; }}
+            .typing-dot:nth-child(3) {{ animation-delay: .4s; margin-right: 0; }}
         `;
         doc.head.appendChild(style);
 
-        const API_KEY = "{groq_key}";
-        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+        // --- HTML STRUCTURE ---
+        const container = doc.createElement('div');
+        container.id = containerId;
+        container.style.cssText = "position:fixed; bottom:80px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
+        
+        const windowDiv = doc.createElement('div');
+        windowDiv.id = "meshu-window";
+        windowDiv.innerHTML = `
+            <div class="meshu-header">
+                <h3>MESHU Assistant</h3>
+                <p>Always online to help you navigate.</p>
+            </div>
+            <div id="meshu-messages" class="meshu-messages"></div>
+            <div class="quick-chips">
+                <div class="chip" data-query="Tell me about this app">About App</div>
+                <div class="chip" data-query="How to use this?">How to use</div>
+                <div class="chip" data-query="Surprise me!">Surprise me</div>
+            </div>
+            <div class="meshu-input-area">
+                <button id="meshu-mic" title="Click to speak">Mic</button>
+                <input type="text" id="meshu-input" placeholder="Message...">
+                <button id="meshu-send" class="send-btn">Send</button>
+            </div>
+        `;
 
-        function addMessage(text, cls) {{
-            const div = doc.createElement('div');
-            div.className = 'meshu-msg ' + cls;
-            div.innerText = text;
-            messagesDiv.appendChild(div);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        const toggleBtn = doc.createElement('button');
+        toggleBtn.id = "meshu-toggle-btn";
+        toggleBtn.innerHTML = `<img src="{bot_avatar}" alt="MESHU">`;
+
+        container.append(windowDiv, toggleBtn);
+        doc.body.appendChild(container);
+
+        // --- JAVASCRIPT LOGIC ---
+        const messagesContainer = windowDiv.querySelector('#meshu-messages');
+        const inputField = windowDiv.querySelector('#meshu-input');
+        const sendBtn = windowDiv.querySelector('#meshu-send');
+        const micBtn = windowDiv.querySelector('#meshu-mic');
+
+        function speakText(text) {{
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            let cleanText = text.replace(/<[^>]*>?/gm, '').replace(/\\*/g, '');
+            let utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.pitch = 1.8; 
+            utterance.rate = 1.15;
+            window.speechSynthesis.speak(utterance);
         }}
 
-        async function sendMessage() {{
-            const text = input.value.trim();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {{
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = function() {{
+                micBtn.classList.add('recording');
+                inputField.placeholder = "Listening...";
+            }};
+            recognition.onresult = function(event) {{
+                inputField.value = event.results[0][0].transcript;
+                sendMessage(); 
+            }};
+            recognition.onend = recognition.onerror = function() {{
+                micBtn.classList.remove('recording');
+                inputField.placeholder = "Message...";
+            }};
+            
+            micBtn.addEventListener('click', () => {{
+                micBtn.classList.contains('recording') ? recognition.stop() : recognition.start();
+            }});
+        }} else {{
+            micBtn.style.display = 'none'; 
+        }}
+
+        function addMessage(text, type, isTyping = false) {{
+            const div = doc.createElement('div');
+            div.className = 'meshu-msg meshu-' + type;
+            
+            if (isTyping) {{
+                div.id = 'meshu-typing';
+                div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            }} else {{
+                let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+                div.innerHTML = formattedText;
+                if (type === 'ai') speakText(text);
+            }}
+            messagesContainer.appendChild(div);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }}
+
+        // Send message to the Python Backend Bridge securely
+        async function sendMessage(overrideText = null) {{
+            const text = overrideText || inputField.value.trim();
             if(!text) return;
 
-            addMessage(text,'meshu-user');
-            input.value = '';
+            addMessage(text, 'user');
+            inputField.value = '';
+            addMessage('', 'ai', true); // Show typing dots locally
 
-            try {{
-                const response = await fetch(API_URL, {{
-                    method:'POST',
-                    headers:{{
-                        'Content-Type':'application/json',
-                        'Authorization':'Bearer ' + API_KEY
-                    }},
-                    body:JSON.stringify({{
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
-                            {{role:"user",content:text}}
-                        ]
-                    }})
-                }});
-
-                const data = await response.json();
+            const backendInput = doc.querySelector('input[aria-label="meshu_hidden_input"]');
+            if (backendInput) {{
+                // Append a timestamp so Streamlit recognizes it as a "new" input even if you repeat yourself
+                const payload = text + "|||" + Date.now();
+                const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                nativeValueSetter.call(backendInput, payload);
+                backendInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
                 
-                if(data.choices && data.choices[0]) {{
-                    addMessage(data.choices[0].message.content,'meshu-ai');
-                }} else if(data.error) {{
-                    addMessage("Error: " + data.error.message, 'meshu-ai');
-                }} else {{
-                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
-                }}
-
-            }} catch(err) {{
-                addMessage("Error: "+err.message,'meshu-ai');
+                // Emulate 'Enter' to submit the text to Python
+                backendInput.dispatchEvent(new KeyboardEvent('keydown', {{
+                    bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13
+                }}));
+            }} else {{
+                const typingInd = doc.getElementById('meshu-typing');
+                if(typingInd) typingInd.remove();
+                addMessage("Backend bridge disconnected.", 'ai');
             }}
         }}
 
-        toggle.onclick = () => {{
-            windowDiv.style.display = windowDiv.style.display==='flex'?'none':'flex';
-        }};
-        closeBtn.onclick = () => windowDiv.style.display='none';
-        send.onclick = sendMessage;
-        input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
+        sendBtn.addEventListener('click', () => sendMessage());
+        inputField.addEventListener('keypress', (e) => {{ if(e.key === 'Enter') sendMessage(); }});
 
-        addMessage("Hi! I'm MESHU. How can I help you today?",'meshu-ai');
+        windowDiv.addEventListener('click', (e) => {{
+            const chip = e.target.closest('.chip');
+            if (chip) {{
+                const query = chip.getAttribute('data-query');
+                if (query) sendMessage(query);
+            }}
+        }});
+
+        toggleBtn.addEventListener('click', () => {{
+            const isVisible = windowDiv.style.display === 'flex';
+            windowDiv.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) inputField.focus(); 
+        }});
+
+        addMessage("Hello! I'm MESHU, your AI guide. Click a button below or use the microphone to talk!", 'ai');
 
     }})();
     </script>
     """
-
+    
     components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
