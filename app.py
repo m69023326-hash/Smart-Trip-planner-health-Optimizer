@@ -777,13 +777,12 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# ENHANCED analyze_image FUNCTION (with error handling & fallback)
+# FIXED analyze_image FUNCTION (with updated model & safe fallback)
 # ============================================================
 def analyze_image(file, client):
     """
     Analyze an image using Groq's vision model.
-    If the image is too large or the API fails, it falls back to a text prompt
-    using the dual‑AI function.
+    If the image is too large or the API fails, it falls back to a text prompt.
     """
     # Read and encode image
     img_data = file.read()
@@ -795,6 +794,9 @@ def analyze_image(file, client):
     
     img_b64 = base64.b64encode(img_data).decode('utf-8')
     
+    # Current Groq vision model (as of 2025)
+    vision_model = "llama-3.2-11b-vision-preview"
+    
     try:
         # Attempt Groq vision API
         res = client.chat.completions.create(
@@ -805,7 +807,7 @@ def analyze_image(file, client):
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
                 ]
             }],
-            model="llama-3.2-90b-vision-preview"
+            model=vision_model
         )
         return res.choices[0].message.content
         
@@ -813,14 +815,18 @@ def analyze_image(file, client):
         st.error(f"❌ Image analysis failed: {str(e)[:200]}")
         st.info("🔄 Falling back to text‑based analysis. Please describe the image in the chat, or upload a PDF version.")
         
-        # Use dual‑AI fallback with a prompt asking for help
-        messages = [
-            {"role": "system", "content": "You are a helpful medical assistant. The user tried to upload an image but it couldn't be processed. Politely ask them to describe the image or upload a PDF."},
-            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-        ]
-        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
-        return response
-
+        # Use a direct text model for fallback (avoiding NameError)
+        try:
+            fallback_res = client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a helpful medical assistant. The user tried to upload an image but it couldn't be processed. Politely ask them to describe the image or upload a PDF."},
+                    {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
+                ],
+                model="llama-3.3-70b-versatile"
+            )
+            return fallback_res.choices[0].message.content
+        except:
+            return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
 # ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
