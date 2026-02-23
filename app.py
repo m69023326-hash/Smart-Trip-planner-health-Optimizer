@@ -2497,114 +2497,114 @@ with tourism_tab:
         if current_selection in tourism_pages:
             tourism_pages[current_selection]()
 
-import streamlit as st
-import streamlit.components.v1 as components
-
+# ============================================================
+# MESHU CHATBOT (unchanged)
+# ============================================================
 def add_meshu_chatbot():
     try:
         groq_key = st.secrets["good"]  
     except KeyError:
-        st.error("Groq API key 'good' not found.")
+        st.error("Groq API key 'good' not found in secrets.")
         return
 
     chatbot_html = f"""
     <div id="meshu-chatbot-placeholder"></div>
+
     <script>
     (function() {{
         const doc = window.parent.document;
         const containerId = 'meshu-chatbot-container';
+
         if (doc.getElementById(containerId)) return;
 
-        // Stylesheet for Premium Typography and Layout
-        const style = doc.createElement('style');
-        style.textContent = `
-            @keyframes meshuPulse {{ 0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}} 70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}} 100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}} }}
-            @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
-            
-            .meshu-msg {{ 
-                max-width: 85%; 
-                padding: 12px 16px; 
-                border-radius: 18px; 
-                font-size: 14.5px; 
-                line-height: 1.5; 
-                margin-bottom: 4px;
-                font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                letter-spacing: 0.3px;
-            }}
-            .meshu-user {{ 
-                align-self: flex-end; 
-                background: linear-gradient(135deg, #2563eb, #1d4ed8); 
-                color: white; 
-                border-bottom-right-radius: 4px;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            }}
-            .meshu-ai {{ 
-                align-self: flex-start; 
-                background: #1e293b; 
-                color: #e2e8f0; 
-                border-bottom-left-radius: 4px;
-                border: 1px solid rgba(255,255,255,0.05);
-            }}
-            /* Markdown-like spacing inside AI responses */
-            .meshu-ai strong {{ color: #60a5fa; font-weight: 600; }}
-            .meshu-ai p {{ margin: 0 0 8px 0; }}
-            .meshu-ai ul {{ margin: 4px 0; padding-left: 20px; }}
-            .meshu-ai li {{ margin-bottom: 4px; }}
-
-            .typing-dot {{ display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; margin-right: 3px; animation: typing 1.4s infinite both; }}
-            .typing-dot:nth-child(2) {{ animation-delay: .2s; }}
-            .typing-dot:nth-child(3) {{ animation-delay: .4s; }}
-        `;
-        doc.head.appendChild(style);
-
-        // Layout Construction
         const container = doc.createElement('div');
         container.id = containerId;
-        container.style.cssText = "position:fixed; bottom:90px; right:20px; z-index:999999;";
+        container.style.position = 'fixed';
+        container.style.bottom = '90px'; 
+        container.style.right = '20px';
+        container.style.zIndex = '999999';
 
         const toggle = doc.createElement('button');
         toggle.innerHTML = '💬';
-        toggle.style.cssText = `width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);border:none;color:white;font-size:26px;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:meshuPulse 2s infinite;`;
+        toggle.style.cssText = `
+            width:60px;height:60px;border-radius:50%;
+            background:linear-gradient(135deg,#2563eb,#7c3aed);
+            border:none;color:white;font-size:26px;
+            cursor:pointer;
+            box-shadow:0 8px 30px rgba(0,0,0,0.4);
+            animation: meshuPulse 2s infinite;
+        `;
 
         const windowDiv = doc.createElement('div');
-        windowDiv.style.cssText = `display:none; position:absolute; bottom:80px; right:0; width:380px; height:550px; background:rgba(15,23,42,0.98); backdrop-filter:blur(20px); border-radius:24px; box-shadow:0 25px 70px rgba(0,0,0,0.6); overflow:hidden; flex-direction:column; border:1px solid rgba(255,255,255,0.1);`;
+        windowDiv.style.cssText = `
+            display:none;
+            position:absolute;
+            bottom:80px;
+            right:0;
+            width:360px;
+            height:520px;
+            background:rgba(15,23,42,0.98);
+            backdrop-filter:blur(12px);
+            border-radius:22px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+            overflow:hidden;
+            flex-direction:column;
+            font-family: sans-serif;
+            color:#f1f5f9;
+        `;
 
         const header = doc.createElement('div');
-        header.style.cssText = `padding:20px; background:#0f172a; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05);`;
-        header.innerHTML = `<div><div style="font-weight:800; font-size:18px; background:linear-gradient(135deg,#60a5fa,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MESHU</div><div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px;">AI Assistant Active</div></div>`;
+        header.style.cssText = `padding:16px 20px; background:#0f172a; display:flex; justify-content:space-between; align-items:center; font-weight:700;`;
+        header.innerHTML = `<span style="background:linear-gradient(135deg,#60a5fa,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MESHU</span>`;
+
+        const closeBtn = doc.createElement('span');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.cssText = 'cursor:pointer; font-size:24px;';
+        header.appendChild(closeBtn);
 
         const messagesDiv = doc.createElement('div');
-        messagesDiv.style.cssText = `flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; scroll-behavior: smooth;`;
+        messagesDiv.style.cssText = `flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;`;
 
         const inputArea = doc.createElement('div');
-        inputArea.style.cssText = `padding:16px; display:flex; gap:10px; background:#0f172a;`;
+        inputArea.style.cssText = `padding:12px; display:flex; gap:8px; background:#0f172a;`;
+
         const input = doc.createElement('input');
-        input.placeholder = "Message MESHU...";
-        input.style.cssText = `flex:1; padding:12px 18px; border-radius:14px; border:1px solid #334155; background:#1e293b; color:white; outline:none; font-size:14px;`;
+        input.placeholder = "Ask me anything...";
+        input.style.cssText = `flex:1; padding:10px 14px; border-radius:40px; border:none; background:#1e293b; color:white; outline:none;`;
 
         const send = doc.createElement('button');
-        send.innerText = "→";
-        send.style.cssText = `width:45px; height:42px; border-radius:12px; border:none; background:#2563eb; color:white; font-size:20px; cursor:pointer; font-weight:bold;`;
+        send.innerText = "Send";
+        send.style.cssText = `padding:8px 18px; border-radius:40px; border:none; background:#2563eb; color:white; font-weight:600; cursor:pointer;`;
 
-        // Logic Functions
-        function formatText(text) {{
-            // Simple logic to convert **bold** and newlines for a premium look
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\\n/g, '<br>')
-                .replace(/^- (.*)/gm, '<li>$1</li>')
-                .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-        }}
+        inputArea.appendChild(input);
+        inputArea.appendChild(send);
+        windowDiv.appendChild(header);
+        windowDiv.appendChild(messagesDiv);
+        windowDiv.appendChild(inputArea);
+        container.appendChild(toggle);
+        container.appendChild(windowDiv);
+        doc.body.appendChild(container);
 
-        function addMessage(text, cls, isTyping = false) {{
+        const style = doc.createElement('style');
+        style.textContent = `
+            @keyframes meshuPulse {{
+                0% {{box-shadow:0 0 0 0 rgba(37,99,235,0.7)}}
+                70% {{box-shadow:0 0 0 18px rgba(37,99,235,0)}}
+                100% {{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+            }}
+            .meshu-msg {{ max-width:80%; padding:10px 14px; border-radius:20px; font-size:14px; line-height:1.4; }}
+            .meshu-user {{ align-self:flex-end; background:#2563eb; color:white; border-bottom-right-radius:6px; }}
+            .meshu-ai {{ align-self:flex-start; background:#334155; color:#f1f5f9; border-bottom-left-radius:6px; }}
+        `;
+        doc.head.appendChild(style);
+
+        const API_KEY = "{groq_key}";
+        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+        function addMessage(text, cls) {{
             const div = doc.createElement('div');
             div.className = 'meshu-msg ' + cls;
-            if (isTyping) {{
-                div.id = 'meshu-typing-indicator';
-                div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-            }} else {{
-                div.innerHTML = formatText(text);
-            }}
+            div.innerText = text;
             messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }}
@@ -2612,46 +2612,54 @@ def add_meshu_chatbot():
         async function sendMessage() {{
             const text = input.value.trim();
             if(!text) return;
-            addMessage(text, 'meshu-user');
+
+            addMessage(text,'meshu-user');
             input.value = '';
-            addMessage('', 'meshu-ai', true);
 
             try {{
-                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {{
+                const response = await fetch(API_URL, {{
                     method:'POST',
-                    headers:{{ 'Content-Type':'application/json', 'Authorization':'Bearer {groq_key}' }},
-                    body:JSON.stringify({{ 
-                        model: "llama-3.3-70b-versatile", 
+                    headers:{{
+                        'Content-Type':'application/json',
+                        'Authorization':'Bearer ' + API_KEY
+                    }},
+                    body:JSON.stringify({{
+                        model: "llama-3.3-70b-versatile",
                         messages: [
-                            {{role:"system", content:"Format your answers beautifully using bullet points for lists and bolding for key terms. Avoid long paragraphs."}},
-                            {{role:"user", content:text}}
-                        ] 
+                            {{role:"system",content:"You are MESHU, a smart helpful assistant."}},
+                            {{role:"user",content:text}}
+                        ]
                     }})
                 }});
-                const data = await res.json();
-                doc.getElementById('meshu-typing-indicator')?.remove();
-                addMessage(data.choices[0].message.content, 'meshu-ai');
-            }} catch {{
-                doc.getElementById('meshu-typing-indicator')?.remove();
-                addMessage("I'm having trouble connecting. Check your internet!", 'meshu-ai');
+
+                const data = await response.json();
+                
+                if(data.choices && data.choices[0]) {{
+                    addMessage(data.choices[0].message.content,'meshu-ai');
+                }} else if(data.error) {{
+                    addMessage("Error: " + data.error.message, 'meshu-ai');
+                }} else {{
+                    addMessage("Sorry, I couldn't process that.",'meshu-ai');
+                }}
+
+            }} catch(err) {{
+                addMessage("Error: "+err.message,'meshu-ai');
             }}
         }}
 
-        // Append everything
-        inputArea.append(input, send);
-        windowDiv.append(header, messagesDiv, inputArea);
-        container.append(toggle, windowDiv);
-        doc.body.appendChild(container);
-
-        toggle.onclick = () => windowDiv.style.display = windowDiv.style.display==='flex'?'none':'flex';
+        toggle.onclick = () => {{
+            windowDiv.style.display = windowDiv.style.display==='flex'?'none':'flex';
+        }};
+        closeBtn.onclick = () => windowDiv.style.display='none';
         send.onclick = sendMessage;
-        input.onkeypress = (e) => e.key==='Enter' && sendMessage();
+        input.addEventListener('keypress',(e)=>{{if(e.key==='Enter')sendMessage();}});
+
+        addMessage("Hi! I'm MESHU. How can I help you today?",'meshu-ai');
+
     }})();
     </script>
     """
-    components.html(chatbot_html, height=0)
 
-add_meshu_chatbot()
     components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
