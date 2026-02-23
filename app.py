@@ -793,65 +793,11 @@ def create_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 # ============================================================
-# ULTIMATE MULTI‑KEY AI FUNCTION FOR HEALTH COMPANION
-# ============================================================
-def get_ai_response(messages, model="llama-3.3-70b-versatile"):
-    """
-    Attempts to get response from Groq first, using all available Groq keys.
-    If all Groq keys fail, falls back to DeepSeek using all available DeepSeek keys.
-    If both providers fail, returns an error message.
-    """
-    groq_keys = [GROQ_KEY, GROQ_KEY_2]
-    deepseek_keys = [DEEPSEEK_KEY, DEEPSEEK_KEY_2]
-
-    # Try Groq keys in order
-    for idx, key in enumerate(groq_keys):
-        try:
-            groq_client = Groq(api_key=key)
-            response = groq_client.chat.completions.create(
-                messages=messages,
-                model=model
-            )
-            return response.choices[0].message.content, f"groq_key_{idx+1}"
-        except Exception as e:
-            st.warning(f"Groq key {idx+1} failed: {str(e)[:100]}. Trying next Groq key...")
-            continue
-
-    # All Groq keys failed – try DeepSeek keys
-    for idx, key in enumerate(deepseek_keys):
-        try:
-            headers = {
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "deepseek-chat",
-                "messages": messages,
-                "temperature": 0.7
-            }
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            result = response.json()
-            return result["choices"][0]["message"]["content"], f"deepseek_key_{idx+1}"
-        except Exception as e2:
-            st.warning(f"DeepSeek key {idx+1} failed: {str(e2)[:100]}. Trying next DeepSeek key...")
-            continue
-
-    # All keys failed
-    st.error("All AI services failed. Please check your API keys and try again later.")
-    return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
-
-# ============================================================
-# ULTIMATE IMAGE ANALYSIS (multi‑key, multi‑model)
+# ULTIMATE IMAGE ANALYSIS (updated vision models, retry on rate limit)
 # ============================================================
 def analyze_image(file):
     """
-    Analyze an image using Groq's vision models with key rotation.
+    Analyze an image using Groq's vision models with key rotation and retry on rate limits.
     Tries a list of known working vision models in order, and for each model
     cycles through all Groq keys. If all models/keys fail, returns a user‑friendly message.
     """
@@ -864,12 +810,14 @@ def analyze_image(file):
     
     img_b64 = base64.b64encode(img_data).decode('utf-8')
     
-    # List of currently active vision models (as of early 2025)
+    # Updated list of Groq vision models (as of early 2025)
     vision_models = [
-        "llama-3.2-11b-vision-preview",   # 11B model, fast and capable
-        "llava-v1.5-7b-4096-preview",     # LLaVA 7B
-        "llava-v1.5-13b-4096-preview",    # LLaVA 13B
-        "llama-3.2-90b-vision-preview",   # older but may still work (try last)
+        "llama-3.2-11b-vision",          # newest 11B vision model
+        "llama-3.2-90b-vision",          # newest 90B vision model
+        "llama-3.2-11b-vision-preview",  # older but may still work
+        "llama-3.2-90b-vision-preview",  # older
+        "llava-v1.5-7b-4096-preview",    # LLaVA 7B
+        "llava-v1.5-13b-4096-preview",   # LLaVA 13B
     ]
     
     groq_keys = [GROQ_KEY, GROQ_KEY_2]
@@ -877,24 +825,31 @@ def analyze_image(file):
     last_error = ""
     for model in vision_models:
         for key_idx, key in enumerate(groq_keys):
-            try:
-                client = Groq(api_key=key)
-                res = client.chat.completions.create(
-                    messages=[{
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                        ]
-                    }],
-                    model=model
-                )
-                return res.choices[0].message.content
-            except Exception as e:
-                last_error = str(e)
-                st.warning(f"Vision model '{model}' with Groq key {key_idx+1} failed: {last_error[:100]}. Trying next key...")
-                continue  # try next key for the same model
-        # If all keys failed for this model, try next model
+            retries = 3
+            for attempt in range(retries):
+                try:
+                    client = Groq(api_key=key)
+                    res = client.chat.completions.create(
+                        messages=[{
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
+                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                            ]
+                        }],
+                        model=model
+                    )
+                    return res.choices[0].message.content
+                except Exception as e:
+                    last_error = str(e)
+                    if "429" in last_error:  # rate limit
+                        st.warning(f"Rate limit hit for model '{model}' with Groq key {key_idx+1}. Retrying in {2**attempt} seconds...")
+                        time.sleep(2 ** attempt)  # exponential backoff
+                        continue
+                    else:
+                        st.warning(f"Vision model '{model}' with Groq key {key_idx+1} failed: {last_error[:100]}. Trying next key...")
+                        break  # break retry loop, try next key
+            # If all keys failed for this model, try next model
         st.warning(f"All keys failed for model '{model}'. Trying next vision model...")
     
     # All models/keys failed – give a helpful message
