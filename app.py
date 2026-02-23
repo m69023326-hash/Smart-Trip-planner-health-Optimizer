@@ -792,80 +792,119 @@ def create_pdf(text):
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# ============================================================
-# ULTIMATE IMAGE ANALYSIS (updated vision models, retry on rate limit)
-# ============================================================
-def analyze_image(file):
-    """
-    Analyze an image using Groq's vision models with key rotation and retry on rate limits.
-    Tries a list of known working vision models in order, and for each model
-    cycles through all Groq keys. If all models/keys fail, returns a user‑friendly message.
-    """
-    # Read and encode image
-    img_data = file.read()
-    file_size_mb = len(img_data) / (1024 * 1024)
-    
-    if file_size_mb > 20:
-        st.warning(f"⚠️ Image is {file_size_mb:.1f} MB. Large images may fail. Consider compressing or using a PDF.")
-    
-    img_b64 = base64.b64encode(img_data).decode('utf-8')
-    
-    # Updated list of Groq vision models (as of early 2025)
-    vision_models = [
-        "llama-3.2-11b-vision",          # newest 11B vision model
-        "llama-3.2-90b-vision",          # newest 90B vision model
-        "llama-3.2-11b-vision-preview",  # older but may still work
-        "llama-3.2-90b-vision-preview",  # older
-        "llava-v1.5-7b-4096-preview",    # LLaVA 7B
-        "llava-v1.5-13b-4096-preview",   # LLaVA 13B
-    ]
-    
-    groq_keys = [GROQ_KEY, GROQ_KEY_2]
-    
-    last_error = ""
-    for model in vision_models:
-        for key_idx, key in enumerate(groq_keys):
-            retries = 3
-            for attempt in range(retries):
-                try:
-                    client = Groq(api_key=key)
-                    res = client.chat.completions.create(
-                        messages=[{
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
-                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                            ]
-                        }],
-                        model=model
-                    )
-                    return res.choices[0].message.content
-                except Exception as e:
-                    last_error = str(e)
-                    if "429" in last_error:  # rate limit
-                        st.warning(f"Rate limit hit for model '{model}' with Groq key {key_idx+1}. Retrying in {2**attempt} seconds...")
-                        time.sleep(2 ** attempt)  # exponential backoff
-                        continue
-                    else:
-                        st.warning(f"Vision model '{model}' with Groq key {key_idx+1} failed: {last_error[:100]}. Trying next key...")
-                        break  # break retry loop, try next key
-            # If all keys failed for this model, try next model
-        st.warning(f"All keys failed for model '{model}'. Trying next vision model...")
-    
-    # All models/keys failed – give a helpful message
-    st.error(f"❌ Image analysis failed with all vision models and keys. Last error: {last_error[:200]}")
-    st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
-    
-    # Fallback to text‑only response using the multi‑key text function
-    try:
-        fallback_msg, _ = get_ai_response([
-            {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
-            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
-        ])
-        return fallback_msg
-    except:
-        return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
+# ================================
+# 🩺 HEALTH REPORT ANALYZER TAB
+# ================================
 
+import streamlit as st
+from groq import Groq
+import PyPDF2
+from PIL import Image
+import io
+import base64
+
+# ---------- CONFIG ----------
+GROQ_API_KEY = "grok_api_key_2"
+client = Groq(api_key=GROQ_API_KEY)
+
+# ---------- TEXT EXTRACTOR ----------
+def extract_text_from_pdf(file):
+    try:
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            content = page.extract_text()
+            if content:
+                text += content + "\n"
+        return text.strip()
+    except:
+        return None
+
+def extract_text_from_image(file):
+    try:
+        image = Image.open(file)
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        return f"[IMAGE_REPORT]\nBase64:{img_str[:500]}"
+    except:
+        return None
+
+# ---------- AI ANALYSIS ----------
+def analyze_health_report(report_text):
+    prompt = f"""
+You are a clinical nutrition AI.
+
+TASK:
+1. Analyze medical values quickly
+2. Detect possible health concern
+3. Provide ONLY a simple diet plan
+
+RULES:
+- No long explanation
+- No medical disclaimer
+- No diagnosis paragraph
+- Output must be short
+- Provide diet suitable for Pakistan region foods
+
+OUTPUT FORMAT:
+
+Health Focus:
+<1 line>
+
+Recommended Diet Plan:
+• Breakfast:
+• Lunch:
+• Dinner:
+• Avoid:
+• Hydration:
+
+Medical Report:
+{report_text}
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error analyzing report: {str(e)}"
+
+# ---------- UI ----------
+def health_chatbot_tab():
+    st.markdown("## 🧬 AI Health Report Analyzer")
+    st.write("Upload medical report → Get instant diet plan")
+
+    uploaded_file = st.file_uploader(
+        "Upload Report (PDF, JPG, PNG)",
+        type=["pdf", "jpg", "jpeg", "png"]
+    )
+
+    if uploaded_file:
+        file_type = uploaded_file.type
+
+        with st.spinner("Analyzing report..."):
+            if "pdf" in file_type:
+                report_text = extract_text_from_pdf(uploaded_file)
+            else:
+                report_text = extract_text_from_image(uploaded_file)
+
+            if not report_text:
+                st.error("Could not read the report.")
+                return
+
+            result = analyze_health_report(report_text)
+
+        st.success("Analysis Complete")
+        st.markdown(result)
+
+# ---------- CALL THIS FUNCTION WHERE YOUR TABS ARE ----------
+# Example:
+# with tab_health:
+#     health_chatbot_tab()
 # ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
