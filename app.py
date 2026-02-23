@@ -2507,8 +2507,13 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (Mobile Responsive Edition)
+# MESHU CHATBOT (Perfect Mobile Fit Edition)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2524,7 +2529,6 @@ def add_meshu_chatbot():
         img_base64 = base64.b64encode(img_path.read_bytes()).decode()
         bot_avatar = f"data:image/png;base64,{img_base64}"
     except Exception:
-        # Fallback to a placeholder icon if the folder/image is missing
         bot_avatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
 
     # 3. Chatbot HTML/CSS/JS Injection
@@ -2536,7 +2540,6 @@ def add_meshu_chatbot():
         const doc = window.parent.document;
         const containerId = 'meshu-chatbot-container';
         
-        // Prevent duplicate instances if the app reloads
         if (doc.getElementById(containerId)) return;
 
         // --- PREMIUM & RESPONSIVE CSS STYLES ---
@@ -2564,21 +2567,21 @@ def add_meshu_chatbot():
             #meshu-window {{
                 display: none; 
                 width: 380px; 
-                max-width: calc(100vw - 40px); /* SHRINK ON MOBILE: Viewport width minus margins */
-                height: 580px;
-                max-height: calc(100vh - 120px); /* SHRINK ON MOBILE: Keep above keyboard */
+                max-width: calc(100vw - 40px); /* Perfect horizontal fit */
+                height: 520px; /* Slightly shorter default */
+                max-height: calc(100vh - 200px); /* 🟢 THE FIX: Leaves room for browser UI & Manage App */
                 background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
-                border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                position: absolute; bottom: 85px; right: 0;
+                border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                position: absolute; bottom: 80px; right: 0;
                 flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.1);
                 font-family: 'Inter', sans-serif; overflow: hidden;
             }}
 
-            .meshu-header {{ padding: 18px 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
-            .meshu-header h3 {{ margin: 0; font-size: 17px; color: white; }}
-            .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; }}
+            .meshu-header {{ padding: 15px 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+            .meshu-header h3 {{ margin: 0; font-size: 16px; color: white; }}
+            .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.3; }}
 
-            .meshu-messages {{ flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }}
+            .meshu-messages {{ flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }}
             
             .meshu-msg {{ 
                 max-width: 85%; padding: 12px 16px; border-radius: 18px; 
@@ -2587,15 +2590,15 @@ def add_meshu_chatbot():
             .meshu-user {{ align-self: flex-end; background: #2563eb; border-bottom-right-radius: 4px; }}
             .meshu-ai {{ align-self: flex-start; background: #1e293b; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }}
             
-            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 15px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
+            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 15px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
             .chip {{ 
                 background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; 
-                color: #60a5fa; padding: 6px 12px; border-radius: 20px; 
+                color: #60a5fa; padding: 6px 12px; border-radius: 16px; 
                 font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap;
             }}
             .chip:hover {{ background: #2563eb; color: white; }}
 
-            .meshu-input-area {{ padding: 12px 15px; display: flex; gap: 8px; background: #0f172a; }}
+            .meshu-input-area {{ padding: 10px 15px; display: flex; gap: 8px; background: #0f172a; }}
             .meshu-input-area input {{ 
                 flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid #334155;
                 background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
@@ -2616,15 +2619,14 @@ def add_meshu_chatbot():
         // --- HTML STRUCTURE ---
         const container = doc.createElement('div');
         container.id = containerId;
-        // Right is 20px, combined with max-width calc(100vw - 40px), ensures perfect 20px padding on left side of mobile screens!
-        container.style.cssText = "position:fixed; bottom:60px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
+        container.style.cssText = "position:fixed; bottom:80px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
         
         const windowDiv = doc.createElement('div');
         windowDiv.id = "meshu-window";
         windowDiv.innerHTML = `
             <div class="meshu-header">
                 <h3>MESHU Assistant ✨</h3>
-                <p>Always online to help you navigate this app.</p>
+                <p>Always online to help you navigate.</p>
             </div>
             <div id="meshu-messages" class="meshu-messages"></div>
             <div class="quick-chips">
@@ -2739,5 +2741,4 @@ def add_meshu_chatbot():
     
     components.html(chatbot_html, height=0)
 
-# Start the Chatbot
 add_meshu_chatbot()
