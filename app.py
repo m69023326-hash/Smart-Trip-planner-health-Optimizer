@@ -16,6 +16,7 @@ import json
 import os
 import hashlib
 from datetime import datetime
+import time  # for retry delays
 
 # ============================================================
 # PAGE CONFIG & INITIAL SETUP
@@ -792,130 +793,98 @@ def create_pdf(text):
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# ==========================================
-# 🩺 HEALTH REPORT ANALYZER (STABLE VERSION)
-# ==========================================
-
-import streamlit as st
-import os
-from groq import Groq
-import PyPDF2
-from PIL import Image
-import io
-
-client = Groq(api_key=os.getenv("grok_api_key_2"))
-
-def extract_pdf_text(file):
-    text = ""
-    reader = PyPDF2.PdfReader(file)
-    for page in reader.pages:
-        content = page.extract_text()
-        if content:
-            text += content
-    return text.strip()
-
-def extract_image_info(file):
-    image = Image.open(file)
-    return "Medical report image uploaded."
-
-def analyze_report(text):
-    messages = [
-        {
-            "role": "user",
-            "content": f"""
-Analyze this medical report briefly and give ONLY diet plan.
-
-Output format:
-Health Focus:
-<one line>
-
-Diet Plan:
-Breakfast:
-Lunch:
-Dinner:
-Avoid:
-Hydration:
-
-Report:
-{text}
-"""
-        }
-    ]
-
+# ============================================================
+# SINGLE‑KEY AI FUNCTION FOR HEALTH COMPANION (using only GROQ_KEY_2)
+# ============================================================
+def get_ai_response(messages, model="llama-3.3-70b-versatile"):
+    """
+    Attempts to get response from Groq using only the second key (grok_api_key_2).
+    If it fails, returns an error message.
+    """
     try:
-        response = client.chat.completions.create(
-            model="llama3-70b-8192",
+        groq_client = Groq(api_key=GROQ_KEY_2)
+        response = groq_client.chat.completions.create(
             messages=messages,
-            temperature=0.2
+            model=model
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content, "groq_key_2"
     except Exception as e:
-        return f"Analysis failed: {str(e)}"
+        st.error(f"❌ Groq API failed: {str(e)[:200]}")
+        return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
 
-def health_chatbot_tab():
-    st.subheader("🧬 AI Medical Report → Diet Plan")
-
-    file = st.file_uploader(
-        "Upload PDF or Image",
-        type=["pdf", "png", "jpg", "jpeg"]
-    )
-
-    if file:
-        with st.spinner("Reading report..."):
-            if file.type == "application/pdf":
-                text = extract_pdf_text(file)
-            else:
-                text = extract_image_info(file)
-
-            if not text:
-                st.error("Could not read file")
-                return
-
-            result = analyze_report(text)
-
-        st.success("Diet Plan Generated")
-        st.markdown(result)
 # ============================================================
-# TOURISM FUNCTIONS
+# ULTIMATE IMAGE ANALYSIS (updated vision models, single key)
 # ============================================================
-def load_json(filename):
-    filepath = os.path.join(DATA_DIR, filename)
+def analyze_image(file):
+    """
+    Analyze an image using Groq's vision models with a single key and retry on rate limit.
+    Tries a list of known working vision models in order, with exponential backoff on 429 errors.
+    If all models fail, returns a user‑friendly message.
+    """
+    # Read and encode image
+    img_data = file.read()
+    file_size_mb = len(img_data) / (1024 * 1024)
+    
+    if file_size_mb > 20:
+        st.warning(f"⚠️ Image is {file_size_mb:.1f} MB. Large images may fail. Consider compressing or using a PDF.")
+    
+    img_b64 = base64.b64encode(img_data).decode('utf-8')
+    
+    # Updated list of Groq vision models (as of early 2025)
+    vision_models = [
+        "llama-3.2-11b-vision",          # newest 11B vision model
+        "llama-3.2-90b-vision",          # newest 90B vision model
+        "llama-3.2-11b-vision-preview",  # older but may still work
+        "llama-3.2-90b-vision-preview",  # older
+        "llava-v1.5-7b-4096-preview",    # LLaVA 7B
+        "llava-v1.5-13b-4096-preview",   # LLaVA 13B
+    ]
+    
+    last_error = ""
+    for model in vision_models:
+        retries = 3
+        for attempt in range(retries):
+            try:
+                client = Groq(api_key=GROQ_KEY_2)
+                res = client.chat.completions.create(
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Extract all visible text from this image. If it's a medical report, summarize the key findings in a clear, professional manner."},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                        ]
+                    }],
+                    model=model
+                )
+                return res.choices[0].message.content
+            except Exception as e:
+                last_error = str(e)
+                if "429" in last_error:  # rate limit
+                    wait = 2 ** attempt
+                    st.warning(f"Rate limit hit for model '{model}'. Retrying in {wait} seconds...")
+                    time.sleep(wait)
+                else:
+                    st.warning(f"Vision model '{model}' failed: {last_error[:100]}. Trying next model...")
+                    break  # break retry loop, try next model
+        # If all retries failed, continue to next model
+        st.warning(f"All retries failed for model '{model}'. Trying next vision model...")
+    
+    # All models failed – give a helpful message
+    st.error(f"❌ Image analysis failed with all vision models. Last error: {last_error[:200]}")
+    st.info("🔄 Please describe the image in the chat, or upload a PDF version.")
+    
+    # Fallback to text‑only response using the single‑key text function
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return [] if filename == "destinations.json" else {}
-
-def save_json(filename, data):
-    filepath = os.path.join(DATA_DIR, filename)
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-def get_admin_hash():
-    return hashlib.sha256("admin123".encode()).hexdigest()
-
-def sanitize_messages(messages):
-    if not messages: return messages
-    cleaned = [messages[0]]
-    for msg in messages[1:]:
-        if cleaned and msg["role"] == cleaned[-1]["role"] and msg["role"] != "system":
-            cleaned[-1] = {"role": msg["role"], "content": cleaned[-1]["content"] + "\n" + msg["content"]}
-        else: cleaned.append(msg)
-    return cleaned
-
-def fetch_weather_tourism(lat, lon):
-    params = {"latitude": lat, "longitude": lon, "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code", "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code", "timezone": "Asia/Karachi", "forecast_days": 7}
-    try:
-        resp = requests.get(OPEN_METEO_URL, params=params, timeout=10)
-        return resp.json()
-    except: return None
-
-def weather_code_to_text(code):
-    codes = {0:"☀️ Clear",1:"🌤️ Mainly Clear",2:"⛅ Partly Cloudy",3:"☁️ Overcast", 45:"🌫️ Foggy",51:"🌦️ Light Drizzle",61:"🌧️ Slight Rain",63:"🌧️ Moderate Rain",65:"🌧️ Heavy Rain",71:"🌨️ Slight Snow",95:"⛈️ Thunderstorm"}
-    return codes.get(code, f"Code {code}")
+        fallback_msg, _ = get_ai_response([
+            {"role": "system", "content": "You are a helpful medical assistant. The user's image could not be processed. Politely ask them to describe the image or upload a PDF."},
+            {"role": "user", "content": "My image couldn't be analyzed. What should I do?"}
+        ])
+        return fallback_msg
+    except:
+        return "I'm unable to process the image. Please describe it in the chat or upload a PDF."
 
 # ============================================================
-# TOURISM PAGES VIEWS (unchanged, with CSS variables)
+# TOURISM FUNCTIONS (unchanged, with CSS variables)
 # ============================================================
 def page_home():
     st.markdown("""
@@ -2580,9 +2549,9 @@ with planner_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-# --- TAB 2: HEALTH COMPANION (now with multi‑key AI) ---
+# --- TAB 2: HEALTH COMPANION (now with single‑key AI) ---
 with companion_tab:
-    # Use the multi‑key AI function instead of direct Groq client
+    # Use the single‑key AI function instead of direct Groq client
     if not st.session_state.chat_history:
         st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
         st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
@@ -2623,7 +2592,7 @@ with companion_tab:
     if uploaded_file:
         txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file)
         st.session_state.medical_data = txt
-        # Use multi‑key AI
+        # Use single‑key AI
         messages = [
             {"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."},
             {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}
@@ -2637,8 +2606,8 @@ with companion_tab:
 
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
-        # Transcribe with Groq (still using first key for audio)
-        groq_client = Groq(api_key=GROQ_KEY)
+        # Transcribe with Groq (still using first key for audio, but you could use the second key if needed)
+        groq_client = Groq(api_key=GROQ_KEY_2)
         txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
         
         sys_prompt = "You are a friendly AI companion. Reply in the exact same language as the user. YOU MUST start your response with exactly [LANG:UR] for Urdu, [LANG:HI] for Hindi, or [LANG:EN] for English. Always use emojis."
@@ -2725,13 +2694,13 @@ with tourism_tab:
             tourism_pages[current_selection]()
 
 # ============================================================
-# MESHU CHATBOT (unchanged)
+# MESHU CHATBOT (unchanged, but using the second key for consistency)
 # ============================================================
 def add_meshu_chatbot():
     try:
-        groq_key = st.secrets["good"]  
+        groq_key = st.secrets["grok_api_key_2"]   # use the second key
     except KeyError:
-        st.error("Groq API key 'good' not found in secrets.")
+        st.error("Groq API key 'grok_api_key_2' not found in secrets.")
         return
 
     chatbot_html = f"""
