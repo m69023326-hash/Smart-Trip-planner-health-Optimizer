@@ -2152,60 +2152,7 @@ with main_tab:
     with planner_content_col:
         planner_modules[selected]()
 
-# --- TAB 2: HEALTH COMPANION (now with dual‑AI fallback) ---
-with companion_tab:
-    # Use the dual‑AI function instead of direct Groq client
-    if not st.session_state.chat_history:
-        st.markdown('<div class="greeting-header">Hello dear, how can I help you?</div>', unsafe_allow_html=True)
-        st.markdown('<div class="greeting-sub">Tell me what you want or choose an option below</div>', unsafe_allow_html=True)
-        col_buttons, col_space = st.columns([1, 2]) 
-        with col_buttons:
-            if st.button("📄 Share Reports & Get Analysis"): 
-                st.session_state.chat_history.append({"role": "assistant", "content": "Upload your report using the ➕ button below!"})
-                st.rerun()
-            if st.button("🥦 Prepare a Diet Plan"): 
-                st.session_state.chat_history.append({"role": "user", "content": "I need a diet plan."})
-                st.rerun()
-
-    for i, msg in enumerate(st.session_state.chat_history):
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
-            with st.expander("📋 Copy Text"): 
-                st.code(msg["content"], language="markdown")
-            if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
-                st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
-                
-    if st.session_state.autoplay_audio:
-        st.audio(st.session_state.autoplay_audio, autoplay=True)
-        st.session_state.autoplay_audio = None
-
-    st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
-    if st.session_state.chat_history:
-        st.markdown('<a href="#chat-bottom" class="scroll-btn">⬇️</a>', unsafe_allow_html=True)
-
-    col_plus, col_clear, col_voice = st.columns([0.08, 0.08, 0.84]) 
-    with col_plus:
-        with st.popover("➕", use_container_width=True):
-            uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
-    with col_clear: 
-        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
-    with col_voice: 
-        audio_val = st.audio_input("Voice", label_visibility="collapsed")
-
-    if uploaded_file:
-        txt = extract_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else analyze_image(uploaded_file, Groq(api_key=GROQ_KEY))
-        st.session_state.medical_data = txt
-        # Use dual AI
-        messages = [
-            {"role": "system", "content": "You are a nutritionist. Always use emojis. Ask 'Do you want its PDF file?' at the end."},
-            {"role": "user", "content": f"Analyze: {txt}. Give diet plan."}
-        ]
-        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
-        st.session_state.chat_history.extend([
-            {"role": "user", "content": f"📎 {uploaded_file.name}"},
-            {"role": "assistant", "content": response}
-        ])
-        st.rerun()
+v
 
     if audio_val and audio_val != st.session_state.last_audio:
         st.session_state.last_audio = audio_val
