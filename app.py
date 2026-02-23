@@ -2512,8 +2512,13 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (Perfect Mobile Fit Edition)
+# MESHU CHATBOT (Inside Joke Edition)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2567,9 +2572,9 @@ def add_meshu_chatbot():
             #meshu-window {{
                 display: none; 
                 width: 380px; 
-                max-width: calc(100vw - 40px); /* Perfect horizontal fit */
-                height: 520px; /* Slightly shorter default */
-                max-height: calc(100vh - 200px); /* 🟢 THE FIX: Leaves room for browser UI & Manage App */
+                max-width: calc(100vw - 40px);
+                height: 520px;
+                max-height: calc(100vh - 200px);
                 background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
                 border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                 position: absolute; bottom: 80px; right: 0;
@@ -2651,7 +2656,6 @@ def add_meshu_chatbot():
         const messagesContainer = windowDiv.querySelector('#meshu-messages');
         const inputField = windowDiv.querySelector('#meshu-input');
         const sendBtn = windowDiv.querySelector('#meshu-send');
-        const chips = windowDiv.querySelectorAll('.chip');
         const API_KEY = "{groq_key}";
 
         function addMessage(text, type, isTyping = false) {{
@@ -2663,7 +2667,7 @@ def add_meshu_chatbot():
                 div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
             }} else {{
                 let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
-                formattedText = formattedText.replace(/\\n/g, '<br>');
+                // Removed global newline replacement here to prevent breaking HTML string injections
                 div.innerHTML = formattedText;
             }}
             messagesContainer.appendChild(div);
@@ -2677,6 +2681,36 @@ def add_meshu_chatbot():
             addMessage(text, 'user');
             inputField.value = '';
 
+            // --- HARDCODED EASTER EGGS (JOKES) ---
+            const lowerText = text.toLowerCase();
+            const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
+            
+            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText)) {{
+                // Show thinking animation to make it feel natural
+                addMessage('', 'ai', true); 
+                
+                setTimeout(() => {{
+                    const typingInd = doc.getElementById('meshu-typing');
+                    if(typingInd) typingInd.remove();
+                    
+                    if (lowerText.includes("who created you")) {{
+                        addMessage("My owner **Mubashir Arshad**.", 'ai');
+                    }} 
+                    else if (text === "12345") {{
+                        // Creates clickable buttons inside the chat bubble!
+                        const friendsHTML = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>';
+                        addMessage(friendsHTML, 'ai');
+                    }} 
+                    else if (jokeNames.includes(lowerText)) {{
+                        addMessage("from your brother bundle of curse upon you 😂", 'ai');
+                    }}
+                }}, 600); // 0.6 second delay
+                
+                return; // Stop here, do NOT send this to the Groq API!
+            }}
+            // --- END OF EASTER EGGS ---
+
+            // Proceed with normal AI behavior
             addMessage('', 'ai', true);
 
             try {{
@@ -2703,7 +2737,9 @@ def add_meshu_chatbot():
                 if(typingInd) typingInd.remove();
 
                 if(data.choices && data.choices[0]) {{
-                    addMessage(data.choices[0].message.content, 'ai');
+                    // Quick fix for normal newlines without breaking HTML
+                    let finalResponse = data.choices[0].message.content.replace(/\\n/g, '<br>');
+                    addMessage(finalResponse, 'ai');
                 }} else {{
                     addMessage("Oops! Something went wrong processing your request. 🤖", 'ai');
                 }}
@@ -2714,17 +2750,17 @@ def add_meshu_chatbot():
             }}
         }}
 
+        // Event Listeners
         sendBtn.addEventListener('click', () => sendMessage());
-        
-        inputField.addEventListener('keypress', (e) => {{
-            if(e.key === 'Enter') sendMessage();
-        }});
+        inputField.addEventListener('keypress', (e) => {{ if(e.key === 'Enter') sendMessage(); }});
 
-        chips.forEach(chip => {{
-            chip.addEventListener('click', () => {{
+        // 🟢 EVENT DELEGATION: This handles BOTH the quick-chips and your generated Joke chips!
+        windowDiv.addEventListener('click', (e) => {{
+            const chip = e.target.closest('.chip');
+            if (chip) {{
                 const query = chip.getAttribute('data-query');
-                sendMessage(query);
-            }});
+                if (query) sendMessage(query);
+            }}
         }});
 
         toggleBtn.addEventListener('click', () => {{
@@ -2733,6 +2769,7 @@ def add_meshu_chatbot():
             if (!isVisible) inputField.focus(); 
         }});
 
+        // Greet the user automatically
         addMessage("Hello! I'm MESHU, your AI guide. Click a button below or type a question! ✨", 'ai');
 
     }})();
