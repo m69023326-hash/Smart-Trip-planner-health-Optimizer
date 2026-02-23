@@ -605,6 +605,12 @@ def clear_chat():
     st.session_state.medical_data = ""
     st.session_state.last_audio = None
     st.session_state.autoplay_audio = None
+    # Reset questionnaire state
+    st.session_state.disease_info = None
+    st.session_state.disease_asked = False
+    st.session_state.report_uploaded = False
+    st.session_state.feeling_asked = False
+    st.session_state.diet_generated = False
 
 def update_planner_module():
     st.session_state.planner_module = st.session_state.planner_nav
@@ -670,50 +676,147 @@ def create_pdf(text):
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# ============================================================
-# DUAL AI FUNCTION FOR HEALTH COMPANION
-# ============================================================
-def get_ai_response(messages, model="llama-3.3-70b-versatile"):
-    """
-    Attempts to get response from Groq first.
-    If Groq fails, falls back to DeepSeek.
-    If both fail, returns an error message.
-    """
-    # Try Groq first
-    try:
+# --- TAB 2: HEALTH COMPANION (enhanced interactive questionnaire) ---
+with companion_tab:
+    # Initialize state variables for the questionnaire
+    if "disease_info" not in st.session_state:
+        st.session_state.disease_info = None
+        st.session_state.disease_asked = False
+        st.session_state.report_uploaded = False
+        st.session_state.feeling_asked = False
+        st.session_state.diet_generated = False
+
+    # Display chat history
+    for i, msg in enumerate(st.session_state.chat_history):
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+            with st.expander("📋 Copy Text"):
+                st.code(msg["content"], language="markdown")
+            if msg["role"] == "user" and "pdf" in msg["content"].lower() and i > 0:
+                st.download_button("📥 Download", create_pdf(st.session_state.chat_history[i-1]["content"]), f"doc_{i}.pdf", key=f"dl_{i}")
+
+    if st.session_state.autoplay_audio:
+        st.audio(st.session_state.autoplay_audio, autoplay=True)
+        st.session_state.autoplay_audio = None
+
+    st.markdown('<div id="chat-bottom"></div>', unsafe_allow_html=True)
+    if st.session_state.chat_history:
+        st.markdown('<a href="#chat-bottom" class="scroll-btn">⬇️</a>', unsafe_allow_html=True)
+
+    col_plus, col_clear, col_voice = st.columns([0.08, 0.08, 0.84])
+    with col_plus:
+        with st.popover("➕", use_container_width=True):
+            uploaded_file = st.file_uploader("Upload", type=["pdf", "jpg", "png"], label_visibility="collapsed")
+    with col_clear:
+        st.button("🗑️", help="Clear Chat Memory", on_click=clear_chat, use_container_width=True)
+    with col_voice:
+        audio_val = st.audio_input("Voice", label_visibility="collapsed")
+
+    # --- Handle file upload (acknowledge only, no analysis) ---
+    if uploaded_file:
+        st.session_state.chat_history.append({"role": "user", "content": f"📎 Uploaded file: {uploaded_file.name}"})
+        st.session_state.report_uploaded = True
+        st.session_state.chat_history.append({"role": "assistant", "content": "Thank you. Now, how are you feeling today? Please describe your current symptoms or how you feel."})
+        st.session_state.feeling_asked = True
+        st.rerun()
+
+    # --- Handle voice input (unchanged) ---
+    if audio_val and audio_val != st.session_state.last_audio:
+        st.session_state.last_audio = audio_val
         groq_client = Groq(api_key=GROQ_KEY)
-        response = groq_client.chat.completions.create(
-            messages=messages,
-            model=model
-        )
-        return response.choices[0].message.content, "groq"
-    except Exception as e:
-        st.warning(f"Groq API failed: {str(e)[:100]}. Falling back to DeepSeek...")
-        
-        # Fallback to DeepSeek
-        try:
-            # DeepSeek API call (assuming OpenAI-compatible endpoint)
-            headers = {
-                "Authorization": f"Bearer {DEEPSEEK_KEY}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "deepseek-chat",
-                "messages": messages,
-                "temperature": 0.7
-            }
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            result = response.json()
-            return result["choices"][0]["message"]["content"], "deepseek"
-        except Exception as e2:
-            st.error(f"Both AI services failed. Groq: {str(e)[:100]}, DeepSeek: {str(e2)[:100]}")
-            return "I'm sorry, but I'm unable to process your request at the moment. Please try again later.", None
+        txt = groq_client.audio.transcriptions.create(file=("v.wav", audio_val), model="whisper-large-v3-turbo").text
+
+        sys_prompt = "You are a friendly AI companion. Reply in the exact same language as the user. YOU MUST start your response with exactly [LANG:UR] for Urdu, [LANG:HI] for Hindi, or [LANG:EN] for English. Always use emojis."
+        messages = [
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": txt}
+        ]
+        response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+
+        lang = "UR" if "[LANG:UR]" in response else "HI" if "[LANG:HI]" in response else "EN"
+        clean = response.replace("[LANG:UR]", "").replace("[LANG:HI]", "").replace("[LANG:EN]", "").strip()
+
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": f"🎙️ {txt}"},
+            {"role": "assistant", "content": clean}
+        ])
+        st.session_state.autoplay_audio = asyncio.run(tts(clean, lang))
+        st.rerun()
+
+    # --- Handle text input (the core questionnaire) ---
+    if prompt := st.chat_input("Message..."):
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+
+        # Determine next step based on state
+        if not st.session_state.disease_asked:
+            # This is the answer to the disease question
+            st.session_state.disease_info = prompt
+            st.session_state.disease_asked = True
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload any medical report file (PDF, image, etc.). You can use the ➕ button above."})
+
+        elif st.session_state.disease_asked and not st.session_state.report_uploaded:
+            # User typed instead of uploading
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please upload a file using the ➕ button."})
+
+        elif st.session_state.report_uploaded and not st.session_state.feeling_asked:
+            # Should not happen (handled after upload), but just in case
+            st.session_state.chat_history.append({"role": "assistant", "content": "Please describe how you are feeling."})
+
+        elif st.session_state.feeling_asked and not st.session_state.diet_generated:
+            # User provided feeling – generate diet plan
+            feeling = prompt
+            diet_prompt = f"""
+You are a professional nutritionist. Based on the following information, create a detailed, personalized diet plan.
+
+User's disease/condition: {st.session_state.disease_info if st.session_state.disease_info else "None reported"}
+User's current feeling/symptoms: {feeling}
+
+Please provide a comprehensive diet plan including:
+- General dietary recommendations
+- Foods to include and avoid
+- Sample meal ideas (breakfast, lunch, dinner, snacks)
+- Hydration advice
+- Any supplements if appropriate
+- Lifestyle tips
+
+Format the plan in a clear, easy-to-read manner with headings and bullet points. Use emojis where helpful.
+"""
+            messages = [{"role": "system", "content": "You are a helpful nutritionist."},
+                        {"role": "user", "content": diet_prompt}]
+            response, source = get_ai_response(messages)
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+            st.session_state.diet_generated = True
+            st.session_state.chat_history.append({"role": "assistant", "content": "Would you like to share your daily routine so I can refine the diet plan further? (Reply with your routine or say 'no thanks')"})
+
+        elif st.session_state.diet_generated:
+            # User may respond with routine or decline
+            if "no" in prompt.lower() or "thanks" in prompt.lower():
+                st.session_state.chat_history.append({"role": "assistant", "content": "You're welcome! If you have any more questions, feel free to ask."})
+            else:
+                refine_prompt = f"""
+Based on the user's routine: {prompt}, refine the previously given diet plan to better fit their schedule. Provide updated meal timing and suggestions.
+"""
+                messages = [{"role": "system", "content": "You are a helpful nutritionist."},
+                            {"role": "user", "content": refine_prompt}]
+                response, source = get_ai_response(messages)
+                st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+        else:
+            # Fallback for general chat (should rarely occur)
+            ctx = f"Medical Context: {st.session_state.medical_data}" if st.session_state.medical_data else ""
+            messages = [
+                {"role": "system", "content": f"Helpful AI. Use emojis. Ask 'What else can I do for you today?'. {ctx}"},
+                {"role": "user", "content": prompt}
+            ]
+            response, source = get_ai_response(messages, model="llama-3.3-70b-versatile")
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+        st.rerun()
+
+    # --- Initial greeting if no chat history ---
+    if not st.session_state.chat_history:
+        st.session_state.chat_history.append({"role": "assistant", "content": "Hello! I'm your AI Health Companion. Do you have any disease or medical condition? (Please answer Yes or No, and if Yes, specify.)"})
+        st.rerun()
 
 # ============================================================
 # TOURISM FUNCTIONS
