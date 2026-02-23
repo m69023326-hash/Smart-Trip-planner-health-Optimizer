@@ -2502,8 +2502,13 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (Premium Edition with Fixed Logic)
+# MESHU CHATBOT (Mobile Responsive Edition)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2534,7 +2539,7 @@ def add_meshu_chatbot():
         // Prevent duplicate instances if the app reloads
         if (doc.getElementById(containerId)) return;
 
-        // --- PREMIUM CSS STYLES ---
+        // --- PREMIUM & RESPONSIVE CSS STYLES ---
         const style = doc.createElement('style');
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -2547,7 +2552,7 @@ def add_meshu_chatbot():
             @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
             
             #meshu-toggle-btn {{
-                width: 70px; height: 70px; border-radius: 50%;
+                width: 65px; height: 65px; border-radius: 50%;
                 background: white; border: 2px solid #2563eb;
                 cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
                 display: flex; align-items: center; justify-content: center;
@@ -2557,7 +2562,11 @@ def add_meshu_chatbot():
             #meshu-toggle-btn:hover img {{ animation: meshuWave 0.6s ease-in-out; }}
 
             #meshu-window {{
-                display: none; width: 380px; height: 580px;
+                display: none; 
+                width: 380px; 
+                max-width: calc(100vw - 40px); /* SHRINK ON MOBILE: Viewport width minus margins */
+                height: 580px;
+                max-height: calc(100vh - 120px); /* SHRINK ON MOBILE: Keep above keyboard */
                 background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px);
                 border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
                 position: absolute; bottom: 85px; right: 0;
@@ -2565,11 +2574,11 @@ def add_meshu_chatbot():
                 font-family: 'Inter', sans-serif; overflow: hidden;
             }}
 
-            .meshu-header {{ padding: 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
-            .meshu-header h3 {{ margin: 0; font-size: 18px; color: white; }}
+            .meshu-header {{ padding: 18px 20px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+            .meshu-header h3 {{ margin: 0; font-size: 17px; color: white; }}
             .meshu-header p {{ margin: 4px 0 0; font-size: 12px; color: #94a3b8; }}
 
-            .meshu-messages {{ flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }}
+            .meshu-messages {{ flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }}
             
             .meshu-msg {{ 
                 max-width: 85%; padding: 12px 16px; border-radius: 18px; 
@@ -2578,23 +2587,23 @@ def add_meshu_chatbot():
             .meshu-user {{ align-self: flex-end; background: #2563eb; border-bottom-right-radius: 4px; }}
             .meshu-ai {{ align-self: flex-start; background: #1e293b; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }}
             
-            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 20px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
+            .quick-chips {{ display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 15px; background: transparent; border-top: 1px solid rgba(255,255,255,0.05); }}
             .chip {{ 
                 background: rgba(37, 99, 235, 0.1); border: 1px solid #2563eb; 
                 color: #60a5fa; padding: 6px 12px; border-radius: 20px; 
-                font-size: 12px; cursor: pointer; transition: 0.2s;
+                font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap;
             }}
             .chip:hover {{ background: #2563eb; color: white; }}
 
-            .meshu-input-area {{ padding: 15px 20px; display: flex; gap: 10px; background: #0f172a; }}
+            .meshu-input-area {{ padding: 12px 15px; display: flex; gap: 8px; background: #0f172a; }}
             .meshu-input-area input {{ 
-                flex: 1; padding: 12px 18px; border-radius: 12px; border: 1px solid #334155;
-                background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif;
+                flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid #334155;
+                background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
             }}
             .meshu-input-area button {{ 
-                background: #2563eb; border: none; padding: 0 18px; 
+                background: #2563eb; border: none; padding: 0 16px; 
                 border-radius: 12px; color: white; font-weight: 600; cursor: pointer;
-                font-family: 'Inter', sans-serif; transition: 0.2s;
+                font-family: 'Inter', sans-serif; transition: 0.2s; font-size: 14px;
             }}
             .meshu-input-area button:hover {{ background: #1d4ed8; }}
             
@@ -2607,7 +2616,8 @@ def add_meshu_chatbot():
         // --- HTML STRUCTURE ---
         const container = doc.createElement('div');
         container.id = containerId;
-        container.style.cssText = "position:fixed; bottom:60px; right:25px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
+        // Right is 20px, combined with max-width calc(100vw - 40px), ensures perfect 20px padding on left side of mobile screens!
+        container.style.cssText = "position:fixed; bottom:90px; right:20px; z-index:999999; display:flex; flex-direction:column; align-items:flex-end;";
         
         const windowDiv = doc.createElement('div');
         windowDiv.id = "meshu-window";
@@ -2623,7 +2633,7 @@ def add_meshu_chatbot():
                 <div class="chip" data-query="Surprise me! 🎲">Surprise me</div>
             </div>
             <div class="meshu-input-area">
-                <input type="text" id="meshu-input" placeholder="Type a message...">
+                <input type="text" id="meshu-input" placeholder="Message...">
                 <button id="meshu-send">Send</button>
             </div>
         `;
@@ -2650,7 +2660,6 @@ def add_meshu_chatbot():
                 div.id = 'meshu-typing';
                 div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
             }} else {{
-                // Quick Markdown Formatting (Bolding and Line Breaks)
                 let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
                 formattedText = formattedText.replace(/\\n/g, '<br>');
                 div.innerHTML = formattedText;
@@ -2666,7 +2675,6 @@ def add_meshu_chatbot():
             addMessage(text, 'user');
             inputField.value = '';
 
-            // Show Thinking Dots
             addMessage('', 'ai', true);
 
             try {{
@@ -2689,7 +2697,6 @@ def add_meshu_chatbot():
                 }});
                 const data = await response.json();
                 
-                // Remove the thinking dots
                 const typingInd = doc.getElementById('meshu-typing');
                 if(typingInd) typingInd.remove();
 
@@ -2701,12 +2708,10 @@ def add_meshu_chatbot():
             }} catch (e) {{
                 const typingInd = doc.getElementById('meshu-typing');
                 if(typingInd) typingInd.remove();
-                addMessage("I'm having trouble connecting to the server. Check your network or API key! 📡", 'ai');
+                addMessage("I'm having trouble connecting to the server. Check your network! 📡", 'ai');
             }}
         }}
 
-        // --- SECURE EVENT LISTENERS ---
-        // Using event listeners here fixes the Streamlit iframe scoping issue
         sendBtn.addEventListener('click', () => sendMessage());
         
         inputField.addEventListener('keypress', (e) => {{
@@ -2715,7 +2720,6 @@ def add_meshu_chatbot():
 
         chips.forEach(chip => {{
             chip.addEventListener('click', () => {{
-                // Get the text from the data-query attribute and send it
                 const query = chip.getAttribute('data-query');
                 sendMessage(query);
             }});
@@ -2724,10 +2728,9 @@ def add_meshu_chatbot():
         toggleBtn.addEventListener('click', () => {{
             const isVisible = windowDiv.style.display === 'flex';
             windowDiv.style.display = isVisible ? 'none' : 'flex';
-            if (!isVisible) inputField.focus(); // Auto-focus when opened
+            if (!isVisible) inputField.focus(); 
         }});
 
-        // Greet the user automatically
         addMessage("Hello! I'm MESHU, your AI guide. Click a button below or type a question! ✨", 'ai');
 
     }})();
