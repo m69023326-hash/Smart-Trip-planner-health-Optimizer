@@ -792,119 +792,89 @@ def create_pdf(text):
     pdf.multi_cell(0, 10, text.encode('latin-1', 'replace').decode('latin-1'))
     return pdf.output(dest='S').encode('latin-1')
 
-# ================================
-# 🩺 HEALTH REPORT ANALYZER TAB
-# ================================
+# ==========================================
+# 🩺 HEALTH REPORT ANALYZER (STABLE VERSION)
+# ==========================================
 
 import streamlit as st
+import os
 from groq import Groq
 import PyPDF2
 from PIL import Image
 import io
-import base64
 
-# ---------- CONFIG ----------
-GROQ_API_KEY = "grok_api_key_2"
-client = Groq(api_key=GROQ_API_KEY)
+client = Groq(api_key=os.getenv("grok_api_key_2"))
 
-# ---------- TEXT EXTRACTOR ----------
-def extract_text_from_pdf(file):
-    try:
-        reader = PyPDF2.PdfReader(file)
-        text = ""
-        for page in reader.pages:
-            content = page.extract_text()
-            if content:
-                text += content + "\n"
-        return text.strip()
-    except:
-        return None
+def extract_pdf_text(file):
+    text = ""
+    reader = PyPDF2.PdfReader(file)
+    for page in reader.pages:
+        content = page.extract_text()
+        if content:
+            text += content
+    return text.strip()
 
-def extract_text_from_image(file):
-    try:
-        image = Image.open(file)
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        return f"[IMAGE_REPORT]\nBase64:{img_str[:500]}"
-    except:
-        return None
+def extract_image_info(file):
+    image = Image.open(file)
+    return "Medical report image uploaded."
 
-# ---------- AI ANALYSIS ----------
-def analyze_health_report(report_text):
-    prompt = f"""
-You are a clinical nutrition AI.
+def analyze_report(text):
+    messages = [
+        {
+            "role": "user",
+            "content": f"""
+Analyze this medical report briefly and give ONLY diet plan.
 
-TASK:
-1. Analyze medical values quickly
-2. Detect possible health concern
-3. Provide ONLY a simple diet plan
-
-RULES:
-- No long explanation
-- No medical disclaimer
-- No diagnosis paragraph
-- Output must be short
-- Provide diet suitable for Pakistan region foods
-
-OUTPUT FORMAT:
-
+Output format:
 Health Focus:
-<1 line>
+<one line>
 
-Recommended Diet Plan:
-• Breakfast:
-• Lunch:
-• Dinner:
-• Avoid:
-• Hydration:
+Diet Plan:
+Breakfast:
+Lunch:
+Dinner:
+Avoid:
+Hydration:
 
-Medical Report:
-{report_text}
+Report:
+{text}
 """
+        }
+    ]
 
     try:
         response = client.chat.completions.create(
             model="llama3-70b-8192",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3
+            messages=messages,
+            temperature=0.2
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"Error analyzing report: {str(e)}"
+        return f"Analysis failed: {str(e)}"
 
-# ---------- UI ----------
 def health_chatbot_tab():
-    st.markdown("## 🧬 AI Health Report Analyzer")
-    st.write("Upload medical report → Get instant diet plan")
+    st.subheader("🧬 AI Medical Report → Diet Plan")
 
-    uploaded_file = st.file_uploader(
-        "Upload Report (PDF, JPG, PNG)",
-        type=["pdf", "jpg", "jpeg", "png"]
+    file = st.file_uploader(
+        "Upload PDF or Image",
+        type=["pdf", "png", "jpg", "jpeg"]
     )
 
-    if uploaded_file:
-        file_type = uploaded_file.type
-
-        with st.spinner("Analyzing report..."):
-            if "pdf" in file_type:
-                report_text = extract_text_from_pdf(uploaded_file)
+    if file:
+        with st.spinner("Reading report..."):
+            if file.type == "application/pdf":
+                text = extract_pdf_text(file)
             else:
-                report_text = extract_text_from_image(uploaded_file)
+                text = extract_image_info(file)
 
-            if not report_text:
-                st.error("Could not read the report.")
+            if not text:
+                st.error("Could not read file")
                 return
 
-            result = analyze_health_report(report_text)
+            result = analyze_report(text)
 
-        st.success("Analysis Complete")
+        st.success("Diet Plan Generated")
         st.markdown(result)
-
-# ---------- CALL THIS FUNCTION WHERE YOUR TABS ARE ----------
-# Example:
-# with tab_health:
-#     health_chatbot_tab()
 # ============================================================
 # TOURISM FUNCTIONS
 # ============================================================
