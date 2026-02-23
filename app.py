@@ -2517,8 +2517,13 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (Inside Joke Edition)
+# MESHU CHATBOT (Voice + Jumping + Easter Eggs)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2547,17 +2552,21 @@ def add_meshu_chatbot():
         
         if (doc.getElementById(containerId)) return;
 
-        // --- PREMIUM & RESPONSIVE CSS STYLES ---
+        // --- PREMIUM, RESPONSIVE & ANIMATION CSS STYLES ---
         const style = doc.createElement('style');
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             
-            @keyframes meshuWave {{
-                0%, 100% {{ transform: rotate(0deg); }}
-                25% {{ transform: rotate(10deg); }}
-                75% {{ transform: rotate(-10deg); }}
+            /* JUMPING ANIMATION */
+            @keyframes meshuJump {{
+                0%, 100% {{ transform: translateY(0); }}
+                40% {{ transform: translateY(-18px); }}
+                60% {{ transform: translateY(-10px); }}
+                80% {{ transform: translateY(-18px); }}
             }}
+            
             @keyframes typing {{ 0%, 100% {{ opacity: .2; }} 20% {{ opacity: 1; }} }}
+            @keyframes pulseRed {{ 0% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }} 70% {{ box-shadow: 0 0 0 10px rgba(239,68,68,0); }} 100% {{ box-shadow: 0 0 0 0 rgba(239,68,68,0); }} }}
             
             #meshu-toggle-btn {{
                 width: 65px; height: 65px; border-radius: 50%;
@@ -2565,9 +2574,9 @@ def add_meshu_chatbot():
                 cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden; transition: 0.3s;
+                animation: meshuJump 2.5s infinite cubic-bezier(0.28, 0.84, 0.42, 1); /* Continuous Jumping */
             }}
             #meshu-toggle-btn img {{ width: 85%; height: 85%; transform-origin: bottom center; }}
-            #meshu-toggle-btn:hover img {{ animation: meshuWave 0.6s ease-in-out; }}
 
             #meshu-window {{
                 display: none; 
@@ -2604,16 +2613,23 @@ def add_meshu_chatbot():
             .chip:hover {{ background: #2563eb; color: white; }}
 
             .meshu-input-area {{ padding: 10px 15px; display: flex; gap: 8px; background: #0f172a; }}
+            #meshu-mic {{
+                background: #334155; border: none; padding: 0 12px; 
+                border-radius: 12px; color: white; cursor: pointer; transition: 0.2s; font-size: 16px;
+            }}
+            #meshu-mic:hover {{ background: #475569; }}
+            #meshu-mic.recording {{ background: #ef4444; animation: pulseRed 1.5s infinite; }}
+
             .meshu-input-area input {{ 
                 flex: 1; padding: 10px 15px; border-radius: 12px; border: 1px solid #334155;
                 background: #1e293b; color: white; outline: none; font-family: 'Inter', sans-serif; font-size: 14px;
             }}
-            .meshu-input-area button {{ 
+            .meshu-input-area button.send-btn {{ 
                 background: #2563eb; border: none; padding: 0 16px; 
                 border-radius: 12px; color: white; font-weight: 600; cursor: pointer;
                 font-family: 'Inter', sans-serif; transition: 0.2s; font-size: 14px;
             }}
-            .meshu-input-area button:hover {{ background: #1d4ed8; }}
+            .meshu-input-area button.send-btn:hover {{ background: #1d4ed8; }}
             
             .typing-dot {{ display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; margin-right: 3px; animation: typing 1.4s infinite both; }}
             .typing-dot:nth-child(2) {{ animation-delay: .2s; }}
@@ -2640,8 +2656,9 @@ def add_meshu_chatbot():
                 <div class="chip" data-query="Surprise me! 🎲">Surprise me</div>
             </div>
             <div class="meshu-input-area">
+                <button id="meshu-mic" title="Click to speak">🎤</button>
                 <input type="text" id="meshu-input" placeholder="Message...">
-                <button id="meshu-send">Send</button>
+                <button id="meshu-send" class="send-btn">Send</button>
             </div>
         `;
 
@@ -2656,7 +2673,68 @@ def add_meshu_chatbot():
         const messagesContainer = windowDiv.querySelector('#meshu-messages');
         const inputField = windowDiv.querySelector('#meshu-input');
         const sendBtn = windowDiv.querySelector('#meshu-send');
+        const micBtn = windowDiv.querySelector('#meshu-mic');
         const API_KEY = "{groq_key}";
+
+        let firstJokeName = null;
+        let waitingForKon = false;
+
+        // --- TEXT TO SPEECH (Childish Voice) ---
+        function speakText(text) {{
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop current speech
+            
+            // Remove emojis and HTML tags so it doesn't read them out loud
+            let cleanText = text.replace(/<[^>]*>?/gm, '').replace(/[\\u{{1F600}}-\\u{{1F6FF}}]/gu, '').replace(/\\*/g, '');
+            
+            let utterance = new SpeechSynthesisUtterance(cleanText);
+            
+            // Make it sound childish (High pitch, slightly fast)
+            utterance.pitch = 1.8; 
+            utterance.rate = 1.15;
+            
+            window.speechSynthesis.speak(utterance);
+        }}
+
+        // --- SPEECH TO TEXT (Microphone) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {{
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = function() {{
+                micBtn.classList.add('recording');
+                inputField.placeholder = "Listening...";
+            }};
+            
+            recognition.onresult = function(event) {{
+                const transcript = event.results[0][0].transcript;
+                inputField.value = transcript;
+                sendMessage(); // Auto-send when finished speaking
+            }};
+            
+            recognition.onerror = function() {{
+                micBtn.classList.remove('recording');
+                inputField.placeholder = "Message...";
+            }};
+            
+            recognition.onend = function() {{
+                micBtn.classList.remove('recording');
+                inputField.placeholder = "Message...";
+            }};
+            
+            micBtn.addEventListener('click', () => {{
+                if (micBtn.classList.contains('recording')) {{
+                    recognition.stop();
+                }} else {{
+                    recognition.start();
+                }}
+            }});
+        }} else {{
+            micBtn.style.display = 'none'; // Hide mic if browser doesn't support it
+        }}
 
         function addMessage(text, type, isTyping = false) {{
             const div = doc.createElement('div');
@@ -2667,8 +2745,12 @@ def add_meshu_chatbot():
                 div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
             }} else {{
                 let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
-                // Removed global newline replacement here to prevent breaking HTML string injections
                 div.innerHTML = formattedText;
+                
+                // If AI is speaking, trigger the voice
+                if (type === 'ai') {{
+                    speakText(text);
+                }}
             }}
             messagesContainer.appendChild(div);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -2681,12 +2763,11 @@ def add_meshu_chatbot():
             addMessage(text, 'user');
             inputField.value = '';
 
-            // --- HARDCODED EASTER EGGS (JOKES) ---
+            // --- EASTER EGGS / MEMORY LOGIC ---
             const lowerText = text.toLowerCase();
             const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
             
-            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText)) {{
-                // Show thinking animation to make it feel natural
+            if (lowerText.includes("who created you") || text === "12345" || jokeNames.includes(lowerText) || (lowerText === "kon" && waitingForKon)) {{
                 addMessage('', 'ai', true); 
                 
                 setTimeout(() => {{
@@ -2697,20 +2778,30 @@ def add_meshu_chatbot():
                         addMessage("My owner **Mubashir Arshad**.", 'ai');
                     }} 
                     else if (text === "12345") {{
-                        // Creates clickable buttons inside the chat bubble!
                         const friendsHTML = 'I think you are one of them:<br><div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;"><div class="chip" data-query="Ahsan">Ahsan</div><div class="chip" data-query="Zain">Zain</div><div class="chip" data-query="Muneeb">Muneeb</div><div class="chip" data-query="Shoaib">Shoaib</div><div class="chip" data-query="Furqan">Furqan</div><div class="chip" data-query="Hafiz shb">Hafiz shb</div></div>';
                         addMessage(friendsHTML, 'ai');
                     }} 
-                    else if (jokeNames.includes(lowerText)) {{
-                        addMessage("from your brother bundle of curse upon you 😂", 'ai');
+                    else if (lowerText === "kon" && waitingForKon) {{
+                        addMessage("whi pehlay wala **" + firstJokeName + "** 😂", 'ai');
+                        waitingForKon = false; 
                     }}
-                }}, 600); // 0.6 second delay
+                    else if (jokeNames.includes(lowerText)) {{
+                        if (firstJokeName === null) {{
+                            firstJokeName = text; 
+                            addMessage("from your brother bundle of curse upon you 😂", 'ai');
+                        }} else if (lowerText !== firstJokeName.toLowerCase()) {{
+                            addMessage("lanti ramzan me bhi jhoot bool rha ha mujhay pta ha k tu whi ha 😠", 'ai');
+                            waitingForKon = true; 
+                        }} else {{
+                            addMessage("from your brother bundle of curse upon you 😂", 'ai');
+                        }}
+                    }}
+                }}, 600);
                 
-                return; // Stop here, do NOT send this to the Groq API!
+                return; 
             }}
             // --- END OF EASTER EGGS ---
 
-            // Proceed with normal AI behavior
             addMessage('', 'ai', true);
 
             try {{
@@ -2725,7 +2816,7 @@ def add_meshu_chatbot():
                         messages: [
                             {{
                                 role: "system", 
-                                content: "You are MESHU, a smart, friendly AI assistant for this high-end web app. Use emojis naturally. Use short paragraphs and bold key terms to make your answers scannable. Be helpful, concise, and professional."
+                                content: "You are MESHU, a smart, friendly AI assistant. Use emojis naturally. Use short paragraphs. Be helpful, concise, and professional."
                             }},
                             {{role: "user", content: text}}
                         ]
@@ -2737,7 +2828,6 @@ def add_meshu_chatbot():
                 if(typingInd) typingInd.remove();
 
                 if(data.choices && data.choices[0]) {{
-                    // Quick fix for normal newlines without breaking HTML
                     let finalResponse = data.choices[0].message.content.replace(/\\n/g, '<br>');
                     addMessage(finalResponse, 'ai');
                 }} else {{
@@ -2750,11 +2840,9 @@ def add_meshu_chatbot():
             }}
         }}
 
-        // Event Listeners
         sendBtn.addEventListener('click', () => sendMessage());
         inputField.addEventListener('keypress', (e) => {{ if(e.key === 'Enter') sendMessage(); }});
 
-        // 🟢 EVENT DELEGATION: This handles BOTH the quick-chips and your generated Joke chips!
         windowDiv.addEventListener('click', (e) => {{
             const chip = e.target.closest('.chip');
             if (chip) {{
@@ -2769,8 +2857,7 @@ def add_meshu_chatbot():
             if (!isVisible) inputField.focus(); 
         }});
 
-        // Greet the user automatically
-        addMessage("Hello! I'm MESHU, your AI guide. Click a button below or type a question! ✨", 'ai');
+        addMessage("Hello! I'm MESHU, your AI guide. Click a button below or use the microphone to talk! ✨", 'ai');
 
     }})();
     </script>
