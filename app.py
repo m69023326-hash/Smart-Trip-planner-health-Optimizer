@@ -2502,8 +2502,13 @@ import streamlit.components.v1 as components
 import base64
 from pathlib import Path
 
+import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+
 # ============================================================
-# MESHU CHATBOT (No Emojis Edition)
+# MESHU CHATBOT (Error Diagnostic Edition)
 # ============================================================
 def add_meshu_chatbot():
     # 1. API Key Setup
@@ -2537,7 +2542,6 @@ def add_meshu_chatbot():
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             
-            /* JUMPING ANIMATION */
             @keyframes meshuJump {{
                 0%, 100% {{ transform: translateY(0); }}
                 40% {{ transform: translateY(-18px); }}
@@ -2659,21 +2663,16 @@ def add_meshu_chatbot():
         let firstJokeName = null;
         let waitingForKon = false;
 
-        // --- TEXT TO SPEECH (Childish Voice) ---
         function speakText(text) {{
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
-            
             let cleanText = text.replace(/<[^>]*>?/gm, '').replace(/\\*/g, '');
             let utterance = new SpeechSynthesisUtterance(cleanText);
-            
             utterance.pitch = 1.8; 
             utterance.rate = 1.15;
-            
             window.speechSynthesis.speak(utterance);
         }}
 
-        // --- SPEECH TO TEXT (Microphone) ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
         if (SpeechRecognition) {{
@@ -2723,10 +2722,7 @@ def add_meshu_chatbot():
             }} else {{
                 let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
                 div.innerHTML = formattedText;
-                
-                if (type === 'ai') {{
-                    speakText(text);
-                }}
+                if (type === 'ai') speakText(text);
             }}
             messagesContainer.appendChild(div);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -2739,7 +2735,6 @@ def add_meshu_chatbot():
             addMessage(text, 'user');
             inputField.value = '';
 
-            // --- EASTER EGGS / MEMORY LOGIC ---
             const lowerText = text.toLowerCase();
             const jokeNames = ["ahsan", "zain", "muneeb", "shoaib", "furqan", "hafiz shb"];
             
@@ -2773,10 +2768,8 @@ def add_meshu_chatbot():
                         }}
                     }}
                 }}, 600);
-                
                 return; 
             }}
-            // --- END OF EASTER EGGS ---
 
             addMessage('', 'ai', true);
 
@@ -2798,6 +2791,13 @@ def add_meshu_chatbot():
                         ]
                     }})
                 }});
+                
+                // 🛠️ NEW: EXPLICIT ERROR CATCHING 
+                if (!response.ok) {{
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "HTTP Error: " + response.status);
+                }}
+
                 const data = await response.json();
                 
                 const typingInd = doc.getElementById('meshu-typing');
@@ -2812,7 +2812,9 @@ def add_meshu_chatbot():
             }} catch (e) {{
                 const typingInd = doc.getElementById('meshu-typing');
                 if(typingInd) typingInd.remove();
-                addMessage("I'm having trouble connecting to the server. Check your network.", 'ai');
+                
+                // 🛠️ NEW: PRINTS THE EXACT SYSTEM ERROR
+                addMessage("System Error: " + e.message, 'ai');
             }}
         }}
 
@@ -2842,4 +2844,3 @@ def add_meshu_chatbot():
     components.html(chatbot_html, height=0)
 
 add_meshu_chatbot()
-
