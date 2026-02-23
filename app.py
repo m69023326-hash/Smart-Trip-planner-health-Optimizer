@@ -556,6 +556,94 @@ base_css = """
     .welcome-card:nth-child(1) { animation-delay: 0.1s; }
     .welcome-card:nth-child(2) { animation-delay: 0.3s; }
     .welcome-card:nth-child(3) { animation-delay: 0.5s; }
+
+    /* ===== NEW ANIMATIONS & RESPONSIVE STYLES FOR WELCOME TAB ===== */
+    .animated-welcome {
+        font-size: 5em;
+        font-weight: 900;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 300% 300%;
+        animation: slideInFromLeft 1s ease-out, gradientShift 6s ease infinite;
+        margin-bottom: 20px;
+        text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        letter-spacing: -0.02em;
+    }
+    @keyframes slideInFromLeft {
+        0% { opacity: 0; transform: translateX(-50px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    
+    .clickable-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .clickable-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
+        border-color: var(--text-accent);
+    }
+    .clickable-card:active {
+        transform: translateY(-2px) scale(0.98);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .animated-welcome {
+            font-size: 3em;
+        }
+        .welcome-subtitle {
+            font-size: 1.1em !important;
+            padding: 0 15px;
+        }
+        .premium-card h3 {
+            font-size: 1.4em !important;
+        }
+        .premium-card p {
+            font-size: 0.95em !important;
+        }
+        .stButton>button {
+            height: 44px;  /* better touch target */
+        }
+        .gallery-img-container img {
+            height: 180px;
+        }
+        .info-panel-header {
+            font-size: 20px !important;
+        }
+        div[role="radiogroup"] > label {
+            padding: 12px 14px;
+            font-size: 0.9em;
+        }
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .scroll-btn {
+            bottom: 70px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 18px;
+        }
+    }
+    @media (max-width: 480px) {
+        .animated-welcome {
+            font-size: 2.2em;
+        }
+        .welcome-subtitle {
+            font-size: 1em !important;
+        }
+        .stButton>button {
+            font-size: 0.9rem;
+            padding-left: 12px;
+        }
+    }
 </style>
 """
 
@@ -2116,14 +2204,13 @@ Format everything with bullet points, tables, and clear section breaks. Make it 
         st.info("👈 Fill in your routine and preferences, then click the glowing button for your ultimate trip plan.")
 
 # ============================================================
-# NEW WELCOME TAB (added as the first tab) – ENHANCED
+# NEW WELCOME TAB (ENHANCED)
 # ============================================================
 def tab_welcome():
-    # We'll inject a script to handle tab switching
+    # Inject script to handle tab switching
     st.markdown("""
     <script>
     function switchTab(tabName) {
-        // Find all tab buttons (they have role="tab")
         const tabs = document.querySelectorAll('button[role="tab"]');
         for (let tab of tabs) {
             if (tab.innerText.includes(tabName)) {
@@ -2203,99 +2290,32 @@ def tab_welcome():
     """, unsafe_allow_html=True)
 
 # ============================================================
-# Add these new CSS classes to your base_css (inside the <style> block)
+# MAIN APP LAYOUT with Theme Toggle
 # ============================================================
-# Add the following inside base_css, after the existing animations:
+# Apply theme CSS
+st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
+st.markdown(base_css, unsafe_allow_html=True)
 
-"""
-    /* Animated Welcome Text */
-    .animated-welcome {
-        font-size: 5em;
-        font-weight: 900;
-        background: linear-gradient(135deg, #4f46e5, #06b6d4, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 300% 300%;
-        animation: slideInFromLeft 1s ease-out, gradientShift 6s ease infinite;
-        margin-bottom: 20px;
-        text-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
-        letter-spacing: -0.02em;
-    }
-    @keyframes slideInFromLeft {
-        0% { opacity: 0; transform: translateX(-50px); }
-        100% { opacity: 1; transform: translateX(0); }
-    }
-    
-    /* Clickable cards */
-    .clickable-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-        border: 2px solid transparent;
-        position: relative;
-        overflow: hidden;
-    }
-    .clickable-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: var(--shadow-hover), 0 0 0 2px var(--text-accent);
-        border-color: var(--text-accent);
-    }
-    .clickable-card:active {
-        transform: translateY(-2px) scale(0.98);
-    }
-    
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
-        .animated-welcome {
-            font-size: 3em;
-        }
-        .welcome-subtitle {
-            font-size: 1.1em !important;
-            padding: 0 15px;
-        }
-        .premium-card h3 {
-            font-size: 1.4em !important;
-        }
-        .premium-card p {
-            font-size: 0.95em !important;
-        }
-        .stButton>button {
-            height: 44px;  /* better touch target */
-        }
-        .gallery-img-container img {
-            height: 180px;
-        }
-        .info-panel-header {
-            font-size: 20px !important;
-        }
-        div[role="radiogroup"] > label {
-            padding: 12px 14px;
-            font-size: 0.9em;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 8px 12px;
-            font-size: 0.9rem;
-        }
-        .scroll-btn {
-            bottom: 70px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            font-size: 18px;
-        }
-    }
-    @media (max-width: 480px) {
-        .animated-welcome {
-            font-size: 2.2em;
-        }
-        .welcome-subtitle {
-            font-size: 1em !important;
-        }
-        .stButton>button {
-            font-size: 0.9rem;
-            padding-left: 12px;
-        }
-    }
-"""
+# Header with title and theme toggle
+header_col1, header_col2, header_col3 = st.columns([4, 6, 2])
+with header_col1:
+    st.title("🗺️ Ultimate Planner & Hub")
+with header_col3:
+    if st.button(f"{'🌙 Dark' if st.session_state.theme == 'light' else '☀️ Light'}", key="theme_toggle", help="Switch theme"):
+        toggle_theme()
+        st.rerun()
+
+# Tabs – WELCOME TAB ADDED AS THE FIRST TAB
+main_tab, planner_tab, companion_tab, tourism_tab = st.tabs([
+    "👋 Welcome", 
+    "📅 Trip Planner", 
+    "🤖 Health Companion", 
+    "🇵🇰 Pakistan Tourism"
+])
+
+# --- TAB 0: WELCOME ---
+with main_tab:
+    tab_welcome()
 
 # --- TAB 1: TRIP PLANNER ---
 with planner_tab:
@@ -2642,5 +2662,4 @@ def add_meshu_chatbot():
 
     components.html(chatbot_html, height=0)
 
-add_meshu_chatbot() 
-
+add_meshu_chatbot()
